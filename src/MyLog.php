@@ -14,16 +14,16 @@ class MyLog
 
     public function __construct($file)
     {
-        $log = new Logger('name');
-        $log->pushHandler(new StreamHandler($file, Level::Warning));
+        $this->log = new Logger('name');
+        $this->log->pushHandler(new StreamHandler($file, Level::Warning));
     }
 
     public function put($value, $type)
     {
         if ($type === self::Warning) {
-            $log->Warning($value);
+            $this->log->Warning($value);
         } elseif ($type === self::Error) {
-            $log->error($value);
+            $this->log->error($value);
         }
     }
 }
