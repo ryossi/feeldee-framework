@@ -1,0 +1,36 @@
+{
+  "name": "ryossi/feeldee-framework",
+  "description": "Feeldee Framework - Laravel based experience CMS development framework.",
+  "keywords": [
+    "framework",
+    "laravel",
+    "feeldee",
+    "cms"
+  ],
+  "license": "MIT",
+  "homepage": "https://www.feeldee.com",
+  "support": {
+    "source": "https://github.com/ryossi/feeldee-framework",
+    "issues": "https://github.com/ryossi/feeldee-framework/issues"
+  },
+  "authors": [
+    {
+      "name": "Ryo Sakai",
+      "email": "r.sakai@feeldee.com"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^10.38"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Feeldee\\": "src/"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
