@@ -28,9 +28,19 @@
   },
   "autoload": {
     "psr-4": {
-      "Feeldee\\": "src/"
+      "Feeldee\\Framework\\": "src/"
     }
   },
   "minimum-stability": "dev",
-  "prefer-stable": true
+  "prefer-stable": true,
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Feeldee\\Framework\\FeeldeeServiceProvider"
+      ],
+      "dont-discover": [
+        "*"
+      ]
+    }
+  }
 }
