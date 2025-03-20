@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework;
 
+use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider;
 
 class FeeldeeServiceProvider extends ServiceProvider
@@ -36,12 +37,12 @@ class FeeldeeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // 追加設定
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
         $this->publishes([
             __DIR__ . '/../config/feeldee.php' => config_path('feeldee.php'),
         ], 'feeldee');
 
-        // 追加マイグレーション
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        AboutCommand::add('Feeldee', fn() => ['Framework Version' => '1.0.0']);
     }
 }
