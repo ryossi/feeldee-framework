@@ -36,8 +36,12 @@ class FeeldeeServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // 追加設定
         $this->publishes([
             __DIR__ . '/../config/feeldee.php' => config_path('feeldee.php'),
         ], 'feeldee');
+
+        // 追加マイグレーション
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
 }
