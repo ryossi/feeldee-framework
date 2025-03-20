@@ -38,6 +38,6 @@ class FeeldeeServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__ . '/../config/feeldee.php' => config_path('feeldee.php'),
-        ]);
+        ], 'feeldee');
     }
 }
