@@ -6,5 +6,38 @@ use Illuminate\Support\ServiceProvider;
 
 class FeeldeeServiceProvider extends ServiceProvider
 {
-    public function boot(): void {}
+    /**
+     * Register any application services.
+     */
+    public function register(): void
+    {
+        $this->mergeConfigFrom(
+            __DIR__ . '/../config/feeldee.php',
+            'feeldee'
+        );
+    }
+
+    /**
+     * All of the container bindings that should be registered.
+     *
+     * @var array
+     */
+    public $bindings = [];
+
+    /**
+     * All of the container singletons that should be registered.
+     *
+     * @var array
+     */
+    public $singletons = [];
+
+    /**
+     * Bootstrap any application services.
+     */
+    public function boot(): void
+    {
+        $this->publishes([
+            __DIR__ . '/../config/feeldee.php' => config_path('feeldee.php'),
+        ]);
+    }
 }
