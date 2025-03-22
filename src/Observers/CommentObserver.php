@@ -10,7 +10,7 @@ class CommentObserver
     /**
      * Handle the Comment "creating" event.
      *
-     * @param  \App\Models\Comment  $comment
+     * @param  \Feeldee\Framework\Models\Comment  $comment
      * @return void
      */
     public function creating(Comment $comment)
@@ -27,7 +27,7 @@ class CommentObserver
     /**
      * Handle the Comment "updated" event.
      *
-     * @param  \App\Models\Comment  $comment
+     * @param  \Feeldee\Framework\Models\Comment  $comment
      * @return void
      */
     public function updating(Comment $comment)

@@ -2,8 +2,8 @@
 
 namespace Feeldee\Framework\Models;
 
-use App\Notifications\ChangeEmail;
-use App\Notifications\MustChangeEmail;
+use Feeldee\Framework\Notifications\ChangeEmail;
+use Feeldee\Framework\Notifications\MustChangeEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;

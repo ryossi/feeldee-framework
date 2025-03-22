@@ -10,7 +10,7 @@ class ReplyObserver
     /**
      * Handle the Reply "creating" event.
      *
-     * @param  \App\Models\Reply  $reply
+     * @param  \Feeldee\Framework\Models\Reply  $reply
      * @return void
      */
     public function creating(Reply $reply)

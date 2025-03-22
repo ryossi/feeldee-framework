@@ -4,8 +4,8 @@ namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
-use App\Facades\ImageText;
-use App\ValueObjects\Configs\LocationConfig;
+use Feeldee\Framework\Facades\ImageText;
+use Feeldee\Framework\ValueObjects\Configs\LocationConfig;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 

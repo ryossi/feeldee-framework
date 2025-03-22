@@ -9,7 +9,7 @@ class PostPhotoSyncObserver
     /**
      * Handle the Post "updated" event.
      *
-     * @param  \App\Models\Post  $post
+     * @param  \Feeldee\Framework\Models\Post  $post
      * @return void
      */
     public function updated(Post $post)
@@ -21,7 +21,7 @@ class PostPhotoSyncObserver
     /**
      * Handle the Post "deleting" event.
      *
-     * @param  \App\Models\Post  $post
+     * @param  \Feeldee\Framework\Models\Post  $post
      * @return void
      */
     public function deleting(Post $post)

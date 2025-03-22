@@ -9,7 +9,7 @@ class PointObserver
     /**
      * Handle the Point "creating" event.
      *
-     * @param  \App\Models\Point  $point
+     * @param  \Feeldee\Framework\Models\Point  $point
      * @return void
      */
     public function creating(Point $point)

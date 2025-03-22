@@ -9,7 +9,7 @@ class ContentViewHistoryObserver
     /**
      * Handle the Comment "creating" event.
      *
-     * @param  \App\Models\ContentViewHistory  $contentViewHistory
+     * @param  \Feeldee\Framework\Models\ContentViewHistory  $contentViewHistory
      * @return void
      */
     public function creating(ContentViewHistory $contentViewHistory)

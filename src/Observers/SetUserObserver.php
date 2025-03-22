@@ -10,7 +10,7 @@ class SetUserObserver
     /**
      * Handle the Model "creating" event.
      *
-     * @param  \App\Models\Model  $model
+     * @param  \Feeldee\Framework\Models\Model  $model
      * @return void
      */
     public function creating(Model $model)
@@ -22,7 +22,7 @@ class SetUserObserver
     /**
      * Handle the Model "updating" event.
      *
-     * @param  \App\Models\Model  $model
+     * @param  \Feeldee\Framework\Models\Model  $model
      * @return void
      */
     public function updating(Model $model)
@@ -33,7 +33,7 @@ class SetUserObserver
     /**
      * Handle the Model "saving" event.
      *
-     * @param  \App\Models\Model  $model
+     * @param  \Feeldee\Framework\Models\Model  $model
      * @return void
      */
     public function saving(Model $model)

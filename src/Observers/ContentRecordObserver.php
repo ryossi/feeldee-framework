@@ -9,7 +9,7 @@ class ContentRecordObserver
     /**
      * Handle the Content "deleting" event.
      *
-     * @param  \App\Models\Content  $content
+     * @param  \Feeldee\Framework\Models\Content  $content
      * @return void
      */
     public function deleting(Content $content)

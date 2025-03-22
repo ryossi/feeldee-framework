@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\PublicLevel;
+use Feeldee\Framework\Models\PublicLevel;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
