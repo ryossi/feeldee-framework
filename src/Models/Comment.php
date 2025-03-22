@@ -2,15 +2,18 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Observers\CommentObserver;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 /**
  * コメントをあらわすモデル
  */
+#[ObservedBy([CommentObserver::class])]
 class Comment extends Model
 {
     use HasFactory, SetUser;

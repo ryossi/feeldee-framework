@@ -5,14 +5,19 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Carbon\Carbon;
+use Feeldee\Framework\Observers\ContentRecordObserver;
+use Feeldee\Framework\Observers\ContentTagObserver;
+use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use PHPHtmlParser\Dom;
 
 /**
  * 投稿をあらわすモデル
  */
+#[ObservedBy([PostPhotoSyncObserver::class, ContentRecordObserver::class, ContentTagObserver::class])]
 class Post extends Content
 {
     use HasFactory, SetUser;

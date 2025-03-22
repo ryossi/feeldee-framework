@@ -2,13 +2,16 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Observers\ReplyObserver;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 /**
  * 返信をあらわすモデル
  */
+#[ObservedBy([ReplyObserver::class])]
 class Reply extends Model
 {
     use HasFactory, SetUser;
