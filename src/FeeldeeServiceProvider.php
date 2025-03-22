@@ -4,6 +4,7 @@ namespace Feeldee\Framework;
 
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class FeeldeeServiceProvider extends ServiceProvider
 {
@@ -44,5 +45,13 @@ class FeeldeeServiceProvider extends ServiceProvider
         ], 'feeldee');
 
         AboutCommand::add('Feeldee', fn() => ['Framework Version' => '1.0.0']);
+
+        // カスタムポリモーフィックタイプ
+        Relation::enforceMorphMap([
+            'post' => 'Feeldee\Framework\Models\Post',
+            'photo' => 'Feeldee\Framework\Models\Photo',
+            'location' => 'Feeldee\Framework\Models\Location',
+            'item' => 'Feeldee\Framework\Models\Item',
+        ]);
     }
 }
