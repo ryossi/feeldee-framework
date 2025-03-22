@@ -5,7 +5,6 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Facades\ImageText;
-use Feeldee\Framework\ValueObjects\Configs\LocationConfig;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -34,13 +33,6 @@ class Location extends Content
      */
     protected static function booted(): void
     {
-        static::creating(function (Location $location) {
-            // デフォルト公開レベル設定
-            if ($location->public_level === null) {
-                $location->public_level = $location->profile->config(LocationConfig::TYPE)->value->default_public_level;
-            }
-        });
-
         static::created(function (Location $location) {
             // サムネイルイメージアップロード
             if (ImageText::isImageText($location->thumbnail)) {
