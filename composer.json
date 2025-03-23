@@ -21,7 +21,7 @@
   ],
   "require": {
     "php": "^8.2",
-    "laravel/framework": "^10.38",
+    "laravel/framework": "^10.48.29",
     "hashids/hashids": "^5.0",
     "intervention/image": "^2.7",
     "paquettg/php-html-parser": "^3.1"
