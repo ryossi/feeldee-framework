@@ -12,7 +12,7 @@ feeldee-frameworkは、日記、フィールドノートなどの趣味や特定
 
 ### 使用方法
 
-feeldeeの概念については、[wiki](https://github.com/ryossi/feeldee-framework/wiki)を参照してください。
+feeldeeの概念や具体的な機能については、[wiki](https://github.com/ryossi/feeldee-framework/wiki)を参照してください。
 
 ## 開発者
 
