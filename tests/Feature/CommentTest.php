@@ -20,12 +20,7 @@ class CommentTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時
      */
-    public function test_コメント日時_コメント日時指定あり()
-    {
-
-        // 準備
-        $profile = Profile::factory()->create();
-    }
+    public function test_コメント日時_コメント日時指定あり() {}
 
     /**
      * コメント日時
