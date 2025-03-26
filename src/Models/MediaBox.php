@@ -36,21 +36,6 @@ class MediaBox extends Model
     }
 
     /**
-     * コンテンツを所有するユーザ
-     *
-     * @return Attribute
-     */
-    protected function user(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(User::class, 'user_id')->get()->first(),
-            set: fn($value) => [
-                'user_id' => $value == null ? null : $value->id
-            ]
-        );
-    }
-
-    /**
      * 最大容量（MB）
      */
     protected function maxSize(): Attribute
