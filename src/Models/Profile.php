@@ -4,7 +4,7 @@ namespace Feeldee\Framework\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -17,11 +17,11 @@ class Profile extends Model
     protected $fillable = ['nickname', 'title', 'subtitle', 'introduction', 'home', 'user_id', 'show_members'];
 
     /**
-     * プロフィールを所有しているユーザを取得
+     * プロフィールのメディアボックスを取得
      */
-    public function user(): BelongsTo
+    public function mediaBox(): HasOne
     {
-        return $this->belongsTo(User::class);
+        return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
     }
 
     /**

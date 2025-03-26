@@ -36,7 +36,7 @@ class Location extends Content
         static::created(function (Location $location) {
             // サムネイルイメージアップロード
             if (ImageText::isImageText($location->thumbnail)) {
-                $media = $location->profile->user->mediaBox->upload($location->thumbnail, $location->id, self::THUMBNAIL_UPLOAD_DIRECTORY);
+                $media = $location->profile->mediaBox->upload($location->thumbnail, $location->id, self::THUMBNAIL_UPLOAD_DIRECTORY);
                 $location->thumbnail = $media;
                 $location->save(['timestamps' => false]);
             }
@@ -45,7 +45,7 @@ class Location extends Content
         static::updating(function (Location $location) {
             // サムネイルイメージアップロード
             if (ImageText::isImageText($location->thumbnail)) {
-                $media = $location->profile->user->mediaBox->upload($location->thumbnail, $location->id, self::THUMBNAIL_UPLOAD_DIRECTORY);
+                $media = $location->profile->mediaBox->upload($location->thumbnail, $location->id, self::THUMBNAIL_UPLOAD_DIRECTORY);
                 $location->thumbnail = $media;
             }
         });
@@ -53,7 +53,7 @@ class Location extends Content
         static::deleted(function (Location $location) {
             // サムネイルイメージ削除
             if ($location->thumbnail) {
-                $media = $location->profile->user->mediaBox->find($location->thumbnail);
+                $media = $location->profile->mediaBox->find($location->thumbnail);
                 $media->delete();
             }
         });
