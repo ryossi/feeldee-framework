@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('media_boxes', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class)->comment('ユーザID')->constrained()->cascadeOnDelete();
+            $table->bigInteger("user_id")->comment('ユーザID')->constrained()->cascadeOnDelete();
             $table->string('directory')->comment('ディレクトリ')->unique();
             $table->integer('max_size')->nullable()->comment('最大容量（MB）');
             $table->bigInteger('created_by')->comment('登録者');
