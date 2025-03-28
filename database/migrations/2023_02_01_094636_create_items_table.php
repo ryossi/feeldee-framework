@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('profile_id')->comment('プロフィールID')->constrained('profiles')->cascadeOnDelete();
+            $table->foreignId('profile_id')->comment('コンテンツ所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
             $table->string('title')->comment('タイトル');
             $table->mediumText('value')->nullable()->comment('内容');
             $table->mediumText('text')->nullable()->comment('テキスト');
