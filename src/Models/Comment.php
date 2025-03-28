@@ -72,7 +72,7 @@ class Comment extends Model
                 $attributes,
                 [
                     'profile' => $commentable->profile,
-                    'commenter' => $user?->profile,
+                    'commenter' => $user?->getProfile(),
                 ]
             )
         );
@@ -107,7 +107,9 @@ class Comment extends Model
     protected static function booted(): void
     {
         static::creating(function (self $model) {
-            // コメント日時未設定時はシステム日時
+            // コメント所有者
+            $model->profile = $model->commentable->profile;
+            // システム日時デフォルト
             self::default_commented_at($model);
             // コメント者ニックネームデフォルト
             self::default_commenter_nickname($model);

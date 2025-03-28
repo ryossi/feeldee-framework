@@ -15,8 +15,9 @@ class SetUserObserver
      */
     public function creating(Model $model)
     {
-        $model->created_by = Auth::id();
-        $model->updated_by = Auth::id();
+        $id = Auth::id();
+        $model->created_by = $id;
+        $model->updated_by = $id;
     }
 
     /**
@@ -26,17 +27,6 @@ class SetUserObserver
      * @return void
      */
     public function updating(Model $model)
-    {
-        $model->updated_by = Auth::id();
-    }
-
-    /**
-     * Handle the Model "saving" event.
-     *
-     * @param  \Feeldee\Framework\Models\Model  $model
-     * @return void
-     */
-    public function saving(Model $model)
     {
         $model->updated_by = Auth::id();
     }

@@ -23,8 +23,8 @@ return new class extends Migration
             $table->foreignId('commenter_profile_id')->nullable()->comment('コメント者プロフィールID')->references('id')->on('profiles')->onUpdate('CASCADE')->onDelete('SET NULL');
             $table->string('commenter_nickname')->comment('コメント者ニックネーム');
             $table->boolean('is_public')->default(false)->comment('公開フラグ');
-            $table->bigInteger('created_by')->comment('登録者');
-            $table->bigInteger('updated_by')->comment('更新者');
+            $table->bigInteger('created_by')->nullable()->comment('登録者');
+            $table->bigInteger('updated_by')->nullable()->comment('更新者');
             $table->timestamps();
         });
     }
