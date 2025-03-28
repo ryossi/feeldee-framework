@@ -15,11 +15,6 @@ class CommentObserver
      */
     public function creating(Comment $comment)
     {
-        // コメント日時未設定時はシステム日時
-        if (is_null($comment->commented_at)) {
-            $comment->commented_at = Carbon::now();
-        }
-
         // コメント対象コンテンツのプロフィールコピー
         $comment->profile = $comment->commentable->profile;
     }

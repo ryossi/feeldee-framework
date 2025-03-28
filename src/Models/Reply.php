@@ -38,7 +38,7 @@ class Reply extends Model
     protected $appends = ['replyer', 'nickname'];
 
     /**
-     * 返信しているコメントを取得
+     * 返信対象
      */
     public function comment()
     {
@@ -46,7 +46,14 @@ class Reply extends Model
     }
 
     /**
-     * 返信者プロフィール
+     * 変換する属性
+     */
+    protected $casts = [
+        'replied_at' => 'datetime'
+    ];
+
+    /**
+     * 返信者
      *
      * @return Attribute
      */
@@ -62,7 +69,7 @@ class Reply extends Model
     }
 
     /**
-     * 返信者ニックネーム
+     * ニックネーム
      */
     protected function nickname(): Attribute
     {

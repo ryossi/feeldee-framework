@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Carbon\Carbon;
 use Feeldee\Framework\Observers\CommentObserver;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 /**
  * コメントをあらわすモデル
@@ -23,7 +26,7 @@ class Comment extends Model
      *
      * @var array
      */
-    protected $fillable = ['body', 'commenter', 'commented_at'];
+    protected $fillable = ['body', 'commenter', 'nickname', 'commented_at'];
 
     /**
      * 配列に表示する属性
@@ -40,20 +43,84 @@ class Comment extends Model
     protected $appends = ['commenter', 'nickname', 'replies', 'commentable'];
 
     /**
-     * コメント対象コンテンツ
+     * 変換する属性
      */
-    protected function getCommentableAttribute()
-    {
-        return  $this->commentable()->first();
-    }
+    protected $casts = [
+        'commented_at' => 'datetime'
+    ];
 
-    public function commentable()
+    /**
+     * コメントを作成します。
+     * 
+     * @param array<string, mixed>  $attributes　属性
+     * @param Content $ommentable コメント対象
+     * @return Self 作成したコメント
+     */
+    public static function create($attributes = [], Content $commentable): Self
     {
-        return $this->morphTo();
+        // ログインユーザ取得
+        $user = Auth::user();
+
+        // 属性検証
+        Validator::validate($attributes, [
+            'nickname' => Rule::requiredIf(!$user),
+        ]);
+
+        // コメント作成
+        return $commentable->comments()->create(
+            array_merge(
+                $attributes,
+                [
+                    'profile' => $commentable->profile,
+                    'commenter' => $user?->profile,
+                ]
+            )
+        );
     }
 
     /**
-     * コメントを所有するプロフィール
+     * コメント日時のデフォルトを設定します。
+     */
+    protected static function default_commented_at($model)
+    {
+        // コメント日時未設定時はシステム日時
+        if (is_null($model->commented_at)) {
+            $model->commented_at = Carbon::now();
+        }
+    }
+
+    /**
+     * コメント者ニックネームのデフォルトを設定します。
+     */
+    protected static function default_commenter_nickname($model)
+    {
+        // コメント者がログイン済み、かつニックネームが指定されたかった場合
+        if ($model->commenter && !$model->nickname) {
+            // コメント者のプロフィールのニックネーム
+            $model->nickname = $model->commenter->nickname;
+        }
+    }
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            // コメント日時未設定時はシステム日時
+            self::default_commented_at($model);
+            // コメント者ニックネームデフォルト
+            self::default_commenter_nickname($model);
+        });
+
+        static::updating(function (self $model) {
+            // コメント者ニックネームデフォルト
+            self::default_commenter_nickname($model);
+        });
+    }
+
+    /**
+     * コメント所有者
      *
      * @return Attribute
      */
@@ -68,7 +135,23 @@ class Comment extends Model
     }
 
     /**
-     * コメンタープロフィール
+     * コメント対象
+     */
+    public function commentable()
+    {
+        return $this->morphTo();
+    }
+    /**
+     * コメント対象コンテンツ
+     * TODO: 冗長なのでコメント対象と統一する
+     */
+    protected function getCommentableAttribute()
+    {
+        return  $this->commentable()->first();
+    }
+
+    /**
+     * コメント者
      *
      * @return Attribute
      */
@@ -77,33 +160,37 @@ class Comment extends Model
         return Attribute::make(
             get: fn($value, $attributes) => $attributes['commenter_profile_id'] ? $this->belongsTo(Profile::class, 'commenter_profile_id')->get()->first() : null,
             set: fn($value) => [
-                'commenter_profile_id' => $value instanceof Profile ? $value->id : null,
-                'commenter_nickname' => $value instanceof Profile ? $value->nickname : $value,
+                'commenter_profile_id' => $value
             ]
         );
     }
 
     /**
-     * コメント者ニックネーム
+     * ニックネーム
      */
     protected function nickname(): Attribute
     {
         return Attribute::make(
             get: fn($value, $attributes) => $this->commenter instanceof Profile ? $this->commenter->nickname : $attributes['commenter_nickname'],
+            set: fn($value) => [
+                'commenter_nickname' => $value,
+            ]
         );
     }
 
     /**
      * 返信リスト
      */
-    protected function getRepliesAttribute()
-    {
-        return  $this->replies()->get();
-    }
-
     public function replies()
     {
         return $this->hasMany(Reply::class);
+    }
+    /**
+     * TODO: 冗長なので返信リストと統一する
+     */
+    protected function getRepliesAttribute()
+    {
+        return  $this->replies()->get();
     }
 
     /**
