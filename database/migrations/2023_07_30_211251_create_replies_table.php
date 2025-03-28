@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('comment_id')->comment('コメントID')->constrained('comments')->cascadeOnDelete();
             $table->dateTime('replied_at')->comment('返信日時');
             $table->text('body')->nullable()->comment('返信本文');
-            $table->foreignId('replyer_profile_id')->nullable()->comment('返信者')->references('id')->on('profiles')->onUpdate('CASCADE')->onDelete('SET NULL');
+            $table->foreignId('replyer_profile_id')->nullable()->comment('返信者プロフィールID')->references('id')->on('profiles')->onUpdate('CASCADE')->onDelete('SET NULL');
             $table->string('replyer_nickname')->comment('返信者ニックネーム');
             $table->boolean('is_public')->default(false)->comment('公開フラグ');
             $table->bigInteger('created_by')->comment('登録者');
