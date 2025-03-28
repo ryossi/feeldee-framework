@@ -66,7 +66,7 @@ class Photo extends Content
      */
     protected function prepare(): void
     {
-        $media = $this->profile->mediaBox->find($this->src);
+        $media = $this->profile->mediaBox?->find($this->src);
         if ($media !== null) {
             // メディアが存在する場合
             $this->photo_type = PhotoType::Feeldee;
