@@ -79,29 +79,6 @@ class Comment extends Model
     }
 
     /**
-     * コメント日時のデフォルトを設定します。
-     */
-    protected static function default_commented_at($model)
-    {
-        // コメント日時未設定時はシステム日時
-        if (is_null($model->commented_at)) {
-            $model->commented_at = Carbon::now();
-        }
-    }
-
-    /**
-     * コメント者ニックネームのデフォルトを設定します。
-     */
-    protected static function default_commenter_nickname($model)
-    {
-        // コメント者がログイン済み、かつニックネームが指定されたかった場合
-        if ($model->commenter && !$model->nickname) {
-            // コメント者のプロフィールのニックネーム
-            $model->nickname = $model->commenter->nickname;
-        }
-    }
-
-    /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
@@ -109,15 +86,11 @@ class Comment extends Model
         static::creating(function (self $model) {
             // コメント所有者
             $model->profile = $model->commentable->profile;
-            // システム日時デフォルト
-            self::default_commented_at($model);
-            // コメント者ニックネームデフォルト
-            self::default_commenter_nickname($model);
-        });
-
-        static::updating(function (self $model) {
-            // コメント者ニックネームデフォルト
-            self::default_commenter_nickname($model);
+            // コメント日時
+            if (is_null($model->commented_at)) {
+                // 未設定時はシステム日時
+                $model->commented_at = Carbon::now();
+            }
         });
     }
 
@@ -173,7 +146,7 @@ class Comment extends Model
     protected function nickname(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => $this->commenter instanceof Profile ? $this->commenter->nickname : $attributes['commenter_nickname'],
+            get: fn($value, $attributes) => empty($attributes['commenter_nickname']) ? $this->commenter->nickname : $attributes['commenter_nickname'],
             set: fn($value) => [
                 'commenter_nickname' => $value,
             ]

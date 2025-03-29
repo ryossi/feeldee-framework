@@ -267,7 +267,6 @@ class CommentTest extends TestCase
         // 実行
         $comment = Comment::create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
         ], $item);
 
         // 評価
@@ -296,5 +295,109 @@ class CommentTest extends TestCase
 
         // 評価
         Assert::assertNull($comment->commenter, 'コメント者プロフィールIDは設定されないこと');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     */
+    public function test_コメント者_コメント者_ログインユーザかつニックネーム指定なし()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1))->create();
+        $item = $profile->items->first();
+
+        // コメント者準備
+        $nickname = 'MyCommenter';
+        Auth::shouldReceive('id')->andReturn(2);
+        $commenter = Profile::factory()->create([
+            'nickname' => $nickname,
+        ]);
+        $user = $this->mock(HssProfile::class);
+        $user->shouldReceive('getProfile')->andReturn($commenter);
+        Auth::shouldReceive('user')->andReturn($user);
+
+        // 実行
+        $comment = Comment::create([
+            'body' => 'これはテストコメントです。',
+        ], $item);
+
+        // 評価
+        Assert::assertEquals($commenter->nickname, $comment->nickname, 'コメント者のプロフィールのニックネームであること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     */
+    public function test_コメント者_コメント者_ログインユーザかつニックネーム指定あり()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1))->create();
+        $item = $profile->items->first();
+
+        // コメント者準備
+        Auth::shouldReceive('id')->andReturn(2);
+        $commenter = Profile::factory()->create();
+        $user = $this->mock(HssProfile::class);
+        $user->shouldReceive('getProfile')->andReturn($commenter);
+        Auth::shouldReceive('user')->andReturn($user);
+        $nickname = 'MyNickname';
+
+        // 実行
+        $comment = Comment::create([
+            'body' => 'これはテストコメントです。',
+            'nickname' => $nickname,
+        ], $item);
+
+        // 評価
+        Assert::assertEquals($nickname, $comment->nickname, '指定したニックネームであること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     */
+    public function test_コメント者_コメント者_匿名ユーザかつニックネーム指定なし()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1))->create();
+        $item = $profile->items->first();
+
+        // コメント者準備
+        Auth::shouldReceive('id')->andReturnNull();
+        Auth::shouldReceive('user')->andReturn(null);
+
+        // 実行
+        $this->assertThrows(function () use ($item) {
+            Comment::create([
+                'body' => 'これはテストコメントです。',
+            ], $item);
+        }, \Illuminate\Validation\ValidationException::class);
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     */
+    public function test_コメント者_コメント者_匿名ユーザかつニックネーム指定あり()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1))->create();
+        $item = $profile->items->first();
+
+        // コメント者準備
+        Auth::shouldReceive('id')->andReturnNull();
+        Auth::shouldReceive('user')->andReturn(null);
+        $nickname = 'MyNickname';
+
+        // 実行
+        $comment = Comment::create([
+            'body' => 'これはテストコメントです。',
+            'nickname' => $nickname,
+        ], $item);
+
+        // 評価
+        Assert::assertEquals($nickname, $comment->nickname, '指定したニックネームであること');
     }
 }
