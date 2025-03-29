@@ -3,20 +3,17 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
-use Feeldee\Framework\Observers\CommentObserver;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 /**
  * コメントをあらわすモデル
  */
-#[ObservedBy([CommentObserver::class])]
 class Comment extends Model
 {
     use HasFactory, SetUser;
@@ -71,7 +68,6 @@ class Comment extends Model
             array_merge(
                 $attributes,
                 [
-                    'profile' => $commentable->profile,
                     'commenter' => $user?->getProfile(),
                 ]
             )
