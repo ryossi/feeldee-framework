@@ -400,4 +400,63 @@ class CommentTest extends TestCase
         // 評価
         Assert::assertEquals($nickname, $comment->nickname, '指定したニックネームであること');
     }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開フラグ
+     */
+    public function test_コメント者_公開フラグ_デフォルト()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1))->create();
+        $item = $profile->items->first();
+
+        // コメント者準備
+        Auth::shouldReceive('id')->andReturnNull();
+        Auth::shouldReceive('user')->andReturn(null);
+
+        // 実行
+        $comment = Comment::create([
+            'body' => 'これはテストコメントです。',
+            'nickname' => 'テストユーザ',
+        ], $item);
+        $comment->refresh();
+
+        // 評価
+        Assert::assertFalse($comment->isPublic(), 'デフォルトは、非公開であること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開フラグ
+     */
+    public function test_コメント者_公開フラグ_公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => false])))->create();
+        $comment = $profile->items->first()->comments->first();
+
+        // 実行
+        $comment->doPublic();
+
+        // 評価
+        Assert::assertTrue($comment->isPublic(), '公開であること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開フラグ
+     */
+    public function test_コメント者_公開フラグ_非公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => true])))->create();
+        $comment = $profile->items->first()->comments->first();
+
+        // 実行
+        $comment->doPrivate();
+
+        // 評価
+        Assert::assertFalse($comment->isPublic(), '非公開であること');
+    }
 }
