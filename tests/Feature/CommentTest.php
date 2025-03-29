@@ -298,9 +298,9 @@ class CommentTest extends TestCase
     }
 
     /**
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者_コメント者_ログインユーザかつニックネーム指定なし()
+    public function test_コメント者ニックネーム_ログインユーザかつニックネーム指定なし()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -327,9 +327,9 @@ class CommentTest extends TestCase
     }
 
     /**
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者_コメント者_ログインユーザかつニックネーム指定あり()
+    public function test_コメント者ニックネーム_ログインユーザかつニックネーム指定あり()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -355,9 +355,9 @@ class CommentTest extends TestCase
     }
 
     /**
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者_コメント者_匿名ユーザかつニックネーム指定なし()
+    public function test_コメント者ニックネーム_匿名ユーザかつニックネーム指定なし()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -377,9 +377,9 @@ class CommentTest extends TestCase
     }
 
     /**
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者_コメント者_匿名ユーザかつニックネーム指定あり()
+    public function test_コメント者ニックネーム_匿名ユーザかつニックネーム指定あり()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -402,9 +402,9 @@ class CommentTest extends TestCase
     }
 
     /**
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
-    public function test_コメント者_公開フラグ_デフォルト()
+    public function test_コメント公開フラグ_デフォルト()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -427,9 +427,9 @@ class CommentTest extends TestCase
     }
 
     /**
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
-    public function test_コメント者_公開フラグ_公開()
+    public function test_コメント公開フラグ_公開()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -444,9 +444,9 @@ class CommentTest extends TestCase
     }
 
     /**
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
-    public function test_コメント者_公開フラグ_非公開()
+    public function test_コメント公開フラグ_非公開()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
