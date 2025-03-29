@@ -12,7 +12,7 @@ use Feeldee\Framework\Models\Post;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use PHPUnit\Framework\Assert;
+use Illuminate\Testing\Assert;
 
 /**
  * コメントの用語を担保するための機能テストです。
@@ -448,7 +448,7 @@ class CommentTest extends TestCase
      */
     public function test_コメント公開フラグ_非公開()
     {
-        // コメント対象準備
+        // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => true])))->create();
         $comment = $profile->items->first()->comments->first();

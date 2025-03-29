@@ -2,16 +2,14 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Observers\ReplyObserver;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 /**
  * 返信をあらわすモデル
  */
-#[ObservedBy([ReplyObserver::class])]
 class Reply extends Model
 {
     use HasFactory, SetUser;
@@ -38,19 +36,49 @@ class Reply extends Model
     protected $appends = ['replyer', 'nickname'];
 
     /**
+     * 変換する属性
+     */
+    protected $casts = [
+        'replied_at' => 'datetime'
+    ];
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            // 返信日時
+            if (is_null($model->replied_at)) {
+                // 未設定時はシステム日時
+                $model->replied_at = Carbon::now();
+            }
+            // 返信公開フラグ
+            // 作成時は、返信対象のコメント公開フラグと同じ
+            $model->is_public = $model->comment->isPublic();
+        });
+    }
+
+    /**
+     * 返信を作成します。
+     * 
+     * @param array<string, mixed>  $attributes　属性
+     * @param Comment $comment 返信対象
+     * @return Self 作成した返信
+     */
+    public static function create($attributes = [], Comment $comment): Self
+    {
+        // 返信作成
+        return $comment->replies()->create($attributes);
+    }
+
+    /**
      * 返信対象
      */
     public function comment()
     {
         return $this->belongsTo(Comment::class);
     }
-
-    /**
-     * 変換する属性
-     */
-    protected $casts = [
-        'replied_at' => 'datetime'
-    ];
 
     /**
      * 返信者

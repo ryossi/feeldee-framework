@@ -47,6 +47,22 @@ class Comment extends Model
     ];
 
     /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $model) {
+            // コメント所有者
+            $model->profile = $model->commentable->profile;
+            // コメント日時
+            if (is_null($model->commented_at)) {
+                // 未設定時はシステム日時
+                $model->commented_at = Carbon::now();
+            }
+        });
+    }
+
+    /**
      * コメントを作成します。
      * 
      * @param array<string, mixed>  $attributes　属性
@@ -72,22 +88,6 @@ class Comment extends Model
                 ]
             )
         );
-    }
-
-    /**
-     * モデルの「起動」メソッド
-     */
-    protected static function booted(): void
-    {
-        static::creating(function (self $model) {
-            // コメント所有者
-            $model->profile = $model->commentable->profile;
-            // コメント日時
-            if (is_null($model->commented_at)) {
-                // 未設定時はシステム日時
-                $model->commented_at = Carbon::now();
-            }
-        });
     }
 
     /**
