@@ -73,4 +73,44 @@ class ReplyTest extends TestCase
         // 評価
         Assert::assertNotEmpty($reply->replied_at, '指定した日時であること');
     }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信本文
+     */
+    public function test_返信本文_テキスト()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)->has(Comment::factory(1)))->create();
+        $comment = $profile->posts->first()->comments->first();
+        $body = 'テスト返信本文';
+
+        // 実行
+        $reply = Reply::create([
+            'body' => $body,
+        ], $comment);
+
+        // 評価
+        Assert::assertEquals($body, $reply->body, 'テキストが使用できること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信本文
+     */
+    public function test_返信本文_HTML()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)->has(Comment::factory(1)))->create();
+        $comment = $profile->posts->first()->comments->first();
+        $body = '<b>テスト返信本文</b>';
+
+        // 実行
+        $reply = Reply::create([
+            'body' => $body,
+        ], $comment);
+
+        // 評価
+        Assert::assertEquals($body, $reply->body, 'HTMLが使用できること');
+    }
 }
