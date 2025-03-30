@@ -48,11 +48,6 @@ class Reply extends Model
     protected static function booted(): void
     {
         static::creating(function (self $model) {
-            // 返信日時
-            if (is_null($model->replied_at)) {
-                // 未設定時はシステム日時
-                $model->replied_at = Carbon::now();
-            }
             // 返信公開フラグ
             // 作成時は、返信対象のコメント公開フラグと同じ
             $model->is_public = $model->comment->isPublic();
@@ -68,6 +63,13 @@ class Reply extends Model
      */
     public static function create($attributes = [], Comment $comment): Self
     {
+        // 返信日時
+        if (!array_key_exists('replied_at', $attributes) || empty($attributes['replied_at'])) {
+            // 返信日時が指定されなかった場合
+            // システム日時が自動で設定される
+            $attributes['replied_at'] = Carbon::now();
+        }
+
         // 返信作成
         return $comment->replies()->create($attributes);
     }

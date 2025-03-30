@@ -54,11 +54,6 @@ class Comment extends Model
         static::creating(function (self $model) {
             // コメント所有者
             $model->profile = $model->commentable->profile;
-            // コメント日時
-            if (is_null($model->commented_at)) {
-                // 未設定時はシステム日時
-                $model->commented_at = Carbon::now();
-            }
         });
     }
 
@@ -74,10 +69,18 @@ class Comment extends Model
         // ログインユーザ取得
         $user = Auth::user();
 
-        // 属性検証
+        // バリデーション
         Validator::validate($attributes, [
+            // 匿名ユーザは、ニックネームが必須
             'nickname' => Rule::requiredIf(!$user),
         ]);
+
+        // コメント日時
+        if (!array_key_exists('commented_at', $attributes) || empty($attributes['commented_at'])) {
+            // コメント日時が指定されなかった場合
+            // システム日時が自動で設定される
+            $attributes['commented_at'] = Carbon::now();
+        }
 
         // コメント作成
         return $commentable->comments()->create(
