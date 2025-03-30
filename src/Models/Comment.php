@@ -140,7 +140,7 @@ class Comment extends Model
     }
 
     /**
-     * ニックネーム
+     * コメント者ニックネーム
      */
     protected function nickname(): Attribute
     {

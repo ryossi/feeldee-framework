@@ -6,6 +6,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 /**
  * 返信をあらわすモデル
@@ -63,6 +66,15 @@ class Reply extends Model
      */
     public static function create($attributes = [], Comment $comment): Self
     {
+        // ログインユーザ取得
+        $user = Auth::user();
+
+        // バリデーション
+        Validator::validate($attributes, [
+            // 匿名ユーザは、ニックネームが必須
+            'nickname' => Rule::requiredIf(!$user),
+        ]);
+
         // 返信日時
         if (!array_key_exists('replied_at', $attributes) || empty($attributes['replied_at'])) {
             // 返信日時が指定されなかった場合
@@ -71,7 +83,14 @@ class Reply extends Model
         }
 
         // 返信作成
-        return $comment->replies()->create($attributes);
+        return $comment->replies()->create(
+            array_merge(
+                $attributes,
+                [
+                    'replyer' => $user?->getProfile(),
+                ]
+            )
+        );
     }
 
     /**
@@ -92,19 +111,21 @@ class Reply extends Model
         return Attribute::make(
             get: fn($value, $attributes) => $attributes['replyer_profile_id'] ? $this->belongsTo(Profile::class, 'replyer_profile_id')->get()->first() : null,
             set: fn($value) => [
-                'replyer_profile_id' => $value instanceof Profile ? $value->id : null,
-                'replyer_nickname' => $value instanceof Profile ? $value->nickname : $value,
+                'replyer_profile_id' => $value
             ]
         );
     }
 
     /**
-     * ニックネーム
+     * 返信者ニックネーム
      */
     protected function nickname(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => $this->replyer instanceof Profile ? $this->replyer->nickname : $attributes['replyer_nickname'],
+            get: fn($value, $attributes) => empty($attributes['creplyer_nickname']) ? $this->replyer->nickname : $attributes['replyer_nickname'],
+            set: fn($value) => [
+                'replyer_nickname' => $value,
+            ]
         );
     }
 }
