@@ -22,7 +22,7 @@ class Reply extends Model
      *
      * @var array
      */
-    protected $fillable = ['body', 'replyer', 'replied_at'];
+    protected $fillable = ['body', 'replyer', 'nickname', 'replied_at'];
 
     /**
      * 配列に表示する属性
@@ -122,7 +122,7 @@ class Reply extends Model
     protected function nickname(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => empty($attributes['creplyer_nickname']) ? $this->replyer->nickname : $attributes['replyer_nickname'],
+            get: fn($value, $attributes) => empty($attributes['replyer_nickname']) ? $this->replyer->nickname : $attributes['replyer_nickname'],
             set: fn($value) => [
                 'replyer_nickname' => $value,
             ]
