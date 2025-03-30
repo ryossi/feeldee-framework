@@ -42,20 +42,9 @@ class Reply extends Model
      * 変換する属性
      */
     protected $casts = [
-        'replied_at' => 'datetime'
+        'replied_at' => 'datetime',
+        'is_public' => 'boolean',
     ];
-
-    /**
-     * モデルの「起動」メソッド
-     */
-    protected static function booted(): void
-    {
-        static::creating(function (self $model) {
-            // 返信公開フラグ
-            // 作成時は、返信対象のコメント公開フラグと同じ
-            $model->is_public = $model->comment->isPublic();
-        });
-    }
 
     /**
      * 返信を作成します。
@@ -95,6 +84,8 @@ class Reply extends Model
 
     /**
      * 返信対象
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function comment()
     {
@@ -118,6 +109,8 @@ class Reply extends Model
 
     /**
      * 返信者ニックネーム
+     * 
+     * @return Attribute
      */
     protected function nickname(): Attribute
     {
@@ -127,5 +120,38 @@ class Reply extends Model
                 'replyer_nickname' => $value,
             ]
         );
+    }
+
+    /**
+     * 返信公開フラグ
+     * 
+     * @return bool
+     */
+    protected function getIsPublicAttribute(): bool
+    {
+        // 返信対象のコメント公開フラグとのAND条件
+        return $this->attributes['is_public'] && $this->comment->isPublic;
+    }
+
+    /**
+     * 返信を公開します。
+     * 
+     * @return void
+     */
+    public function doPublic(): void
+    {
+        $this->is_public = true;
+        $this->save();
+    }
+
+    /**
+     * 返信を非公開にします。
+     * 
+     * @return void
+     */
+    public function doPrivate(): void
+    {
+        $this->is_public = false;
+        $this->save();
     }
 }

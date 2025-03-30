@@ -419,11 +419,12 @@ class CommentTest extends TestCase
         $comment = Comment::create([
             'body' => 'これはテストコメントです。',
             'nickname' => 'テストユーザ',
+            'is_public' => true
         ], $item);
         $comment->refresh();
 
         // 評価
-        Assert::assertFalse($comment->isPublic(), 'デフォルトは、非公開であること');
+        Assert::assertFalse($comment->isPublic, 'デフォルトは、非公開であること');
     }
 
     /**
@@ -440,7 +441,7 @@ class CommentTest extends TestCase
         $comment->doPublic();
 
         // 評価
-        Assert::assertTrue($comment->isPublic(), '公開であること');
+        Assert::assertTrue($comment->isPublic, '公開であること');
     }
 
     /**
@@ -457,6 +458,6 @@ class CommentTest extends TestCase
         $comment->doPrivate();
 
         // 評価
-        Assert::assertFalse($comment->isPublic(), '非公開であること');
+        Assert::assertFalse($comment->isPublic, '非公開であること');
     }
 }

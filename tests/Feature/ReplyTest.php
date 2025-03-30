@@ -283,4 +283,130 @@ class ReplyTest extends TestCase
         // 評価
         Assert::assertEquals($nickname, $reply->nickname, '指定したニックネームであること');
     }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
+     */
+    public function test_返信公開フラグ_デフォルト()
+    {
+        // 返信対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)->has(Comment::factory(1)))->create();
+        $comment = $profile->posts->first()->comments->first();
+
+        // 返信者準備
+        Auth::shouldReceive('user')->andReturn(null);
+
+        // 実行
+        $reply = Reply::create([
+            'nickname' => 'テストユーザ',
+            'is_public' => true,
+        ], $comment);
+        $reply->refresh();
+
+        // 評価
+        Assert::assertFalse($reply->isPublic, '公開フラグがデフォルトであること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
+     */
+    public function test_返信公開フラグ_公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, ['is_public' => false]))))->create();
+        $reply = $profile->posts->first()->comments->first()->replies->first();
+
+        // 実行
+        $reply->doPublic();
+
+        // 評価
+        Assert::assertTrue($reply->isPublic, '公開であること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
+     */
+    public function test_返信公開フラグ_非公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, ['is_public' => true]))))->create();
+        $reply = $profile->posts->first()->comments->first()->replies->first();
+
+        // 実行
+        $reply->doPrivate();
+
+        // 評価
+        Assert::assertFalse($reply->isPublic, '非公開であること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
+     */
+    public function test_返信公開フラグ_取得時の返信公開フラグ_公開・公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, ['is_public' => true]))))->create();
+        $reply = $profile->posts->first()->comments->first()->replies->first();
+
+        // 評価
+        Assert::assertTrue($reply->isPublic, '公開であること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
+     */
+    public function test_返信公開フラグ_取得時の返信公開フラグ_公開・非公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, ['is_public' => false]))))->create();
+        $reply = $profile->posts->first()->comments->first()->replies->first();
+
+        // 評価
+        Assert::assertFalse($reply->isPublic, '非公開であること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
+     */
+    public function test_返信公開フラグ_取得時の返信公開フラグ_非公開・公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => false])
+                ->has(Reply::factory(1, ['is_public' => true]))))->create();
+        $reply = $profile->posts->first()->comments->first()->replies->first();
+
+        // 評価
+        Assert::assertFalse($reply->isPublic, '非公開であること');
+    }
+
+    /**
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
+     */
+    public function test_返信公開フラグ_取得時の返信公開フラグ_非公開・非公開()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => false])
+                ->has(Reply::factory(1, ['is_public' => false]))))->create();
+        $reply = $profile->posts->first()->comments->first()->replies->first();
+
+        // 評価
+        Assert::assertFalse($reply->isPublic, '非公開であること');
+    }
 }

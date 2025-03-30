@@ -43,7 +43,8 @@ class Comment extends Model
      * 変換する属性
      */
     protected $casts = [
-        'commented_at' => 'datetime'
+        'commented_at' => 'datetime',
+        'is_public' => 'boolean',
     ];
 
     /**
@@ -110,6 +111,8 @@ class Comment extends Model
 
     /**
      * コメント対象
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
     public function commentable()
     {
@@ -141,6 +144,8 @@ class Comment extends Model
 
     /**
      * コメント者ニックネーム
+     * 
+     * @return Attribute
      */
     protected function nickname(): Attribute
     {
@@ -154,6 +159,8 @@ class Comment extends Model
 
     /**
      * 返信リスト
+     * 
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function replies()
     {
@@ -168,13 +175,13 @@ class Comment extends Model
     }
 
     /**
-     * コメントが公開中かどうかを判定します。
-     * 
-     * @return bool 公開中の場合true
+     * コメント公開フラグ
+     *
+     * @return bool
      */
-    public function isPublic(): bool
+    protected function getIsPublicAttribute(): bool
     {
-        return $this->is_public;
+        return $this->attributes['is_public'];
     }
 
     /**
