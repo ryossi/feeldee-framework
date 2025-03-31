@@ -14,6 +14,7 @@ use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 use Log;
 use PHPHtmlParser\Dom;
 
@@ -77,6 +78,14 @@ class Post extends Content
         if ($user === null) {
             throw new LoginRequiredException();
         }
+
+        // バリデーション
+        Validator::validate($attributes, [
+            // 登校日は、必須
+            'post_date' => 'required|date',
+            // タイトルは、必須
+            'title' => 'required|string',
+        ]);
 
         // プロフィール取得
         $profile = $user->getProfile();
