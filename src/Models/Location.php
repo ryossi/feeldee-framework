@@ -14,6 +14,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Location extends Content
 {
+    /**
+     * コンテンツ種別
+     */
+    const TYPE = 'location';
+
     protected $fillable = ['profile', 'title', 'latitude', 'longitude', 'zoom', 'public_level', 'thumbnail'];
 
     protected $visible = ['id', 'title', 'latitude', 'longitude', 'zoom', 'is_public', 'thumbnail'];

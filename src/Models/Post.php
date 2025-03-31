@@ -20,7 +20,10 @@ use PHPHtmlParser\Dom;
 #[ObservedBy([PostPhotoSyncObserver::class, ContentRecordObserver::class, ContentTagObserver::class])]
 class Post extends Content
 {
-    use HasFactory, SetUser;
+    /**
+     * コンテンツ種別
+     */
+    const TYPE = 'post';
 
     /**
      * 配列に表示する属性
