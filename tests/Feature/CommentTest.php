@@ -24,9 +24,13 @@ class CommentTest extends TestCase
     use RefreshDatabase;
 
     /**
+     * コメント所有者
+     * 
+     * - コメントされたコンテンツ（以降、コメント対象）に紐付くプロフィールが設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント所有者
      */
-    public function test_コメント所有者()
+    public function test_profile()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -48,9 +52,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント日時
+     * 
+     * - 任意の日時を指定することもできることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時
      */
-    public function test_コメント日時_任意の日時を指定()
+    public function test_commented_at_specify()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -74,9 +82,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント日時
+     * 
+     * - コメント日時が指定されなかった場合はシステム日時が自動で設定されれることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時
      */
-    public function test_コメント日時_指定されなかった場合()
+    public function test_commented_at_default()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -98,9 +110,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント本文
+     * 
+     * - テキストが使用できることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント本文
      */
-    public function test_コメント本文_テキスト()
+    public function test_body_text()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -123,9 +139,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント本文
+     * 
+     * - HTMLが使用できることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント本文
      */
-    public function test_コメント本文_HTML()
+    public function test_body_html()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -148,9 +168,15 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント対象
+     * 
+     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
+     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
-    public function test_コメント対象_投稿()
+    public function test_commentable_posts()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -170,12 +196,21 @@ class CommentTest extends TestCase
         // 評価
         Assert::assertEquals($post->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Post::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Post::TYPE,
+        ]);
     }
 
     /**
+     * コメント対象
+     * 
+     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
+     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
-    public function test_コメント対象_写真()
+    public function test_commentable_photos()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -195,12 +230,21 @@ class CommentTest extends TestCase
         // 評価
         Assert::assertEquals($photo->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Photo::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Photo::TYPE,
+        ]);
     }
 
     /**
+     * コメント対象
+     * 
+     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
+     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
-    public function test_コメント対象_場所()
+    public function test_commentable_locations()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -220,12 +264,21 @@ class CommentTest extends TestCase
         // 評価
         Assert::assertEquals($location->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Location::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Location::TYPE,
+        ]);
     }
 
     /**
+     * コメント対象
+     * 
+     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
+     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
-    public function test_コメント対象_アイテム()
+    public function test_commentable_items()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->twice()->andReturn(1);
@@ -245,12 +298,19 @@ class CommentTest extends TestCase
         // 評価
         Assert::assertEquals($item->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Item::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Item::TYPE,
+        ]);
     }
 
     /**
+     * コメント者
+     * 
+     * - コメント者がログインユーザの場合は、コメント者プロフィールIDには、コメント者のプロフィールIDが設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
-    public function test_コメント者_ログインユーザ()
+    public function test_commenter_logged_in_user()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -271,12 +331,19 @@ class CommentTest extends TestCase
 
         // 評価
         Assert::assertEquals($commenter->id, $comment->commenter->id, 'コメント者のプロフィールのIDがコメント者プロフィールIDに設定されること');
+        $this->assertDatabaseHas('comments', [
+            'commenter_profile_id' => $commenter->id,
+        ]);
     }
 
     /**
+     * コメント者
+     * 
+     * - コメント者が匿名ユーザの場合は、コメント者プロフィールIDは設定されないことを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
-    public function test_コメント者_匿名ユーザ()
+    public function test_commenter_anonymous()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -298,9 +365,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント者ニックネーム
+     * 
+     * - ログインユーザ、かつコメント者ニックネームが指定されなかった場合は、コメント者のプロフィールのニックネームであることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者ニックネーム_ログインユーザかつニックネーム指定なし()
+    public function test_nickname_logged_in_user_default()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -324,12 +395,19 @@ class CommentTest extends TestCase
 
         // 評価
         Assert::assertEquals($commenter->nickname, $comment->nickname, 'コメント者のプロフィールのニックネームであること');
+        $this->assertDatabaseHas('comments', [
+            'commenter_nickname' => null,
+        ]);
     }
 
     /**
+     * コメント者ニックネーム
+     * 
+     * - ログインユーザ、かつコメント者ニックネームが指定された場合は、指定したニックネームが設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者ニックネーム_ログインユーザかつニックネーム指定あり()
+    public function test_nickname_logged_in_user_specify()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -355,9 +433,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント者ニックネーム
+     * 
+     * - 匿名ユーザは、ニックネームが必須であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者ニックネーム_匿名ユーザかつニックネーム指定なし()
+    public function test_nickname_anonymous_required()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -377,9 +459,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント者ニックネーム
+     * 
+     * - 匿名ユーザ、かつニックネームが指定された場合は、指定したニックネームが設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_コメント者ニックネーム_匿名ユーザかつニックネーム指定あり()
+    public function test_nickname_anonymous_specify()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -402,9 +488,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント公開フラグ
+     * 
+     * - コメント公開フラグが指定されなかった場合は、非公開であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
-    public function test_コメント公開フラグ_デフォルト()
+    public function test_is_public_default()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -428,9 +518,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント公開フラグ
+     * 
+     * - doPublic()メソッドを実行すると、コメントが公開されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
-    public function test_コメント公開フラグ_公開()
+    public function test_is_public_doPublic()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -445,9 +539,13 @@ class CommentTest extends TestCase
     }
 
     /**
+     * コメント公開フラグ
+     * 
+     * - doPrivate()メソッドを実行すると、コメントが非公開になることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
-    public function test_コメント公開フラグ_非公開()
+    public function test_is_public_doPrivate()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);

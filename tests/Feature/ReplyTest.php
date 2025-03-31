@@ -22,9 +22,13 @@ class ReplyTest extends TestCase
     use RefreshDatabase;
 
     /**
+     * 返信対象
+     * 
+     * - 返信対象のは、返信したコメントであることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信対象
      */
-    public function test_返信対象()
+    public function test_comment()
     {
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -44,9 +48,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信日時
+     * 
+     * - 返信日時は、任意の日時を指定できることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時
      */
-    public function test_返信日時_任意の日時を指定()
+    public function test_replied_at_specify()
     {
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -68,9 +76,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信日時
+     * 
+     * - 返信日時は、指定しなかった場合は、現在日時が設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時
      */
-    public function test_返信日時_指定されなかった場合()
+    public function test_replied_at_default()
     {
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -90,9 +102,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信本文
+     * 
+     * - テキストが使用できることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信本文
      */
-    public function test_返信本文_テキスト()
+    public function test_body_text()
     {
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -114,9 +130,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信本文
+     * 
+     * - HTMLが使用できることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信本文
      */
-    public function test_返信本文_HTML()
+    public function test_body_html()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -169,9 +189,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信者
+     * 
+     * - 返信者が匿名ユーザの場合は、返信者のプロフィールのIDは設定されないことを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者
      */
-    public function test_返信者_匿名ユーザ()
+    public function test_replyer_anonymous()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -188,12 +212,19 @@ class ReplyTest extends TestCase
 
         // 評価
         Assert::assertNull($reply->replyer, '返信者プロフィールIDは設定されないこと');
+        $this->assertDatabaseHas('replies', [
+            'replyer_profile_id' => null,
+        ]);
     }
 
     /**
+     * 返信者ニックネーム
+     * 
+     * ログインユーザ、かつ返信者ニックネームが指定されなかった場合は、返信者のプロフィールのニックネームであることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者ニックネーム
      */
-    public function test_返信者ニックネーム_ログインユーザかつニックネーム指定なし()
+    public function test_nickname_logged_in_user_default()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -216,12 +247,19 @@ class ReplyTest extends TestCase
 
         // 評価
         Assert::assertEquals($replyer->nickname, $reply->nickname, 'ログインユーザのニックネームであること');
+        $this->assertDatabaseHas('replies', [
+            'replyer_nickname' => null,
+        ]);
     }
 
     /**
+     * 返信者ニックネーム
+     * 
+     * ログインユーザ、かつ返信者ニックネームが指定された場合は、指定したニックネームであることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者ニックネーム
      */
-    public function test_返信者ニックネーム_ログインユーザかつニックネーム指定あり()
+    public function test_nickname_logged_in_user_specify()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -250,9 +288,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信者ニックネーム
+     * 
+     * - 匿名ユーザは、ニックネームが必須であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者ニックネーム
      */
-    public function test_返信者ニックネーム_匿名ユーザかつニックネーム指定なし()
+    public function test_nickname_anonymous_required()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -269,9 +311,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信者ニックネーム
+     * 
+     * - 匿名ユーザ、かつニックネーム指定ありの場合は、指定したニックネームであることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者ニックネーム
      */
-    public function test_返信者ニックネーム_匿名ユーザかつニックネーム指定あり()
+    public function test_nickname_anonymous_specify()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -292,9 +338,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信公開フラグ
+     * 
+     * - デフォルトで非公開であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
-    public function test_返信公開フラグ_デフォルト()
+    public function test_is_public_default()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -316,9 +366,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信公開フラグ
+     * 
+     * - doPublic()メソッドを実行すると、返信が公開されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
-    public function test_返信公開フラグ_公開()
+    public function test_is_public_doPublic()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -335,9 +389,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信公開フラグ
+     * 
+     * - doPrivate()メソッドを実行すると、返信が非公開になることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
-    public function test_返信公開フラグ_非公開()
+    public function test_is_public_doPrivate()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -354,9 +412,14 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信公開フラグ
+     * 
+     * - 取得時の返信公開フラグは、常に返信対象のコメント公開フラグとのAND条件となることを確認します。
+     * - 返信対象のコメント公開フラグが公開、返信公開フラグが公開の場合は、取得時の返信公開フラグは公開であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
-    public function test_返信公開フラグ_取得時の返信公開フラグ_公開・公開()
+    public function test_is_publilc_true_and_true()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -370,9 +433,14 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信公開フラグ
+     * 
+     * - 取得時の返信公開フラグは、常に返信対象のコメント公開フラグとのAND条件となることを確認します。
+     * - 返信対象のコメント公開フラグが公開、返信公開フラグが非公開の場合は、取得時の返信公開フラグは非公開であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
-    public function test_返信公開フラグ_取得時の返信公開フラグ_公開・非公開()
+    public function test_is_publilc_true_and_false()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -386,9 +454,14 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信公開フラグ
+     * 
+     * - 取得時の返信公開フラグは、常に返信対象のコメント公開フラグとのAND条件となることを確認します。
+     * - 返信対象のコメント公開フラグが非公開、返信公開フラグが公開の場合は、取得時の返信公開フラグは非公開であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
-    public function test_返信公開フラグ_取得時の返信公開フラグ_非公開・公開()
+    public function test_is_publilc_false_and_true()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -402,9 +475,14 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信公開フラグ
+     * 
+     * - 取得時の返信公開フラグは、常に返信対象のコメント公開フラグとのAND条件となることを確認します。
+     * - 返信対象のコメント公開フラグが非公開、返信公開フラグが非公開の場合は、取得時の返信公開フラグは非公開であることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
-    public function test_返信公開フラグ_取得時の返信公開フラグ_非公開・非公開()
+    public function test_is_publilc_false_and_false()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
