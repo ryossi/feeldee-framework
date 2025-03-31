@@ -10,6 +10,10 @@ use Intervention\Image\Facades\Image;
  */
 class Item extends Content
 {
+    /**
+     * コンテンツ種別
+     */
+    const TYPE = 'item';
 
     /**
      * 配列に表示する属性

@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\DB;
  */
 class Photo extends Content
 {
-    use HasFactory, SetUser;
+    /**
+     * コンテンツ種別
+     */
+    const TYPE = 'photo';
 
     /**
      * 配列に表示する属性

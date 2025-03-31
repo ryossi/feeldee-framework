@@ -102,7 +102,7 @@ class Reply extends Model
         return Attribute::make(
             get: fn($value, $attributes) => $attributes['replyer_profile_id'] ? $this->belongsTo(Profile::class, 'replyer_profile_id')->get()->first() : null,
             set: fn($value) => [
-                'replyer_profile_id' => $value
+                'replyer_profile_id' => $value?->id,
             ]
         );
     }
