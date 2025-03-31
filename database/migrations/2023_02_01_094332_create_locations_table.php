@@ -19,7 +19,7 @@ return new class extends Migration
             $precision_longitude = config('feeldee.location.precision.longitude', 7);
 
             $table->id();
-            $table->foreignId('profile_id')->comment('プロフィールID')->constrained('profiles')->cascadeOnDelete();
+            $table->foreignId('profile_id')->comment('コンテンツ所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
             $table->string('title')->comment('タイトル');
             $table->mediumText('value')->nullable()->comment('内容');
             $table->mediumText('text')->nullable()->comment('テキスト');

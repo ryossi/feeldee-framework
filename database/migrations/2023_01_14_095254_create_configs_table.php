@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::create('configs', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Profile::class)->comment('プロフィール')->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Profile::class)->comment('プロフィールID')->constrained()->cascadeOnDelete();
             $table->string('type')->comment('型');
             $table->json('value')->comment('値');
             $table->bigInteger('created_by')->comment('登録者');

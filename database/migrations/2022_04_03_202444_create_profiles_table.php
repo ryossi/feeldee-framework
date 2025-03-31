@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('profiles', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger("user_id")->comment('ユーザ');
+            $table->bigInteger("user_id")->comment('ユーザID');
             $table->string('nickname')->comment('ニックネーム')->unique();
             $table->mediumText('image')->nullable()->comment('イメージ');
             $table->string('title')->comment('タイトル');
