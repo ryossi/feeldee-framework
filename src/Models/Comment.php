@@ -104,7 +104,7 @@ class Comment extends Model
         return Attribute::make(
             get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
             set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
+                'profile_id' => $value?->id
             ]
         );
     }
@@ -137,7 +137,7 @@ class Comment extends Model
         return Attribute::make(
             get: fn($value, $attributes) => $attributes['commenter_profile_id'] ? $this->belongsTo(Profile::class, 'commenter_profile_id')->get()->first() : null,
             set: fn($value) => [
-                'commenter_profile_id' => $value
+                'commenter_profile_id' => $value?->id,
             ]
         );
     }
