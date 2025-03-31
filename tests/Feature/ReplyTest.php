@@ -138,9 +138,13 @@ class ReplyTest extends TestCase
     }
 
     /**
+     * 返信者
+     * 
+     * - 返信者がログインユーザの場合は、返信者のプロフィールのIDが返信者プロフィールIDに設定されることを確認します。
+     * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者
      */
-    public function test_返信者_ログインユーザ()
+    public function test_replyer_logged_in_user()
     {
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -158,7 +162,10 @@ class ReplyTest extends TestCase
         $reply = Reply::create([], $comment);
 
         // 評価
-        Assert::assertEquals($replyer, $reply->replyer, 'ログインユーザであること');
+        Assert::assertEquals($replyer, $reply->replyer, '返信者のプロフィールのIDが返信者プロフィールIDに設定されること');
+        $this->assertDatabaseHas('replies', [
+            'replyer_profile_id' => $replyer->id,
+        ]);
     }
 
     /**
