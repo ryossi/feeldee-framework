@@ -5,12 +5,16 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Carbon\Carbon;
+use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Exceptions\LoginRequiredException;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Support\Facades\Auth;
+use Log;
 use PHPHtmlParser\Dom;
 
 /**
@@ -59,7 +63,27 @@ class Post extends Content
      */
     protected $order_column = 'post_date';
 
+    /**
+     * 投稿を作成します。
+     * 
+     * @param array $attributes 投稿の属性
+     * @return Post 投稿
+     * @throws LoginRequiredException ログインユーザでない場合
+     */
+    public static function create($attributes = []): self
+    {
+        // ログインユーザ取得
+        $user = Auth::user();
+        if ($user === null) {
+            throw new LoginRequiredException();
+        }
 
+        // プロフィール取得
+        $profile = $user->getProfile();
+
+        // 投稿作成
+        return $profile->posts()->create($attributes);
+    }
 
 
 

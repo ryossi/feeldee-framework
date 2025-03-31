@@ -4,9 +4,11 @@ namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
+use Feeldee\Framework\Exceptions\LoginRequiredException;
 use Feeldee\Framework\Facades\ImageText;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * 場所をあらわすモデル
@@ -68,6 +70,41 @@ class Location extends Content
             }
         });
     }
+
+    /**
+     * 場所を作成します。
+     * 
+     * @param array $attributes 場所の属性
+     * @return Location 場所
+     * @throws LoginRequiredException ログインユーザでない場合
+     */
+    public static function create($attributes = []): self
+    {
+        // ログインユーザ取得
+        $user = Auth::user();
+        if ($user === null) {
+            throw new LoginRequiredException();
+        }
+
+        // プロフィール取得
+        $profile = $user->getProfile();
+
+        // 投稿作成
+        return $profile->locations()->create($attributes);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * 場所の中央の位置情報（緯度,経度のカンマ区切り文字列）

@@ -19,21 +19,11 @@ abstract class Content extends Model
     use HasFactory, SetUser, AccessCounter;
 
     /**
-     * コンテンツの種類に応じたタイプ
+     * コンテンツ種別
+     * 
+     * @return string コンテンツ種別
      */
     abstract public static function type();
-
-    /**
-     * 省略テキストを取得します。
-     * 
-     * @param int $width 文字数
-     * @param string $trim_marker 省略文字 
-     * @param ?string $encoding エンコード
-     */
-    public function textTruncate(int $width, string $trim_marker, ?string $encoding)
-    {
-        return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
-    }
 
     /**
      * コンテンツを所有するプロフィール
@@ -48,6 +38,18 @@ abstract class Content extends Model
                 'profile_id' => $value == null ? null : $value->id
             ]
         );
+    }
+
+    /**
+     * 省略テキストを取得します。
+     * 
+     * @param int $width 文字数
+     * @param string $trim_marker 省略文字 
+     * @param ?string $encoding エンコード
+     */
+    public function textTruncate(int $width, string $trim_marker, ?string $encoding)
+    {
+        return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
     }
 
     /**

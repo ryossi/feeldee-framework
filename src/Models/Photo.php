@@ -3,8 +3,9 @@
 namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Casts\URL;
+use Feeldee\Framework\Exceptions\LoginRequiredException;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -68,6 +69,43 @@ class Photo extends Content
             $photo->prepare();
         });
     }
+
+    /**
+     * 写真を作成します。
+     * 
+     * @param array $attributes 写真の属性
+     * @return Photo 写真
+     * @throws LoginRequiredException ログインユーザでない場合
+     */
+    public static function create($attributes = []): self
+    {
+        // ログインユーザ取得
+        $user = Auth::user();
+        if ($user === null) {
+            throw new LoginRequiredException();
+        }
+
+        // プロフィール取得
+        $profile = $user->getProfile();
+
+        // 投稿作成
+        return $profile->photos()->create($attributes);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * 写真を準備します。
