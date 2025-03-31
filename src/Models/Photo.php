@@ -15,8 +15,13 @@ class Photo extends Content
 {
     /**
      * コンテンツ種別
+     * 
+     * @return string
      */
-    const TYPE = 'photo';
+    public static function type()
+    {
+        return 'photo';
+    }
 
     /**
      * 配列に表示する属性
@@ -106,14 +111,6 @@ class Photo extends Content
             get: fn($value) => empty($value) ? null : PhotoType::from($value),
             set: fn($value) => $value->value,
         );
-    }
-
-    /**
-     * 写真のタイプ文字列
-     */
-    public static function type()
-    {
-        return 'photo';
     }
 
     /**

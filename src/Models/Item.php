@@ -12,8 +12,13 @@ class Item extends Content
 {
     /**
      * コンテンツ種別
+     * 
+     * @return string
      */
-    const TYPE = 'item';
+    public static function type()
+    {
+        return 'item';
+    }
 
     /**
      * 配列に表示する属性
@@ -74,14 +79,6 @@ class Item extends Content
         } else {
             $this->order_number = $last->order_number + 1;
         }
-    }
-
-    /**
-     * アイテムのタイプ文字列
-     */
-    public static function type()
-    {
-        return 'item';
     }
 
     /**

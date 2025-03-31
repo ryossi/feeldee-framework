@@ -10,7 +10,6 @@ use Feeldee\Framework\Observers\ContentTagObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use PHPHtmlParser\Dom;
 
@@ -22,8 +21,13 @@ class Post extends Content
 {
     /**
      * コンテンツ種別
+     * 
+     * @return string
      */
-    const TYPE = 'post';
+    public static function type()
+    {
+        return 'post';
+    }
 
     /**
      * 配列に表示する属性
@@ -55,13 +59,29 @@ class Post extends Content
      */
     protected $order_column = 'post_date';
 
-    /**
-     * 投稿のタイプ文字列
-     */
-    public static function type()
-    {
-        return 'post';
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     /**
      * この投稿に添付されている写真リスト

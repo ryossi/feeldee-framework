@@ -16,8 +16,13 @@ class Location extends Content
 {
     /**
      * コンテンツ種別
+     * 
+     * @return string
      */
-    const TYPE = 'location';
+    public static function type()
+    {
+        return 'location';
+    }
 
     protected $fillable = ['profile', 'title', 'latitude', 'longitude', 'zoom', 'public_level', 'thumbnail'];
 
@@ -62,14 +67,6 @@ class Location extends Content
                 $media->delete();
             }
         });
-    }
-
-    /**
-     * 場所のタイプ文字列
-     */
-    public static function type()
-    {
-        return 'location';
     }
 
     /**

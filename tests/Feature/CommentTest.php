@@ -197,7 +197,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($post->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Post::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Post::TYPE,
+            'commentable_type' => Post::type(),
         ]);
     }
 
@@ -231,7 +231,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($photo->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Photo::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Photo::TYPE,
+            'commentable_type' => Photo::type()
         ]);
     }
 
@@ -265,7 +265,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($location->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Location::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Location::TYPE,
+            'commentable_type' => Location::type(),
         ]);
     }
 
@@ -299,7 +299,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($item->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Item::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Item::TYPE,
+            'commentable_type' => Item::type(),
         ]);
     }
 
