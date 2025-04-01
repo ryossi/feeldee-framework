@@ -4,8 +4,7 @@ namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
-use Carbon\Carbon;
-use Feeldee\Framework\Exceptions\ApplicationException;
+use Carbon\CarbonImmutable;
 use Feeldee\Framework\Exceptions\LoginRequiredException;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
@@ -15,7 +14,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-use Log;
 use PHPHtmlParser\Dom;
 
 /**
@@ -55,14 +53,25 @@ class Post extends Content
      */
     protected $casts = [
         'post_date' => 'date',
-        'thumbnail' => URL::class,
         'value' => Html::class,
+        'thumbnail' => URL::class,
     ];
 
     /**
      * コンテンツをソートするカラム名
      */
     protected $order_column = 'post_date';
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Self $model) {
+            // テキストは、自動補完
+            $model->text = strip_tags($model->value);
+        });
+    }
 
     /**
      * 投稿を作成します。
@@ -168,7 +177,7 @@ class Post extends Content
     {
         $ago = function ($value, $attributes) {
             $post_date = strtotime($attributes['post_date']);
-            $today = strtotime(Carbon::now());
+            $today = strtotime(CarbonImmutable::now());
             $seconds = $today - $post_date;
             $hours = floor($seconds / 60 / 60);
             if ($hours < config('feeldee.post.ago.boundary.hour')) {

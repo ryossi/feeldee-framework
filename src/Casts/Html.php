@@ -52,11 +52,9 @@ class Html implements CastsAttributes
                 $image->setAttribute('src', MediaBox::path($image->src));
             }
             $value = $dom->outerHtml;
-            $text = $value ? strip_tags($value) : null;
         }
         return [
             'value' => $value,
-            'text' => $text,
         ];
     }
 }

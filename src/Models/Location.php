@@ -45,6 +45,11 @@ class Location extends Content
      */
     protected static function booted(): void
     {
+        static::saving(function (Self $model) {
+            // テキストは、自動補完
+            $model->text = strip_tags($model->value);
+        });
+
         static::created(function (Location $location) {
             // サムネイルイメージアップロード
             if (ImageText::isImageText($location->thumbnail)) {

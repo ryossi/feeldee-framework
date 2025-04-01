@@ -193,4 +193,134 @@ class PostTest extends TestCase
             ]);
         }, \Illuminate\Validation\ValidationException::class);
     }
+
+    /**
+     * 内容
+     * 
+     * - 投稿記事の本文であることを確認します。
+     * - HTMLが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#内容
+     */
+    public function test_value_html()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $user = $this->mock(HssProfile::class);
+        $user->shouldReceive('getProfile')->andReturn($profile);
+        Auth::shouldReceive('user')->andReturn($user);
+        $value = '<p>投稿記事の本文</p>';
+
+        // 実行
+        $post = Post::create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $post->value, '投稿記事の本文であること');
+        // HTMLが使用できること
+        $this->assertDatabaseHas('posts', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 内容
+     * 
+     * - 投稿記事の本文であることを確認します。
+     * - テキストが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#内容
+     */
+    public function test_value_text()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $user = $this->mock(HssProfile::class);
+        $user->shouldReceive('getProfile')->andReturn($profile);
+        Auth::shouldReceive('user')->andReturn($user);
+        $value = '投稿記事の本文';
+
+        // 実行
+        $post = Post::create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $post->value, '投稿記事の本文であること');
+        // テキストが使用できること
+        $this->assertDatabaseHas('posts', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * テキスト
+     * 
+     * - 投稿記事の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 記事の投稿時に、自動補完されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#テキスト
+     */
+    public function test_text_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $user = $this->mock(HssProfile::class);
+        $user->shouldReceive('getProfile')->andReturn($profile);
+        Auth::shouldReceive('user')->andReturn($user);
+        $value = '<p>投稿記事の本文</p>';
+        $expected = '投稿記事の本文';
+
+        // 実行
+        $post = Post::create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $post->text, '投稿記事の内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 記事の投稿時に、自動補完されること
+        $this->assertDatabaseHas('posts', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
+     * テキスト
+     * 
+     * - 投稿記事の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 記事の更新時に、自動補完されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#テキスト
+     */
+    public function test_text_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $post = $profile->posts->first();
+        $value = '<p>投稿記事の本文</p>';
+        $expected = '投稿記事の本文';
+
+        // 実行
+        $post->update([
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $post->text, '投稿記事の内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 記事の更新時に、自動補完されること
+        $this->assertDatabaseHas('posts', [
+            'text' => $expected,
+        ]);
+    }
 }
