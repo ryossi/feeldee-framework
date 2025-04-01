@@ -103,26 +103,7 @@ class Post extends Content
         return $profile->posts()->create($attributes);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // ========================== ここまで整理ずみ ==========================
 
 
     /**

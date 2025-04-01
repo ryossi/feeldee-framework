@@ -26,7 +26,7 @@ abstract class Content extends Model
     abstract public static function type();
 
     /**
-     * コンテンツを所有するプロフィール
+     * コンテンツ所有者
      *
      * @return Attribute
      */
@@ -41,19 +41,51 @@ abstract class Content extends Model
     }
 
     /**
-     * 省略テキストを取得します。
-     * 
-     * @param int $width 文字数
-     * @param string $trim_marker 省略文字 
-     * @param ?string $encoding エンコード
+     * コンテンツカテゴリ
      */
-    public function textTruncate(int $width, string $trim_marker, ?string $encoding)
+    public function category()
     {
-        return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
+        return $this->belongsTo(Category::class);
     }
 
     /**
-     * コンテンツの公開レベル
+     * コンテンツ公開フラグ
+     *
+     * @return bool
+     */
+    protected function getIsPublicAttribute(): bool
+    {
+        return $this->attributes['is_public'];
+    }
+
+    /**
+     * コンテンツを公開します。
+     * 
+     * @return void
+     */
+    public function doPublic(): void
+    {
+        $this->is_public = true;
+        $this->save();
+
+        $this->afterPublic();
+    }
+
+    /**
+     * コンテンツを非公開にします。
+     * 
+     * @return void
+     */
+    public function doPrivate(): void
+    {
+        $this->is_public = false;
+        $this->save();
+
+        $this->afterPrivate();
+    }
+
+    /**
+     * コンテンツ公開レベル
      *
      * @return Attribute
      */
@@ -78,6 +110,20 @@ abstract class Content extends Model
         );
     }
 
+    // ========================== ここまで整理ずみ ==========================
+
+    /**
+     * 省略テキストを取得します。
+     * 
+     * @param int $width 文字数
+     * @param string $trim_marker 省略文字 
+     * @param ?string $encoding エンコード
+     */
+    public function textTruncate(int $width, string $trim_marker, ?string $encoding)
+    {
+        return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
+    }
+
     /**
      * 公開レベルが変更された場合の処理を記述します。
      * 
@@ -86,46 +132,13 @@ abstract class Content extends Model
      */
     protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
 
-    /**
-     * コンテンツが公開中かどうかを判定します。
-     * 
-     * @return bool 公開中の場合true
-     */
-    public function isPublic(): bool
-    {
-        return $this->is_public;
-    }
 
-    /**
-     * コンテンツを公開します。
-     * 
-     * @return void
-     */
-    public function doPublic(): void
-    {
-        $this->is_public = true;
-        $this->save();
-
-        $this->afterPublic();
-    }
 
     /**
      * コンテンツ公開後の処理を記述します。
      */
     protected function afterPublic(): void {}
 
-    /**
-     * コンテンツを非公開にします。
-     * 
-     * @return void
-     */
-    public function doPrivate(): void
-    {
-        $this->is_public = false;
-        $this->save();
-
-        $this->afterPrivate();
-    }
 
     /**
      * コンテンツ非公開後の処理を記述します。
@@ -263,14 +276,6 @@ abstract class Content extends Model
         }
 
         return $this->tags()->get(['name']);
-    }
-
-    /**
-     * カテゴリー
-     */
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
     }
 
     /**

@@ -28,8 +28,8 @@ return new class extends Migration
             $table->integer('zoom')->comment('縮尺');
             $table->mediumText('thumbnail')->nullable()->comment('サムネイル');
             $table->foreignId('category_id')->nullable()->comment('カテゴリーID')->constrained('categories')->onDelete('set null');;
-            $table->boolean('is_public')->default(false)->comment('公開フラグ');
-            $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('公開レベル');
+            $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
+            $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();
