@@ -323,4 +323,36 @@ class PostTest extends TestCase
             'text' => $expected,
         ]);
     }
+
+    /**
+     * サムネイル
+     * 
+     * - 投稿記事のサムネイル画像であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#サムネイル
+     */
+    public function test_thumbnail()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $user = $this->mock(HssProfile::class);
+        $user->shouldReceive('getProfile')->andReturn($profile);
+        Auth::shouldReceive('user')->andReturn($user);
+        $thumbnail = '/path/to/thumbnail.jpg';
+
+        // 実行
+        $post = Post::create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'thumbnail' => $thumbnail,
+        ]);
+
+        // 検証
+        $this->assertEquals($thumbnail, $post->thumbnail, '投稿記事のサムネイル画像であること');
+        // サムネイル画像が保存されていること
+        $this->assertDatabaseHas('posts', [
+            'thumbnail' => $thumbnail,
+        ]);
+    }
 }
