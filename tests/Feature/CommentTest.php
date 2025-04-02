@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Reply;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -557,5 +558,27 @@ class CommentTest extends TestCase
 
         // 評価
         Assert::assertFalse($comment->isPublic, '非公開であること');
+    }
+
+    /**
+     * 返信リスト
+     * 
+     * - 返信リストが取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リスト
+     */
+    public function test_replies()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $count = 5;
+        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1)->has(Reply::factory($count))))->create();
+        $comment = $profile->items->first()->comments->first();
+
+        // 実行
+        $replies = $comment->replies;
+
+        // 評価
+        Assert::assertEquals($count, $replies->count(), '返信リストが取得できること');
     }
 }
