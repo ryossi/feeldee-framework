@@ -167,4 +167,131 @@ class CategoryTest extends TestCase
             'type' => Item::type(),
         ]);
     }
+
+    /**
+     * カテゴリ名
+     * 
+     * - カテゴリの名前であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名
+     */
+    public function test_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+        ], $profile);
+
+        // 評価
+        $this->assertEquals('テストカテゴリ', $category->name, 'カテゴリの名前であること');
+        $this->assertDatabaseHas('categories', [
+            'name' => 'テストカテゴリ',
+        ]);
+    }
+
+    /**
+     * カテゴリ名
+     * 
+     * - カテゴリ名は必須項目であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名
+     */
+    public function test_name_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            Category::create([
+                'type' => Post::type(),
+            ], $profile);
+        }, \Illuminate\Validation\ValidationException::class);
+    }
+
+    /**
+     * カテゴリ名
+     * 
+     * - カテゴリ所有プロフィールとカテゴリタイプの中でユニークであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名
+     */
+    public function test_name_unique()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Category::factory(1, ['name' => 'テストカテゴリ', 'type' => Post::type()]))->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            Category::create([
+                'name' => 'テストカテゴリ',
+                'type' => Post::type(),
+            ], $profile);
+        }, \Illuminate\Validation\ValidationException::class);
+    }
+
+    /**
+     * カテゴリ名
+     * 
+     * - カテゴリ所有プロフィールとカテゴリタイプの中でユニークであることを確認します。
+     * - カテゴリタイプが異なる場合は、登録できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名
+     */
+    public function test_name_unique_with_different_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Category::factory(1, ['name' => 'テストカテゴリ', 'type' => Post::type()]))->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Item::type(),
+        ], $profile);
+
+        // 評価
+        $this->assertEquals('テストカテゴリ', $category->name, 'カテゴリタイプが異なる場合は、登録できること');
+        $this->assertDatabaseHas('categories', [
+            'name' => 'テストカテゴリ',
+            'type' => Item::type(),
+        ]);
+    }
+
+    /**
+     * カテゴリ名
+     * 
+     * - カテゴリ所有プロフィールとカテゴリタイプの中でユニークであることを確認します。
+     * - カテゴリ所有プロフィールが異なる場合は、登録できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名
+     */
+    public function test_name_unique_with_different_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(Category::factory(1, ['name' => 'テストカテゴリ', 'type' => Post::type()]))->create();
+        $otherProfile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+        ], $otherProfile);
+
+        // 評価
+        $this->assertEquals('テストカテゴリ', $category->name, 'カテゴリ所有プロフィールが異なる場合は、登録できること');
+        $this->assertDatabaseHas('categories', [
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+            'profile_id' => $otherProfile->id,
+        ]);
+    }
 }

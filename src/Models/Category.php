@@ -13,6 +13,7 @@ use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -62,10 +63,19 @@ class Category extends Model
     {
         // バリデーション
         Validator::validate($attributes, [
-            // カテゴリ名
-            'name' => 'required|string|max:255',
             // カテゴリタイプ
             'type' => 'required|string|max:255',
+            // カテゴリ名
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('categories')->where(function ($query) use ($profile, $attributes) {
+                    // カテゴリ名重複チェック
+                    return $query->where('profile_id', $profile->id)
+                        ->where('type', $attributes['type'] ?? null);
+                }),
+            ],
         ]);
 
         // カテゴリ作成
