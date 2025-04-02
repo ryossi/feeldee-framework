@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -29,6 +30,13 @@ class Category extends Model
     protected $fillable = ['profile', 'type', 'name', 'parent'];
 
     /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
+    protected $visible = ['profile', 'id', 'type', 'name', 'parent'];
+
+    /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
@@ -42,6 +50,83 @@ class Category extends Model
             $category->newOrderNumber();
         });
     }
+
+    /**
+     * カテゴリを作成します。
+     * 
+     * @param array $attributes カテゴリの属性
+     * @param Profile $profile カテゴリ所有プロフィール
+     * @return self カテゴリ
+     */
+    public static function create(array $attributes = [], Profile $profile): self
+    {
+        // バリデーション
+        Validator::validate($attributes, [
+            // カテゴリ名
+            'name' => 'required|string|max:255',
+            // カテゴリタイプ
+            'type' => 'required|string|max:255',
+        ]);
+
+        // カテゴリ作成
+        return $profile->categories()->create($attributes);
+    }
+
+    // /**
+    //  * カテゴリーを追加します。
+    //  * 
+    //  * @param Profile $profile プロフィール
+    //  * @param string $type タイプ
+    //  * @param string $name カテゴリー名
+    //  * @param mixed $parent 親カテゴリー（カテゴリー|カテゴリー名）
+    //  * @return self 追加したカテゴリー
+    //  */
+    // public static function add(Profile $profile, string $type, string $name, mixed $parent = null): self
+    // {
+    //     // カテゴリー名重複チェック
+    //     if ($profile->categories()->ofType($type)->ofName($name)->exists()) {
+    //         // 同一カテゴリー名のカテゴリーが既に存在する場合
+    //         throw new ApplicationException('CategorySameNameExists', 71003, ['name' => $name]);
+    //     }
+
+    //     if (is_string($parent)) {
+    //         // カテゴリー名の場合
+
+    //         // 親カテゴリー存在チェック
+    //         $parent_name = $parent;
+    //         $parent = $profile->categories()->ofType($type)->ofName($parent_name)->first();
+    //         if ($parent == null) {
+    //             // 親カテゴリーが見つからない場合
+    //             throw new ApplicationException('CategoryParentNotFound', 71001, ['parent_name' => $parent_name]);
+    //         }
+    //     }
+
+    //     // 投稿カテゴリー新規作成
+    //     $category = Category::create([
+    //         'profile' => $profile,
+    //         'type' => $type,
+    //         'name' => $name,
+    //         'parent' => $parent
+    //     ]);
+    //     return $category;
+    // }
+
+    /**
+     * カテゴリ所有プロフィール
+     *
+     * @return Attribute
+     */
+    protected function profile(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
+            set: fn($value) => [
+                'profile_id' => $value?->id
+            ]
+        );
+    }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 同一階層の最後に表示順を新しく割り当てます。
@@ -58,21 +143,6 @@ class Category extends Model
             $last = $categories->last();
             $this->order_number = $last->order_number + 1;
         }
-    }
-
-    /**
-     * カテゴリーを所有するプロフィール
-     *
-     * @return Attribute
-     */
-    protected function profile(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
-            ]
-        );
     }
 
     /**
@@ -360,45 +430,6 @@ class Category extends Model
         }
         $this->name = $new_name;
         $this->save();
-    }
-
-    /**
-     * カテゴリーを追加します。
-     * 
-     * @param Profile $profile プロフィール
-     * @param string $type タイプ
-     * @param string $name カテゴリー名
-     * @param mixed $parent 親カテゴリー（カテゴリー|カテゴリー名）
-     * @return self 追加したカテゴリー
-     */
-    public static function add(Profile $profile, string $type, string $name, mixed $parent = null): self
-    {
-        // カテゴリー名重複チェック
-        if ($profile->categories()->ofType($type)->ofName($name)->exists()) {
-            // 同一カテゴリー名のカテゴリーが既に存在する場合
-            throw new ApplicationException('CategorySameNameExists', 71003, ['name' => $name]);
-        }
-
-        if (is_string($parent)) {
-            // カテゴリー名の場合
-
-            // 親カテゴリー存在チェック
-            $parent_name = $parent;
-            $parent = $profile->categories()->ofType($type)->ofName($parent_name)->first();
-            if ($parent == null) {
-                // 親カテゴリーが見つからない場合
-                throw new ApplicationException('CategoryParentNotFound', 71001, ['parent_name' => $parent_name]);
-            }
-        }
-
-        // 投稿カテゴリー新規作成
-        $category = Category::create([
-            'profile' => $profile,
-            'type' => $type,
-            'name' => $name,
-            'parent' => $parent
-        ]);
-        return $category;
     }
 
     /**

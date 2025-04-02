@@ -1,0 +1,170 @@
+<?php
+
+namespace Tests\Feature;
+
+use Auth;
+use Feeldee\Framework\Models\Category;
+use Feeldee\Framework\Models\Item;
+use Feeldee\Framework\Models\Location;
+use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Profile;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class CategoryTest extends TestCase
+{
+    use RefreshDatabase;
+
+    /**
+     * カテゴリ所有プロフィール
+     * 
+     * - カテゴリを作成したユーザのプロフィールであることを確認します。
+     * - プロフィールのIDが、カテゴリテーブルのカテゴリ所有プロフィールIDに設定されていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ所有プロフィール
+     */
+    public function test_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+        ], $profile);
+
+        // 評価
+        $this->assertEquals($profile->id, $category->profile->id, 'カテゴリを作成したユーザのプロフィールであること');
+        // プロフィールのIDが、カテゴリテーブルのカテゴリ所有プロフィールIDに設定されていること
+        $this->assertDatabaseHas('categories', [
+            'profile_id' => $profile->id,
+        ]);
+    }
+
+    /**
+     * カテゴリタイプ
+     * 
+     * - カテゴリタイプは必須項目であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプ
+     */
+    public function test_type_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            Category::create([
+                'name' => 'テストカテゴリ',
+            ], $profile);
+        }, \Illuminate\Validation\ValidationException::class);
+    }
+
+    /**
+     * カテゴリタイプ
+     * 
+     * - 投稿のカテゴリは、投稿のカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプ
+     */
+    public function test_type_post()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+        ], $profile);
+
+        // 評価
+        $this->assertEquals(Post::type(), $category->type, '投稿のカテゴリタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Post::type(),
+        ]);
+    }
+
+    /**
+     * カテゴリタイプ
+     * 
+     * - 写真のカテゴリは、写真のカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプ
+     */
+    public function test_type_photo()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+        ], $profile);
+
+        // 評価
+        $this->assertEquals(Post::type(), $category->type, '写真のカテゴリタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Post::type(),
+        ]);
+    }
+
+    /**
+     * カテゴリタイプ
+     * 
+     * - 場所のカテゴリは、場所のカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプ
+     */
+    public function test_type_location()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Location::type(),
+        ], $profile);
+
+        // 評価
+        $this->assertEquals(Location::type(), $category->type, '場所のカテゴリタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Location::type(),
+        ]);
+    }
+
+    /**
+     * カテゴリタイプ
+     * 
+     * - アイテムのカテゴリは、アイテムのカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプ
+     */
+    public function test_type_item()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'name' => 'テストカテゴリ',
+            'type' => Item::type(),
+        ], $profile);
+
+        // 評価
+        $this->assertEquals(Item::type(), $category->type, 'アイテムのカテゴリタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Item::type(),
+        ]);
+    }
+}
