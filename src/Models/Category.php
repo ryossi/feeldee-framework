@@ -38,88 +38,42 @@ class Category extends Model
     protected $visible = ['profile', 'id', 'type', 'name', 'parent'];
 
     /**
+     * 同一階層の最後に表示順を新しく割り当てます。
+     */
+    protected function newOrderNumber()
+    {
+        if (!$this->profile) {
+            // カテゴリ所有プロフィールが存在しない場合
+            return;
+        }
+
+        // 同一階層のカテゴリリスト取得
+        $categories = $this->profile->categories()->ofParent($this->parent)->get();
+
+        // 表示順生成
+        if ($categories->isEmpty()) {
+            $this->order_number = 1;
+        } else {
+            $last = $categories->last();
+            $this->order_number = $last->order_number + 1;
+        }
+    }
+
+    /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
     {
+        // カテゴリ表示順決定
         static::addGlobalScope('order_number', function ($builder) {
             $builder->orderBy('order_number');
         });
 
-        static::creating(function (self $category) {
-            // 表示順割り当て
-            $category->newOrderNumber();
+        static::creating(function (self $model) {
+            // カテゴリ表示順自動採番
+            $model->newOrderNumber();
         });
     }
-
-    /**
-     * カテゴリを作成します。
-     * 
-     * @param array $attributes カテゴリの属性
-     * @param Profile $profile カテゴリ所有プロフィール
-     * @return self カテゴリ
-     */
-    public static function create(array $attributes = [], Profile $profile): self
-    {
-        // バリデーション
-        Validator::validate($attributes, [
-            // カテゴリタイプ
-            'type' => 'required|string|max:255',
-            // カテゴリ名
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('categories')->where(function ($query) use ($profile, $attributes) {
-                    // カテゴリ名重複チェック
-                    return $query->where('profile_id', $profile->id)
-                        ->where('type', $attributes['type'] ?? null);
-                }),
-            ],
-        ]);
-
-        // カテゴリ作成
-        return $profile->categories()->create($attributes);
-    }
-
-    // /**
-    //  * カテゴリーを追加します。
-    //  * 
-    //  * @param Profile $profile プロフィール
-    //  * @param string $type タイプ
-    //  * @param string $name カテゴリー名
-    //  * @param mixed $parent 親カテゴリー（カテゴリー|カテゴリー名）
-    //  * @return self 追加したカテゴリー
-    //  */
-    // public static function add(Profile $profile, string $type, string $name, mixed $parent = null): self
-    // {
-    //     // カテゴリー名重複チェック
-    //     if ($profile->categories()->ofType($type)->ofName($name)->exists()) {
-    //         // 同一カテゴリー名のカテゴリーが既に存在する場合
-    //         throw new ApplicationException('CategorySameNameExists', 71003, ['name' => $name]);
-    //     }
-
-    //     if (is_string($parent)) {
-    //         // カテゴリー名の場合
-
-    //         // 親カテゴリー存在チェック
-    //         $parent_name = $parent;
-    //         $parent = $profile->categories()->ofType($type)->ofName($parent_name)->first();
-    //         if ($parent == null) {
-    //             // 親カテゴリーが見つからない場合
-    //             throw new ApplicationException('CategoryParentNotFound', 71001, ['parent_name' => $parent_name]);
-    //         }
-    //     }
-
-    //     // 投稿カテゴリー新規作成
-    //     $category = Category::create([
-    //         'profile' => $profile,
-    //         'type' => $type,
-    //         'name' => $name,
-    //         'parent' => $parent
-    //     ]);
-    //     return $category;
-    // }
 
     /**
      * カテゴリ所有プロフィール
@@ -136,37 +90,22 @@ class Category extends Model
         );
     }
 
-    // ========================== ここまで整理済み ==========================
-
     /**
-     * 同一階層の最後に表示順を新しく割り当てます。
-     */
-    protected function newOrderNumber()
-    {
-        // 同一階層のカテゴリリスト取得
-        $categories = $this->profile->categories()->ofParent($this->parent)->get();
-
-        // 表示順生成
-        if ($categories->isEmpty()) {
-            $this->order_number = 1;
-        } else {
-            $last = $categories->last();
-            $this->order_number = $last->order_number + 1;
-        }
-    }
-
-    /**
-     * このカテゴリーの親カテゴリー
+     * 親カテゴリ
+     * 
+     * @return Attribute
      */
     public function parent(): Attribute
     {
         return Attribute::make(
             get: fn($value) => $this->belongsTo(Category::class, 'parent_id')->get()->first(),
             set: fn($value) => [
-                'parent_id' => $value ? $value->id : null
+                'parent_id' => $value?->id
             ]
         );
     }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * このカテゴリーの子カテゴリーリスト

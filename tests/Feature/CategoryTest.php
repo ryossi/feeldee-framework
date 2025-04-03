@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Auth;
+use Exception;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
@@ -19,7 +20,7 @@ class CategoryTest extends TestCase
      * カテゴリ所有プロフィール
      * 
      * - カテゴリを作成したユーザのプロフィールであることを確認します。
-     * - プロフィールのIDが、カテゴリテーブルのカテゴリ所有プロフィールIDに設定されていることを確認します。
+     * - プロフィールのIDが、カテゴリ所有プロフィールIDに設定されていることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ所有プロフィール
      */
@@ -31,16 +32,38 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $profile,
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
-        ], $profile);
+        ]);
 
         // 評価
         $this->assertEquals($profile->id, $category->profile->id, 'カテゴリを作成したユーザのプロフィールであること');
-        // プロフィールのIDが、カテゴリテーブルのカテゴリ所有プロフィールIDに設定されていること
+        // プロフィールのIDが、カテゴリ所有プロフィールIDに設定されていること
         $this->assertDatabaseHas('categories', [
             'profile_id' => $profile->id,
         ]);
+    }
+
+    /** 
+     * カテゴリ所有プロフィール
+     * 
+     * - カテゴリ所有プロフィールは必須項目であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ所有プロフィール
+     */
+    public function test_profile_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+
+        // 実行
+        $this->assertThrows(function () {
+            Category::create([
+                'name' => 'テストカテゴリ',
+                'type' => Post::type(),
+            ]);
+        }, Exception::class);
     }
 
     /**
@@ -59,9 +82,10 @@ class CategoryTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($profile) {
             Category::create([
+                'profile' => $profile,
                 'name' => 'テストカテゴリ',
-            ], $profile);
-        }, \Illuminate\Validation\ValidationException::class);
+            ]);
+        }, Exception::class);
     }
 
     /**
@@ -79,9 +103,10 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $profile,
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
-        ], $profile);
+        ]);
 
         // 評価
         $this->assertEquals(Post::type(), $category->type, '投稿のカテゴリタイプであること');
@@ -105,9 +130,10 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $profile,
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
-        ], $profile);
+        ]);
 
         // 評価
         $this->assertEquals(Post::type(), $category->type, '写真のカテゴリタイプであること');
@@ -131,9 +157,10 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $profile,
             'name' => 'テストカテゴリ',
             'type' => Location::type(),
-        ], $profile);
+        ]);
 
         // 評価
         $this->assertEquals(Location::type(), $category->type, '場所のカテゴリタイプであること');
@@ -157,9 +184,10 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $profile,
             'name' => 'テストカテゴリ',
             'type' => Item::type(),
-        ], $profile);
+        ]);
 
         // 評価
         $this->assertEquals(Item::type(), $category->type, 'アイテムのカテゴリタイプであること');
@@ -183,9 +211,10 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $profile,
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
-        ], $profile);
+        ]);
 
         // 評価
         $this->assertEquals('テストカテゴリ', $category->name, 'カテゴリの名前であること');
@@ -210,9 +239,10 @@ class CategoryTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($profile) {
             Category::create([
+                'profile' => $profile,
                 'type' => Post::type(),
-            ], $profile);
-        }, \Illuminate\Validation\ValidationException::class);
+            ]);
+        }, Exception::class);
     }
 
     /**
@@ -231,10 +261,11 @@ class CategoryTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($profile) {
             Category::create([
+                'profile' => $profile,
                 'name' => 'テストカテゴリ',
                 'type' => Post::type(),
-            ], $profile);
-        }, \Illuminate\Validation\ValidationException::class);
+            ]);
+        }, Exception::class);
     }
 
     /**
@@ -253,9 +284,10 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $profile,
             'name' => 'テストカテゴリ',
             'type' => Item::type(),
-        ], $profile);
+        ]);
 
         // 評価
         $this->assertEquals('テストカテゴリ', $category->name, 'カテゴリタイプが異なる場合は、登録できること');
@@ -282,9 +314,10 @@ class CategoryTest extends TestCase
 
         // 実行
         $category = Category::create([
+            'profile' => $otherProfile,
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
-        ], $otherProfile);
+        ]);
 
         // 評価
         $this->assertEquals('テストカテゴリ', $category->name, 'カテゴリ所有プロフィールが異なる場合は、登録できること');
