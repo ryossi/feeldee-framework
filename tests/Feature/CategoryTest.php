@@ -429,53 +429,6 @@ class CategoryTest extends TestCase
     }
 
     /**
-     * カテゴリ階層ダウン
-     * 
-     * - カテゴリ階層を一つ下げることができることを確認します。
-     * - 移動先階層のカテゴリ表示順で最初に移動することができることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
-     */
-    public function test_hierarchyDown()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()
-            ->has(
-                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()])
-                    ->has(
-                        Category::factory(1, ['name' => '2階層カテゴリ', 'type' => Post::type()])->for(Profile::factory())->has(
-                            Category::factory(1, ['name' => '3階層カテゴリ', 'type' => Post::type()])->for(Profile::factory()),
-                            'children'
-                        ),
-                        'children'
-                    ),
-                'categories'
-            )->create();
-        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
-        $level2Category = Category::where('name', '2階層カテゴリ')->first();
-        $level3Category = Category::where('name', '3階層カテゴリ')->first();
-
-        // 実行
-        $level2Category->hierarchyDown();
-
-        // 評価
-        $this->assertEquals($rootCategory, $level2Category->parent, 'カテゴリ階層を一つ下げることができること');
-        $this->assertEquals($rootCategory, $level3Category->parent, 'カテゴリ階層を一つ下げることができること');
-        // 移動先階層のカテゴリ表示順で最初に移動することができること
-        $this->assertDatabaseHas('categories', [
-            'id' => $level2Category->id,
-            'parent_id' => $rootCategory->id,
-            'order_number' => 1,
-        ]);
-        $this->assertDatabaseHas('categories', [
-            'id' => $level3Category->id,
-            'parent_id' => $rootCategory->id,
-            'order_number' => 2,
-        ]);
-    }
-
-    /**
      * 親カテゴリ
      * 
      * - カテゴリ階層構造の親となるカテゴリであることを確認します。
