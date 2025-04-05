@@ -8,12 +8,11 @@ use Feeldee\Framework\Models\SqlLikeBuilder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -21,7 +20,7 @@ use Intervention\Image\Facades\Image;
  */
 class Category extends Model
 {
-    use HasFactory, SetUser;
+    use HasFactory, SetUser, WrappedId;
 
     /**
      * 複数代入可能な属性
@@ -36,6 +35,16 @@ class Category extends Model
      * @var array
      */
     protected $visible = ['profile', 'id', 'type', 'name', 'parent'];
+
+    /**
+     * IDをラップする属性
+     * 
+     * @var array
+     */
+    protected $wrappable = [
+        'profile' => 'profile_id',
+        'parent' => 'parent_id',
+    ];
 
     /**
      * 同一階層の最後に表示順を新しく割り当てます。
@@ -78,31 +87,176 @@ class Category extends Model
     /**
      * カテゴリ所有プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value?->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
 
     /**
      * 親カテゴリ
      * 
+     * @return BelongsTo
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    /**
+     * ルートカテゴリかどうか
+     *
+     * @return bool ルートカテゴリの場合true、そうでない場合false
+     */
+    protected function getIsRootAttribute(): bool
+    {
+        return empty($this->attributes['parent_id']);
+    }
+
+    /**
+     * カテゴリ階層レベル
+     * 
+     * ルート階層を1として階層が下がるごとにプラス1されます。
+     * 
      * @return Attribute
      */
-    public function parent(): Attribute
+    public function level(): Attribute
     {
+        $closure = function ($attributes) {
+            $e = $this;
+            $level = 0;
+            while ($e != null) {
+                $level++;
+                $e = $e->parent;
+            }
+            return $level;
+        };
+
         return Attribute::make(
-            get: fn($value) => $this->belongsTo(Category::class, 'parent_id')->get()->first(),
-            set: fn($value) => [
-                'parent_id' => $value?->id
-            ]
-        );
+            get: fn($value, $attributes) => $closure->call($this, $attributes),
+        )->shouldCache();
+    }
+
+    /**
+     * カテゴリ階層アップ
+     * 
+     * カテゴリ階層を一つ上げます。
+     * 
+     * 表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整されます。
+     * 
+     * カテゴリがルートカテゴリまたは移動することによりルートとなってしまう2階層目のカテゴリの場合は、何もしません（空振り）。
+     * 
+     * @return void
+     */
+    public function hierarchyUp(): void
+    {
+        if ($this->level <= 2) {
+            // カテゴリがルートカテゴリまたは移動することによりルートとなってしまう2階層目のカテゴリの場合
+            return;
+        }
+
+        // 階層を一つ上げる
+        $parent = $this->parent;
+        $this->order_number = $parent->order_number + 1;
+        $this->parent = $parent->parent;
+
+        // 表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整
+        $categories = $this->profile->categories()->ofParent($this->parent)->get();
+        $inc = false;
+        foreach ($categories as $category) {
+            if ($category->is($parent)) {
+                $inc = true;
+            } else if ($inc) {
+                $category->order_number++;
+                $category->save();
+            }
+        }
+
+        $this->save();
+    }
+
+    /**
+     * カテゴリ階層ダウン
+     * 
+     * カテゴリの階層を一つ下げます。
+     * 
+     * 新たな親カテゴリは、移動前の階層の表示順でつ上のカテゴリとなります。
+     * 
+     * 表示順は、移動後のカテゴリ階層の最後になります。
+     * 
+     * カテゴリが同階層の表示順で先頭の場合は、何もしません（空振り）。
+     *
+     * @return void
+     */
+    public function hierarchyDown(): void
+    {
+        $prev = $this->previous();
+        if ($prev == null) {
+            // カテゴリが同階層の表示順で先頭の場合
+            return;
+        }
+
+        // 階層をつ下げる
+        // 新たな親カテゴリは、移動前の階層の表示順で一つ上のカテゴリ
+        $this->parent = $prev;
+
+        // 表示中調整
+        $categories = $this->profile->categories()->ofParent($this->parent)->get();
+        if ($categories->isEmpty()) {
+            // 最初の子カテゴリの場合
+            $this->order_number = 1;
+        } else {
+            // 既に子カテゴリが存在する場合
+            // 表示順は、移動後のカテゴリ階層の最後
+            $this->order_number = $categories->last()->order_number + 1;
+        }
+
+        $this->save();
+    }
+
+    /**
+     * カテゴリ階層入替
+     * 
+     * ソース名とターゲット名を指定してカテゴリ階層を入れ替えます。
+     * 
+     * @param Profile $profile プロフィール
+     * @param string $type タイプ
+     * @param string $source_name ソースカテゴリ名
+     * @param string $target_name ターゲットカテゴリ名
+     * @return bool 入れ替えした場合true
+     */
+    public static function swap(Profile $profile, string $type, string $source_name, string $target_name): bool
+    {
+        $source = $profile->categories()->ofType($type)->ofName($source_name)->first();
+        if ($source === null) {
+            return false;
+        }
+
+        $target = $profile->categories()->ofType($type)->ofName($target_name)->first();
+        if ($target === null) {
+            return false;
+        }
+
+        if ($source->parent === $target->parent) {
+            // 同一階層のカテゴリどうしの場合
+
+            // 表示順のみ入れ替え
+            $order_number = $source->order_number;
+            $source->order_number = $target->order_number;
+            $target->order_number = $order_number;
+        } else {
+            // 異なる階層のカテゴリどうしの場合
+
+            // 階層を入れ替える（表示順は、それぞれを維持）
+            $parent = $source->parent;
+            $source->parent = $target->parent;
+            $target->parent = $parent;
+        }
+
+        $source->save();
+        $target->save();
+        return true;
     }
 
     // ========================== ここまで整理済み ==========================
@@ -141,26 +295,6 @@ class Category extends Model
 
         return Attribute::make(
             get: fn($value, $attributes) => $closure->call($this),
-        )->shouldCache();
-    }
-    /**
-     * カテゴリーの階層を取得します。
-     * ルート階層を1として階層が下がるごとにプラス1されま
-     */
-    public function level(): Attribute
-    {
-        $closure = function ($attributes) {
-            $e = $this;
-            $level = 0;
-            while ($e != null) {
-                $level++;
-                $e = $e->parent;
-            }
-            return $level;
-        };
-
-        return Attribute::make(
-            get: fn($value, $attributes) => $closure->call($this, $attributes),
         )->shouldCache();
     }
 
@@ -252,116 +386,6 @@ class Category extends Model
             $target->save();
             $this->save();
         }
-    }
-
-    /**
-     * カテゴリーの階層を一つ上げます。
-     * 表示順は、移動前に親カテゴリーだったカテゴリーの次に並ぶように調整されます。
-     * カテゴリーがルートカテゴリーまたは移動することによりルートとなってしまう2階層目のカテゴリーの場合は、何もしません（空振り）。
-     * 
-     * @return void
-     */
-    public function hierarchyUp(): void
-    {
-        if ($this->level <= 2) {
-            // カテゴリーがルートカテゴリーまたは移動することによりルートとなってしまう2階層目のカテゴリーの場合
-            return;
-        }
-
-        // 階層を一つ上げる
-        $parent = $this->parent;
-        $this->order_number = $parent->order_number + 1;
-        $this->parent = $parent->parent;
-
-        // 表示順は、移動前に親カテゴリーだったカテゴリーの次に並ぶように調整
-        $categories = $this->profile->categories()->ofParent($this->parent)->get();
-        $inc = false;
-        foreach ($categories as $category) {
-            if ($category->is($parent)) {
-                $inc = true;
-            } else if ($inc) {
-                $category->order_number++;
-                $category->save();
-            }
-        }
-
-        $this->save();
-    }
-
-    /**
-     * カテゴリーの階層を一つ下げます。
-     * 新たな親カテゴリーは、移動前の階層の表示順で一つ上のカテゴリーとなります。
-     * 表示順は、移動後のカテゴリー階層の最後になります。
-     * カテゴリーが同階層の表示順で先頭の場合は、何もしません（空振り）。
-     *
-     * @return void
-     */
-    public function hierarchyDown(): void
-    {
-        $prev = $this->previous();
-        if ($prev == null) {
-            // カテゴリーが同階層の表示順で先頭の場合
-            return;
-        }
-
-        // 階層を一つ下げる
-        // 新たな親カテゴリーは、移動前の階層の表示順で一つ上のカテゴリー
-        $this->parent = $prev;
-
-        // 表示中調整
-        $categories = $this->profile->categories()->ofParent($this->parent)->get();
-        if ($categories->isEmpty()) {
-            // 最初の子カテゴリーの場合
-            $this->order_number = 1;
-        } else {
-            // 既に子カテゴリーが存在する場合
-            // 表示順は、移動後のカテゴリー階層の最後
-            $this->order_number = $categories->last()->order_number + 1;
-        }
-
-        $this->save();
-    }
-
-    /**
-     * ソース名とターゲット名を指定してカテゴリを入れ替えます。
-     * 
-     * @param Profile $profile プロフィール
-     * @param string $type タイプ
-     * @param string $source_name ソースカテゴリ名
-     * @param string $target_name ターゲットカテゴリ名
-     * @return bool 入れ替えした場合true
-     */
-    public static function swap(Profile $profile, string $type, string $source_name, string $target_name): bool
-    {
-        $source = $profile->categories()->ofType($type)->ofName($source_name)->first();
-        if ($source === null) {
-            return false;
-        }
-
-        $target = $profile->categories()->ofType($type)->ofName($target_name)->first();
-        if ($target === null) {
-            return false;
-        }
-
-        if ($source->parent === $target->parent) {
-            // 同一階層のカテゴリどうしの場合
-
-            // 表示順のみ入れ替え
-            $order_number = $source->order_number;
-            $source->order_number = $target->order_number;
-            $target->order_number = $order_number;
-        } else {
-            // 異なる階層のカテゴリどうしの場合
-
-            // 階層を入れ替える（表示順は、それぞれを維持）
-            $parent = $source->parent;
-            $source->parent = $target->parent;
-            $target->parent = $parent;
-        }
-
-        $source->save();
-        $target->save();
-        return true;
     }
 
     /**

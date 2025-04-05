@@ -36,4 +36,13 @@ class CategoryFactory extends Factory
             ]),
         ];
     }
+
+    public function withChildren($count = 1, array $attributes = [])
+    {
+        return $this->afterCreating(function (Category $category) use ($count, $attributes) {
+            Category::factory()->count($count)->create(array_merge([
+                'parent_id' => $category->id,
+            ], $attributes));
+        });
+    }
 }

@@ -327,4 +327,215 @@ class CategoryTest extends TestCase
             'profile_id' => $otherProfile->id,
         ]);
     }
+
+    /**
+     * カテゴリ階層アップ
+     * 
+     * - カテゴリ階層を一つ上げることができることを確認します。
+     * - 移動先階層のカテゴリ表示順で最後に移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_hierarchyUp()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(1, ['name' => '2階層カテゴリ', 'type' => Post::type()])->for(Profile::factory())->has(
+                            Category::factory(1, ['name' => '3階層カテゴリ', 'type' => Post::type()])->for(Profile::factory()),
+                            'children'
+                        ),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
+        $level3Category = Category::where('name', '3階層カテゴリ')->first();
+
+        // 実行
+        $level3Category->hierarchyUp();
+
+        // 評価
+        $this->assertEquals($rootCategory, $level3Category->parent, 'カテゴリ階層を一つ上げることができること');
+        // 移動先階層のカテゴリ表示順で最後に移動することができること
+        $this->assertDatabaseHas('categories', [
+            'id' => $level3Category->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 2,
+        ]);
+    }
+
+    /**
+     * カテゴリ階層アップ
+     * 
+     * - ルートカテゴリはカテゴリ階層を上げることができないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_hierarchyUp_root()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()]),
+                'categories'
+            )->create();
+        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
+
+        // 実行
+        $rootCategory->hierarchyUp();
+
+        // 評価
+        $this->assertNull($rootCategory->parent, 'ルートカテゴリはカテゴリ階層を上げることができないこと');
+    }
+
+    /**
+     * カテゴリ階層アップ
+     * 
+     * - ２階層目のカテゴリをルートカテゴリに移動することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_hierarchyUp_2nd()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(1, ['name' => '2階層カテゴリ', 'type' => Post::type()])->for(Profile::factory()),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
+        $level2Category = Category::where('name', '2階層カテゴリ')->first();
+
+        // 実行
+        $level2Category->hierarchyUp();
+
+        // 評価
+        $this->assertEquals($rootCategory, $level2Category->parent, '２階層目のカテゴリをルートカテゴリに移動すること');
+        $this->assertDatabaseHas('categories', [
+            'id' => $level2Category->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 1,
+        ]);
+    }
+
+    /**
+     * カテゴリ階層ダウン
+     * 
+     * - カテゴリ階層を一つ下げることができることを確認します。
+     * - 移動先階層のカテゴリ表示順で最初に移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_hierarchyDown()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(1, ['name' => '2階層カテゴリ', 'type' => Post::type()])->for(Profile::factory())->has(
+                            Category::factory(1, ['name' => '3階層カテゴリ', 'type' => Post::type()])->for(Profile::factory()),
+                            'children'
+                        ),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
+        $level2Category = Category::where('name', '2階層カテゴリ')->first();
+        $level3Category = Category::where('name', '3階層カテゴリ')->first();
+
+        // 実行
+        $level2Category->hierarchyDown();
+
+        // 評価
+        $this->assertEquals($rootCategory, $level2Category->parent, 'カテゴリ階層を一つ下げることができること');
+        $this->assertEquals($rootCategory, $level3Category->parent, 'カテゴリ階層を一つ下げることができること');
+        // 移動先階層のカテゴリ表示順で最初に移動することができること
+        $this->assertDatabaseHas('categories', [
+            'id' => $level2Category->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $level3Category->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 2,
+        ]);
+    }
+
+    /**
+     * 親カテゴリ
+     * 
+     * - カテゴリ階層構造の親となるカテゴリであることを確認します。
+     * - 親カテゴリは、親カテゴリのIDであることを確認します。
+     * - 親をもつカテゴリは、ルートカテゴリでないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#親カテゴリ
+     */
+    public function test_parent()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $parentCategory = Category::create([
+            'profile' => $profile,
+            'name' => '親カテゴリ',
+            'type' => Post::type(),
+        ]);
+        $childCategory = Category::create([
+            'profile' => $profile,
+            'name' => '子カテゴリ',
+            'type' => Post::type(),
+            'parent' => $parentCategory,
+        ]);
+
+        // 評価
+        $this->assertEquals($parentCategory->id, $childCategory->parent->id, '親カテゴリは、親カテゴリのIDであること');
+        // 親カテゴリのIDが、子カテゴリの親カテゴリIDに設定されていること
+        $this->assertDatabaseHas('categories', [
+            'parent_id' => $parentCategory->id,
+        ]);
+        $this->assertFalse($childCategory->isRoot, '親をもつカテゴリは、ルートカテゴリでないこと');
+    }
+
+    /**
+     * 親カテゴリ
+     * 
+     * - 親をもたないカテゴリは、ルートカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#親カテゴリ
+     */
+    public function test_parent_root()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'profile' => $profile,
+            'name' => 'ルートカテゴリ',
+            'type' => Post::type(),
+        ]);
+
+        // 評価
+        $this->assertTrue($category->isRoot, '親をもたないカテゴリは、ルートカテゴリであること');
+        $this->assertDatabaseHas('categories', [
+            'parent_id' => null,
+        ]);
+    }
 }
