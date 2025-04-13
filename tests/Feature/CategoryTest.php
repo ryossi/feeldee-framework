@@ -332,7 +332,7 @@ class CategoryTest extends TestCase
      * カテゴリ階層アップ
      * 
      * - カテゴリ階層を一つ上げることができることを確認します。
-     * - 移動先階層のカテゴリ表示順で最後に移動することができることを確認します。
+     * - カテゴリ階層をアップしたときは、カテゴリ表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
      */
@@ -340,29 +340,30 @@ class CategoryTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()
-            ->has(
-                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()])
-                    ->has(
-                        Category::factory(1, ['name' => '2階層カテゴリ', 'type' => Post::type()])->for(Profile::factory())->has(
-                            Category::factory(1, ['name' => '3階層カテゴリ', 'type' => Post::type()])->for(Profile::factory()),
-                            'children'
-                        ),
-                        'children'
-                    ),
-                'categories'
-            )->create();
-        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
-        $level3Category = Category::where('name', '3階層カテゴリ')->first();
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
+        $categoryB = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $categoryA,
+        ]);
 
         // 実行
-        $level3Category->hierarchyUp();
+        $categoryB->hierarchyUp();
 
         // 評価
-        $this->assertEquals($rootCategory, $level3Category->parent, 'カテゴリ階層を一つ上げることができること');
-        // 移動先階層のカテゴリ表示順で最後に移動することができること
+        $this->assertEquals(2, $categoryB->level, 'カテゴリ階層を一つ上げることができること');
+        // カテゴリ表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整されること
         $this->assertDatabaseHas('categories', [
-            'id' => $level3Category->id,
+            'id' => $categoryB->id,
             'parent_id' => $rootCategory->id,
             'order_number' => 2,
         ]);
@@ -371,7 +372,7 @@ class CategoryTest extends TestCase
     /**
      * カテゴリ階層アップ
      * 
-     * - ルートカテゴリはカテゴリ階層を上げることができないことを確認します。
+     * - ルートカテゴリはカテゴリ階層をアップすることはできないことを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
      */
@@ -379,24 +380,23 @@ class CategoryTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()
-            ->has(
-                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()]),
-                'categories'
-            )->create();
-        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ]);
 
         // 実行
         $rootCategory->hierarchyUp();
 
         // 評価
-        $this->assertNull($rootCategory->parent, 'ルートカテゴリはカテゴリ階層を上げることができないこと');
+        $this->assertNull($rootCategory->parent, 'ルートカテゴリはカテゴリ階層をアップすることはできないこと');
     }
 
     /**
      * カテゴリ階層アップ
      * 
-     * - ２階層目のカテゴリをルートカテゴリに移動することを確認します。
+     * - ２階層目のカテゴリをアップして直接ルートカテゴリにすることもできないことを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
      */
@@ -404,28 +404,139 @@ class CategoryTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()
-            ->has(
-                Category::factory(1, ['name' => 'ルートカテゴリ', 'type' => Post::type()])
-                    ->has(
-                        Category::factory(1, ['name' => '2階層カテゴリ', 'type' => Post::type()])->for(Profile::factory()),
-                        'children'
-                    ),
-                'categories'
-            )->create();
-        $rootCategory = Category::where('name', 'ルートカテゴリ')->first();
-        $level2Category = Category::where('name', '2階層カテゴリ')->first();
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
 
         // 実行
-        $level2Category->hierarchyUp();
+        $categoryA->hierarchyUp();
 
         // 評価
-        $this->assertEquals($rootCategory, $level2Category->parent, '２階層目のカテゴリをルートカテゴリに移動すること');
+        $this->assertEquals(2, $categoryA->level, '２階層目のカテゴリをアップして直接ルートカテゴリにすることもできないこと');
         $this->assertDatabaseHas('categories', [
-            'id' => $level2Category->id,
+            'id' => $categoryA->id,
             'parent_id' => $rootCategory->id,
             'order_number' => 1,
         ]);
+    }
+
+    /**
+     * カテゴリ階層ダウン
+     * 
+     * - カテゴリ階層を一つ下げることができることを確認します。
+     * - カテゴリ階層をダウンしたときは、新たな親カテゴリは、移動前のカテゴリ階層のカテゴリ表示順で直前のカテゴリとなりることを確認します。
+     * - 移動先のカテゴリ階層のカテゴリ表示順で最後に移動することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_hierarchyDown()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
+        $categoryB = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $categoryA,
+        ]);
+        $categoryC = Category::factory()->create([
+            'profile' => $rootCategory->profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
+
+        // 実行
+        $categoryC->hierarchyDown();
+
+        // 評価
+        $this->assertEquals(3, $categoryC->level, 'カテゴリ階層を一つ下げることができること');
+        $this->assertEquals($categoryA->id, $categoryC->parent->id, '新たな親カテゴリは、移動前のカテゴリ階層のカテゴリ表示順で直前のカテゴリとなること');
+        // 移動先のカテゴリ階層のカテゴリ表示順で最後に移動すること
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryC->id,
+            'parent_id' => $categoryA->id,
+            'order_number' => 2,
+        ]);
+    }
+
+    /**
+     * カテゴリ階層ダウン
+     * 
+     * - ルートカテゴリはカテゴリ階層をダウンすることはできないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_hierarchyDown_root()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $rootCategory->hierarchyDown();
+
+        // 評価
+        $this->assertNull($rootCategory->parent, 'ルートカテゴリはカテゴリ階層をダウンすることはできないこと');
+    }
+
+    /**
+     * カテゴリ階層ダウン
+     * 
+     * - カテゴリ表示順の先頭に位置するカテゴリのカテゴリ階層をダウンすることはできないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_hierarchyDown_first()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
+        $categoryB = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $categoryA,
+        ]);
+        $categoryC = Category::factory()->create([
+            'profile' => $rootCategory->profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
+
+
+        // 実行
+        $categoryA->hierarchyDown();
+
+        // 評価
+        $this->assertEquals(2, $categoryA->level, 'カテゴリ表示順の先頭に位置するカテゴリのカテゴリ階層をダウンすることはできないこと');
     }
 
     /**

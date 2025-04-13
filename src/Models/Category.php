@@ -135,7 +135,7 @@ class Category extends Model
 
         return Attribute::make(
             get: fn($value, $attributes) => $closure->call($this, $attributes),
-        )->shouldCache();
+        );
     }
 
     /**
@@ -143,7 +143,7 @@ class Category extends Model
      * 
      * カテゴリ階層を一つ上げます。
      * 
-     * 表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整されます。
+     * カテゴリ表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整されます。
      * 
      * カテゴリがルートカテゴリまたは移動することによりルートとなってしまう2階層目のカテゴリの場合は、何もしません（空振り）。
      * 
@@ -156,24 +156,26 @@ class Category extends Model
             return;
         }
 
-        // 階層を一つ上げる
-        $parent = $this->parent;
-        $this->order_number = $parent->order_number + 1;
-        $this->parent = $parent->parent;
+        DB::transaction(function () {
+            // 階層を一つ上げる
+            $parent = $this->parent;
+            $this->order_number = $parent->order_number + 1;
+            $this->parent = $parent->parent;
 
-        // 表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整
-        $categories = $this->profile->categories()->ofParent($this->parent)->get();
-        $inc = false;
-        foreach ($categories as $category) {
-            if ($category->is($parent)) {
-                $inc = true;
-            } else if ($inc) {
-                $category->order_number++;
-                $category->save();
+            // 表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整
+            $categories = $this->profile->categories()->ofParent($this->parent)->get();
+            $inc = false;
+            foreach ($categories as $category) {
+                if ($category->is($parent)) {
+                    $inc = true;
+                } else if ($inc) {
+                    $category->order_number++;
+                    $category->save();
+                }
             }
-        }
 
-        $this->save();
+            $this->save();
+        });
     }
 
     /**
@@ -216,7 +218,7 @@ class Category extends Model
     }
 
     /**
-     * カテゴリ階層入替
+     * カテゴリ入替
      * 
      * ソース名とターゲット名を指定してカテゴリ階層を入れ替えます。
      * 
@@ -238,25 +240,31 @@ class Category extends Model
             return false;
         }
 
-        if ($source->parent === $target->parent) {
-            // 同一階層のカテゴリどうしの場合
+        DB::transaction(
+            function () use ($source, $target) {
+                if ($source->parent === $target->parent) {
+                    // 同一階層のカテゴリどうしの場合
 
-            // 表示順のみ入れ替え
-            $order_number = $source->order_number;
-            $source->order_number = $target->order_number;
-            $target->order_number = $order_number;
-        } else {
-            // 異なる階層のカテゴリどうしの場合
+                    // 表示順のみ入れ替え
+                    $order_number = $source->order_number;
+                    $source->order_number = $target->order_number;
+                    $target->order_number = $order_number;
+                } else {
+                    // 異なる階層のカテゴリどうしの場合
 
-            // 階層を入れ替える（表示順は、それぞれを維持）
-            $parent = $source->parent;
-            $source->parent = $target->parent;
-            $target->parent = $parent;
-        }
+                    // 階層を入れ替える（表示順は、それぞれを維持）
+                    $parent = $source->parent;
+                    $source->parent = $target->parent;
+                    $target->parent = $parent;
+                }
 
-        $source->save();
-        $target->save();
-        return true;
+                $source->save();
+                $target->save();
+                return true;
+            }
+        );
+
+        return false;
     }
 
     // ========================== ここまで整理済み ==========================
