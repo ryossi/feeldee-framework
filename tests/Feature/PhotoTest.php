@@ -38,29 +38,27 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ所有者
+     * コンテンツ所有プロフィール
      * 
-     * - ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されることを確認します。
+     * - 写真を作成したユーザのプロフィールあることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ所有者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#ココンテンツ所有プロフィール
      */
     public function test_profile()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $photo = Photo::create([
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals($profile->id, $photo->profile_id, 'ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されること');
+        $this->assertEquals($profile->id, $photo->profile->id, '写真を作成したユーザのプロフィールあること');
         $this->assertDatabaseHas('photos', [
             'profile_id' => $profile->id,
         ]);

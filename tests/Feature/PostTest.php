@@ -38,29 +38,27 @@ class PostTest extends TestCase
     }
 
     /**
-     * コンテンツ所有者
+     * コンテンツ所有プロフィール
      * 
-     * - ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されることを確認します。
+     * - 投稿を作成したユーザのプロフィールであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ所有者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ所有プロフィール
      */
     public function test_profile()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $post = Post::create([
             'title' => 'テスト投稿',
             'post_date' => now(),
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals($profile->id, $post->profile_id, 'ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されること');
+        $this->assertEquals($profile->id, $post->profile->id, '投稿を作成したユーザのプロフィールであること');
         $this->assertDatabaseHas('posts', [
             'profile_id' => $profile->id,
         ]);

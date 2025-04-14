@@ -40,20 +40,17 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ所有者
+     * コンテンツ所有プロフィール
      * 
-     * - ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されることを確認します。
+     * - 場所を作成したユーザのプロフィールであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ所有者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ所有プロフィール
      */
     public function test_profile()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $location = Location::create([
@@ -61,10 +58,11 @@ class LocationTest extends TestCase
             'latitude' => 35.681236,
             'longitude' => 139.767125,
             'zoom' => 15,
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals($profile->id, $location->profile_id, 'ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されること');
+        $this->assertEquals($profile->id, $location->profile->id, '場所を作成したユーザのプロフィールであること');
         $this->assertDatabaseHas('locations', [
             'profile_id' => $profile->id,
         ]);

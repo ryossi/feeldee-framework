@@ -36,7 +36,7 @@ abstract class Content extends Model
     ];
 
     /**
-     * コンテンツ所有者
+     * コンテンツ所有プロフィール
      *
      * @return BelongsTo
      */
@@ -45,6 +45,8 @@ abstract class Content extends Model
     {
         return $this->belongsTo(Profile::class);
     }
+
+    // ========================== ここまで整理ずみ ==========================
 
     /**
      * コンテンツカテゴリ

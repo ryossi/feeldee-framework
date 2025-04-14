@@ -37,28 +37,26 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ所有者
+     * コンテンツ所有プロフィール
      * 
-     * - ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されることを確認します。
+     * - アイテムを作成したユーザのプロフィールであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ所有者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ所有プロフィール
      */
     public function test_profile()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $item = Item::create([
             'title' => 'テストアイテム',
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals($profile->id, $item->profile_id, 'ログインユーザのプロフィールのIDがコンテンツ所有者プロフィールIDに設定されること');
+        $this->assertEquals($profile->id, $item->profile->id, 'アイテムを作成したユーザのプロフィールであること');
         $this->assertDatabaseHas('items', [
             'profile_id' => $profile->id,
         ]);
