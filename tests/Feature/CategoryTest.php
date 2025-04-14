@@ -821,7 +821,7 @@ class CategoryTest extends TestCase
     }
 
     /**
-     * 親カテゴリ
+     * カテゴリ入替
      * 
      * - 同一カテゴリどうしの場合でもエラーとならないことを確認します。
      * 
@@ -897,11 +897,65 @@ class CategoryTest extends TestCase
     }
 
     /**
+     * ルートカテゴリ
+     * 
+     * - 親カテゴリがない場合は、ルートカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#ルートカテゴリ
+     */
+    public function test_root_category()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $category = Category::create([
+            'profile' => $profile,
+            'name' => 'ルートカテゴリ',
+            'type' => Post::type(),
+        ]);
+
+        // 評価
+        $this->assertTrue($category->isRoot, '親カテゴリがない場合は、ルートカテゴリであること');
+    }
+
+    /**
+     * ルートカテゴリ
+     * 
+     * - 親カテゴリがある場合は、ルートカテゴリでないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#ルートカテゴリ
+     */
+    public function test_not_root_category()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $parentCategory = Category::create([
+            'profile' => $profile,
+            'name' => '親カテゴリ',
+            'type' => Post::type(),
+        ]);
+        $childCategory = Category::create([
+            'profile' => $profile,
+            'name' => '子カテゴリ',
+            'type' => Post::type(),
+            'parent' => $parentCategory,
+        ]);
+
+        // 評価
+        $this->assertFalse($childCategory->isRoot, '親カテゴリがある場合は、ルートカテゴリでないこと');
+    }
+
+    /**
      * 子カテゴリリスト
      * 
      * - 同じカテゴリを親にもつカテゴリのコレクションを取得できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#親カテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
      */
     public function test_children()
     {
@@ -931,7 +985,7 @@ class CategoryTest extends TestCase
      * - 親カテゴリのカテゴリ所有プロフィールを継承していることを確認します。
      * - 親カテゴリのカテゴリタイプを継承していることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#親カテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
      */
     public function test_children_create()
     {
@@ -964,5 +1018,57 @@ class CategoryTest extends TestCase
             $this->assertEquals($category->profile, $child->profile, '親カテゴリのカテゴリ所有プロフィールを継承していること');
             $this->assertEquals($category->type, $child->type, '親カテゴリのカテゴリタイプを継承していること');
         }
+    }
+
+    /**
+     * 子カテゴリリスト
+     * 
+     * - 子カテゴリが存在する場合は、hasChildがtrueであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
+     */
+    public function test_has_child()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(3)->for(Profile::factory()),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $category = Category::where('name', '親カテゴリ')->first();
+
+        // 評価
+        $this->assertTrue($category->hasChild, '子カテゴリが存在する場合は、hasChildがtrueであること');
+    }
+
+    /**
+     * 子カテゴリリスト
+     * 
+     * - 子カテゴリが存在しない場合は、hasChildがfalseであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
+     */
+    public function test_not_has_child()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(0)->for(Profile::factory()),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $category = Category::where('name', '親カテゴリ')->first();
+
+        // 評価
+        $this->assertFalse($category->hasChild, '子カテゴリが存在しない場合は、hasChildがfalseであること');
     }
 }

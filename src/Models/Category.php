@@ -128,6 +128,24 @@ class Category extends Model
     }
 
     /**
+     * 子カテゴリリスト
+     */
+    public function children()
+    {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    /**
+     * 子カテゴリーが存在するかどうか
+     * 
+     * @return bool 存在する場合true、しない場合false
+     */
+    public function getHasChildAttribute(): bool
+    {
+        return $this->children()->count() > 0;
+    }
+
+    /**
      * カテゴリ階層レベル
      * 
      * ルート階層を1として階層が下がるごとにプラス1されます。
@@ -305,14 +323,6 @@ class Category extends Model
         );
     }
 
-    /**
-     * 子カテゴリリスト
-     */
-    public function children()
-    {
-        return $this->hasMany(Category::class, 'parent_id');
-    }
-
     // ========================== ここまで整理済み ==========================
 
     /**
@@ -342,16 +352,6 @@ class Category extends Model
         return Attribute::make(
             get: fn($value, $attributes) => $closure->call($this),
         )->shouldCache();
-    }
-
-    /**
-     * 子カテゴリーが存在するかどうかを判定します。
-     * 
-     * @return bool 存在する場合true、しない場合false
-     */
-    public function hasChild(): bool
-    {
-        return $this->children()->count() > 0;
     }
 
     /**
