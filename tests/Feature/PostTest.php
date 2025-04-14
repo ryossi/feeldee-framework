@@ -14,30 +14,9 @@ class PostTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 投稿
-     * 
-     * - ログインユーザのみが作成できること
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿
-     */
-    public function test_create()
-    {
-        // 準備
-        Auth::shouldReceive('user')->andReturn(null);
-
-        // 実行
-        $this->assertThrows(function () {
-            Post::create([
-                'title' => 'テスト投稿',
-                'post_date' => now(),
-            ]);
-        }, \Feeldee\Framework\Exceptions\LoginRequiredException::class);
-    }
-
-    /**
      * コンテンツ種別
      * 
-     * - 投稿のコンテンツ種別（type）は、"post"であることを確認します。
+     * - 投稿のコンテンツ種別は、"post"であることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ種別
      */
@@ -46,18 +25,16 @@ class PostTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $post = Post::create([
             'title' => 'テスト投稿',
             'post_date' => now(),
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals('post', $post->type(), '投稿のコンテンツ種別（type）は、"post"であること');
+        $this->assertEquals('post', $post->type(), '投稿のコンテンツ種別は、"post"であること');
     }
 
     /**

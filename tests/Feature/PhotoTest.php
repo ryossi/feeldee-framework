@@ -14,27 +14,9 @@ class PhotoTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 写真
-     * 
-     * - ログインユーザのみが作成できること
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真
-     */
-    public function test_create()
-    {
-        // 準備
-        Auth::shouldReceive('user')->andReturn(null);
-
-        // 実行
-        $this->assertThrows(function () {
-            Photo::create([]);
-        }, \Feeldee\Framework\Exceptions\LoginRequiredException::class);
-    }
-
-    /**
      * コンテンツ種別
      * 
-     * - 写真のコンテンツ種別（type）は、"photo"であることを確認します。
+     * - 写真のコンテンツ種別は、"photo"であることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ種別
      */
@@ -43,18 +25,16 @@ class PhotoTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $photo = Photo::create([
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals('photo', $photo->type(), '写真のコンテンツ種別（type）は、"photo"であること');
+        $this->assertEquals('photo', $photo->type(), '写真のコンテンツ種別は、"photo"であること');
     }
 
     /**

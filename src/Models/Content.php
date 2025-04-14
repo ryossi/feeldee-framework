@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, SetUser, AccessCounter;
+    use HasFactory, SetUser, WrappedId,  AccessCounter;
 
     /**
      * コンテンツ種別
@@ -26,18 +27,23 @@ abstract class Content extends Model
     abstract public static function type();
 
     /**
+     * IDをラップする属性
+     * 
+     * @var array
+     */
+    protected $wrappable = [
+        'profile' => 'profile_id',
+    ];
+
+    /**
      * コンテンツ所有者
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
+
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
 
     /**

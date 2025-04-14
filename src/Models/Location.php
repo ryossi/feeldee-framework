@@ -76,40 +76,7 @@ class Location extends Content
         });
     }
 
-    /**
-     * 場所を作成します。
-     * 
-     * @param array $attributes 場所の属性
-     * @return Location 場所
-     * @throws LoginRequiredException ログインユーザでない場合
-     */
-    public static function create($attributes = []): self
-    {
-        // ログインユーザ取得
-        $user = Auth::user();
-        if ($user === null) {
-            throw new LoginRequiredException();
-        }
-
-        // プロフィール取得
-        $profile = $user->getProfile();
-
-        // 投稿作成
-        return $profile->locations()->create($attributes);
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 場所の中央の位置情報（緯度,経度のカンマ区切り文字列）

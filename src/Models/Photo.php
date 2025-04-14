@@ -15,16 +15,6 @@ use Illuminate\Support\Facades\DB;
 class Photo extends Content
 {
     /**
-     * コンテンツ種別
-     * 
-     * @return string
-     */
-    public static function type()
-    {
-        return 'photo';
-    }
-
-    /**
      * 配列に表示する属性
      *
      * @var array
@@ -71,41 +61,16 @@ class Photo extends Content
     }
 
     /**
-     * 写真を作成します。
+     * コンテンツ種別
      * 
-     * @param array $attributes 写真の属性
-     * @return Photo 写真
-     * @throws LoginRequiredException ログインユーザでない場合
+     * @return string
      */
-    public static function create($attributes = []): self
+    public static function type()
     {
-        // ログインユーザ取得
-        $user = Auth::user();
-        if ($user === null) {
-            throw new LoginRequiredException();
-        }
-
-        // プロフィール取得
-        $profile = $user->getProfile();
-
-        // 投稿作成
-        return $profile->photos()->create($attributes);
+        return 'photo';
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 写真を準備します。

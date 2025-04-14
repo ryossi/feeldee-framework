@@ -23,16 +23,6 @@ use PHPHtmlParser\Dom;
 class Post extends Content
 {
     /**
-     * コンテンツ種別
-     * 
-     * @return string
-     */
-    public static function type()
-    {
-        return 'post';
-    }
-
-    /**
      * 配列に表示する属性
      *
      * @var array
@@ -74,34 +64,15 @@ class Post extends Content
     }
 
     /**
-     * 投稿を作成します。
+     * コンテンツ種別
      * 
-     * @param array $attributes 投稿の属性
-     * @return Post 投稿
-     * @throws LoginRequiredException ログインユーザでない場合
+     * @return string
      */
-    public static function create($attributes = []): self
+    public static function type()
     {
-        // ログインユーザ取得
-        $user = Auth::user();
-        if ($user === null) {
-            throw new LoginRequiredException();
-        }
-
-        // バリデーション
-        Validator::validate($attributes, [
-            // 登校日は、必須
-            'post_date' => 'required|date',
-            // タイトルは、必須
-            'title' => 'required|string',
-        ]);
-
-        // プロフィール取得
-        $profile = $user->getProfile();
-
-        // 投稿作成
-        return $profile->posts()->create($attributes);
+        return 'post';
     }
+
 
     // ========================== ここまで整理ずみ ==========================
 

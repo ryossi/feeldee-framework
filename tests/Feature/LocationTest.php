@@ -14,27 +14,9 @@ class LocationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 場所
-     * 
-     * - ログインユーザのみが作成できること
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所
-     */
-    public function test_create()
-    {
-        // 準備
-        Auth::shouldReceive('user')->andReturn(null);
-
-        // 実行
-        $this->assertThrows(function () {
-            Location::create([]);
-        }, \Feeldee\Framework\Exceptions\LoginRequiredException::class);
-    }
-
-    /**
      * コンテンツ種別
      * 
-     * - 場所のコンテンツ種別（type）は、"location"であることを確認します。
+     * - 場所のコンテンツ種別は、"location"であることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ種別
      */
@@ -43,9 +25,6 @@ class LocationTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $location = Location::create([
@@ -53,10 +32,11 @@ class LocationTest extends TestCase
             'latitude' => 35.681236,
             'longitude' => 139.767125,
             'zoom' => 15,
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals('location', $location->type(), '場所のコンテンツ種別（type）は、"location"であること');
+        $this->assertEquals('location', $location->type(), '場所のコンテンツ種別は、"location"であること');
     }
 
     /**

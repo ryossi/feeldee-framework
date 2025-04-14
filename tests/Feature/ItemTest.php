@@ -14,27 +14,9 @@ class ItemTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * アイテム
-     * 
-     * - ログインユーザのみが作成できること
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム
-     */
-    public function test_create()
-    {
-        // 準備
-        Auth::shouldReceive('user')->andReturn(null);
-
-        // 実行
-        $this->assertThrows(function () {
-            Item::create([]);
-        }, \Feeldee\Framework\Exceptions\LoginRequiredException::class);
-    }
-
-    /**
      * コンテンツ種別
      * 
-     * - アイテムのコンテンツ種別（type）は、"item"であることを確認します。
+     * - アイテムのコンテンツ種別は、"item"であることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ種別
      */
@@ -43,17 +25,15 @@ class ItemTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($profile);
-        Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $item = Item::create([
             'title' => 'テストアイテム',
+            'profile' => $profile,
         ]);
 
         // 検証
-        $this->assertEquals('item', $item->type(), 'アイテムのコンテンツ種別（type）は、"item"であること');
+        $this->assertEquals('item', $item->type(), 'アイテムのコンテンツ種別は、"item"であること');
     }
 
     /**
