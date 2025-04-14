@@ -79,8 +79,21 @@ class Category extends Model
         });
 
         static::creating(function (self $model) {
+            if ($model->parent) {
+                // 親カテゴリが存在する場合は、カテゴリ所有プロフィールおよびカテゴリタイプは親カテゴリから継承
+                $model->profile = $model->parent->profile;
+                $model->type = $model->parent->type;
+            }
             // カテゴリ表示順自動採番
             $model->newOrderNumber();
+        });
+
+        static::updating(function (self $model) {
+            if ($model->parent) {
+                // 親カテゴリが存在する場合は、カテゴリ所有プロフィールおよびカテゴリタイプは親カテゴリから継承
+                $model->profile = $model->parent->profile;
+                $model->type = $model->parent->type;
+            }
         });
     }
 
@@ -292,15 +305,15 @@ class Category extends Model
         );
     }
 
-    // ========================== ここまで整理済み ==========================
-
     /**
-     * このカテゴリーの子カテゴリーリスト
+     * 子カテゴリリスト
      */
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * このカテゴリーに所属するコンテンツリスト

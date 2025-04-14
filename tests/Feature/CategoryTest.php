@@ -866,7 +866,6 @@ class CategoryTest extends TestCase
      * 
      * - カテゴリ階層構造の親となるカテゴリであることを確認します。
      * - 親カテゴリは、親カテゴリのIDであることを確認します。
-     * - 親をもつカテゴリは、ルートカテゴリでないことを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#親カテゴリ
      */
@@ -895,33 +894,75 @@ class CategoryTest extends TestCase
         $this->assertDatabaseHas('categories', [
             'parent_id' => $parentCategory->id,
         ]);
-        $this->assertFalse($childCategory->isRoot, '親をもつカテゴリは、ルートカテゴリでないこと');
     }
 
     /**
-     * 親カテゴリ
+     * 子カテゴリリスト
      * 
-     * - 親をもたないカテゴリは、ルートカテゴリであることを確認します。
+     * - 同じカテゴリを親にもつカテゴリのコレクションを取得できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#親カテゴリ
      */
-    public function test_parent_root()
+    public function test_children()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(3)->for(Profile::factory()),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $category = Category::where('name', '親カテゴリ')->first();
+
+        // 評価
+        $this->assertEquals(3, $category->children->count());
+        foreach ($category->children as $child) {
+            $this->assertEquals($category->id, $child->parent_id, '同じカテゴリを親にもつカテゴリのコレクションを取得できること');
+        }
+    }
+
+    /**
+     * 子カテゴリリスト
+     * 
+     * - 親カテゴリのカテゴリ所有プロフィールを継承していることを確認します。
+     * - 親カテゴリのカテゴリタイプを継承していることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#親カテゴリ
+     */
+    public function test_children_create()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
-            'name' => 'ルートカテゴリ',
-            'type' => Post::type(),
+        $category->children()->create([
+            'name' => '子カテゴリ1',
+        ]);
+        $category->children()->create([
+            'name' => '子カテゴリ2',
+        ]);
+        $category->children()->create([
+            'name' => '子カテゴリ3',
+            'profile' => $otherProfile,
+            'type' => Item::type(),
         ]);
 
         // 評価
-        $this->assertTrue($category->isRoot, '親をもたないカテゴリは、ルートカテゴリであること');
-        $this->assertDatabaseHas('categories', [
-            'parent_id' => null,
-        ]);
+        $this->assertEquals(3, $category->children->count());
+        foreach ($category->children as $child) {
+            $this->assertEquals($category->profile, $child->profile, '親カテゴリのカテゴリ所有プロフィールを継承していること');
+            $this->assertEquals($category->type, $child->type, '親カテゴリのカテゴリタイプを継承していること');
+        }
     }
 }
