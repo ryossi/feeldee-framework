@@ -10,7 +10,7 @@ trait WrappedId
         static::creating(function ($model) {
             foreach ($model->wrappable as $key => $value) {
                 if (isset($model->$key) && array_key_exists($key, $model->attributes)) {
-                    if (is_object($model->$key)) {
+                    if (is_object($model->attributes[$key])) {
                         // 属性にリレーション名が直接入っている場合は、リレーションからIDを取得してセットする
                         $model->$value = $model->attributes[$key]->id;
                     } else {

@@ -220,51 +220,76 @@ class Category extends Model
     /**
      * カテゴリ入替
      * 
-     * ソース名とターゲット名を指定してカテゴリ階層を入れ替えます。
+     * 対象カテゴリを指定してカテゴリどうしを入替えします。
      * 
-     * @param Profile $profile プロフィール
-     * @param string $type タイプ
-     * @param string $source_name ソースカテゴリ名
-     * @param string $target_name ターゲットカテゴリ名
-     * @return bool 入れ替えした場合true
+     * 入替は、カテゴリ所有プロフィールとカテゴリタイプが同じ場合のみ行われます。
+     * 
+     * @param Category $target 対象カテゴリ
+     * @return void
+     * @throws ApplicationException カテゴリ所有プロフィールが異なる場合、CategoryProfileNotMatch[71001]
+     * @throws ApplicationException カテゴリタイプが異なる場合、CategoryTypeNotMatch[71002]
      */
-    public static function swap(Profile $profile, string $type, string $source_name, string $target_name): bool
+    public function swap(Category $target): void
     {
-        $source = $profile->categories()->ofType($type)->ofName($source_name)->first();
-        if ($source === null) {
-            return false;
+        if ($this->profile->id != $target->profile->id) {
+            // プロフィールが異なる場合
+            throw new ApplicationException('CategoryProfileNotMatch', 71001, ['source' => $this->profile->id, 'target' => $target->profile->id]);
         }
-
-        $target = $profile->categories()->ofType($type)->ofName($target_name)->first();
-        if ($target === null) {
-            return false;
+        if ($this->type != $target->type) {
+            // タイプが異なる場合
+            throw new ApplicationException('CategoryTypeNotMatch', 71002, ['source' => $this->type, 'target' => $target->type]);
+        }
+        if ($this->id == $target->id) {
+            // 同一カテゴリの場合
+            return;
         }
 
         DB::transaction(
-            function () use ($source, $target) {
-                if ($source->parent === $target->parent) {
+            function () use ($target) {
+                if ($this->parent?->id == $target->parent?->id) {
                     // 同一階層のカテゴリどうしの場合
 
                     // 表示順のみ入れ替え
-                    $order_number = $source->order_number;
-                    $source->order_number = $target->order_number;
+                    $order_number = $this->order_number;
+                    $this->order_number = $target->order_number;
                     $target->order_number = $order_number;
+
+                    $this->save();
+                    $target->save();
                 } else {
                     // 異なる階層のカテゴリどうしの場合
 
-                    // 階層を入れ替える（表示順は、それぞれを維持）
-                    $parent = $source->parent;
-                    $source->parent = $target->parent;
-                    $target->parent = $parent;
+                    // 対象カテゴリの親カテゴリを自カテゴリに変更しておく
+                    $new_childres = array();
+                    foreach ($target->children as $child) {
+                        $child->parent = $this;
+                        $child->save();
+                        array_push($new_childres, $child->id);
+                    }
+                    // 対象カテゴリの親カテゴリと入替
+                    $target_parent = $target->parent;
+                    if ($target_parent?->id == $this->id) {
+                        // 対象カテゴリの親カテゴリが入替元カテゴリの場合
+                        $target->parent = $this->parent;
+                        $this->parent = $target;
+                    } else {
+                        // 対象カテゴリの親カテゴリが入替元カテゴリでない場合
+                        $target->parent = $this->parent;
+                        $this->parent = $target_parent;
+                    }
+                    $this->save();
+                    $target->save();
+                    // 子カテゴリの親カテゴリを対象カテゴリに変更
+                    foreach ($this->children as $child) {
+                        if (!in_array($child->id, $new_childres)) {
+                            // 既に入替済みの子カテゴリは除外
+                            $child->parent = $target;
+                            $child->save();
+                        };
+                    }
                 }
-
-                $source->save();
-                $target->save();
-                return true;
             }
         );
-
-        return false;
     }
 
     // ========================== ここまで整理済み ==========================

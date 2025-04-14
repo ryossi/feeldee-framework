@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Auth;
 use Exception;
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
@@ -537,6 +538,327 @@ class CategoryTest extends TestCase
 
         // 評価
         $this->assertEquals(2, $categoryA->level, 'カテゴリ表示順の先頭に位置するカテゴリのカテゴリ階層をダウンすることはできないこと');
+    }
+
+    /**
+     * カテゴリ入替
+     * 
+     * - 同一カテゴリ階層でカテゴリの入替ができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_swap_hierarchy_same()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
+        $categoryB = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'parent' => $categoryA,
+        ]);
+        $categoryC = Category::factory()->create([
+            'profile' => $rootCategory->profile,
+            'type' => Post::type(),
+            'parent' => $rootCategory,
+        ]);
+
+        // 実行
+        $categoryA->swap($categoryC);
+
+        // 評価
+        $this->assertEquals(2, $categoryA->level, '入替元カテゴリのカテゴリ階層レベルが維持されていること');
+        $this->assertEquals(2, $categoryC->level, '対象カテゴリのカテゴリ階層レベルが維持されていること');
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryA->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 2,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryC->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 1,
+        ]);
+    }
+
+    /**
+     * カテゴリ入替
+     * 
+     * - カテゴリ階層を跨いでも入替ができることを確認します。
+     * - カテゴリ階層レベルが2以上異なるカテゴリどうしの入替ができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_swap_hierarchy_ptn1()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'ルート'
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリA',
+            'parent' => $rootCategory,
+        ]);
+        $categoryB = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリB',
+            'parent' => $categoryA,
+        ]);
+        $categoryC = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリC',
+            'parent' => $rootCategory,
+        ]);
+        $categoryD = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリD',
+            'parent' => $categoryB,
+        ]);
+
+        // 実行
+        $rootCategory->swap($categoryB);
+
+        // 評価
+        $this->assertEquals(3, $rootCategory->level, '入替元カテゴリのカテゴリ階層レベルが対象カテゴリと入れ替わっていること');
+        $this->assertEquals(1, $categoryB->level, '対象カテゴリのカテゴリ階層レベルが入替元カテゴリと入れ替わっていること');
+        $this->assertEquals($rootCategory->parent->id, $categoryA->id);
+        $categoryD->refresh();
+        $this->assertEquals($categoryD->parent->id, $rootCategory->id);
+        $categoryA->refresh();
+        $this->assertEquals($categoryA->parent->id, $categoryB->id);
+        $this->assertDatabaseHas('categories', [
+            'id' => $rootCategory->id,
+            'parent_id' => $categoryA->id,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryA->id,
+            'parent_id' => $categoryB->id,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryB->id,
+            'parent_id' => null,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryC->id,
+            'parent_id' => $categoryB->id,
+            'order_number' => 2,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryD->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 1,
+        ]);
+    }
+
+    /**
+     * カテゴリ入替
+     * 
+     * - カテゴリ階層を跨いでも入替ができることを確認します。
+     * - カテゴリ階層レベルが隣のカテゴリどうしを入替ができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_swap_hierarchy_ptn2()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'ルート'
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリA',
+            'parent' => $rootCategory,
+        ]);
+        $categoryB = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリB',
+            'parent' => $categoryA,
+        ]);
+        $categoryC = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリC',
+            'parent' => $rootCategory,
+        ]);
+        $categoryD = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリD',
+            'parent' => $categoryB,
+        ]);
+
+        // 実行
+        $categoryA->swap($categoryB);
+
+        // 評価
+        $this->assertEquals(3, $categoryA->level, '入替元カテゴリのカテゴリ階層レベルが対象カテゴリと入れ替わっていること');
+        $this->assertEquals(2, $categoryB->level, '対象カテゴリのカテゴリ階層レベルが入替元カテゴリと入れ替わっていること');
+        $categoryD->refresh();
+        $this->assertEquals($categoryD->parent->id, $categoryA->id);
+        $this->assertDatabaseHas('categories', [
+            'id' => $rootCategory->id,
+            'parent_id' => null,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryA->id,
+            'parent_id' => $categoryB->id,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryB->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryC->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 2,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryD->id,
+            'parent_id' => $categoryA->id,
+            'order_number' => 1,
+        ]);
+    }
+
+    /**
+     * カテゴリ入替
+     * 
+     * - カテゴリ所有プロフィールが異なる場合は、入替できないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_swap_different_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'ルート'
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリA',
+            'parent' => $rootCategory,
+        ]);
+        $otherProfile = Profile::factory()->create();
+        $categoryB = Category::factory()->create([
+            'profile' => $otherProfile,
+            'type' => Post::type(),
+            'name' => 'カテゴリB',
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($categoryA, $categoryB) {
+            $categoryA->swap($categoryB);
+        }, ApplicationException::class, 'CategoryProfileNotMatch');
+    }
+
+    /**
+     * カテゴリ入替
+     * 
+     * - カテゴリタイプが異なる場合は、入替できないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_swap_different_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'ルート'
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリA',
+            'parent' => $rootCategory,
+        ]);
+        $categoryB = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Item::type(),
+            'name' => 'カテゴリB',
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($categoryA, $categoryB) {
+            $categoryA->swap($categoryB);
+        }, ApplicationException::class, 'CategoryTypeNotMatch');
+    }
+
+    /**
+     * 親カテゴリ
+     * 
+     * - 同一カテゴリどうしの場合でもエラーとならないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層
+     */
+    public function test_swap_same_category()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $rootCategory = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'ルート'
+        ]);
+        $categoryA = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => 'カテゴリA',
+            'parent' => $rootCategory,
+        ]);
+
+        // 実行
+        $categoryA->swap($categoryA);
+
+        // 評価
+        $this->assertEquals(2, $categoryA->level, '同一カテゴリどうしの場合でもエラーとならないこと');
+        $this->assertDatabaseHas('categories', [
+            'id' => $rootCategory->id,
+            'parent_id' => null,
+            'order_number' => 1,
+        ]);
+        $this->assertDatabaseHas('categories', [
+            'id' => $categoryA->id,
+            'parent_id' => $rootCategory->id,
+            'order_number' => 1,
+        ]);
     }
 
     /**
