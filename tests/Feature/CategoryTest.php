@@ -1071,4 +1071,191 @@ class CategoryTest extends TestCase
         // 評価
         $this->assertFalse($category->hasChild, '子カテゴリが存在しない場合は、hasChildがfalseであること');
     }
+
+    /**
+     * カテゴリ表示順
+     * 
+     * - 同じカテゴリ階層内でのカテゴリの表示順を決定するための番号であることを確認します。
+     * - 作成時に自動採番されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ表示順
+     */
+    public function test_order_number()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
+
+        // 実行
+        $child1 = $category->children()->create([
+            'name' => '子カテゴリ1',
+        ]);
+        $child2 = $category->children()->create([
+            'name' => '子カテゴリ2',
+        ]);
+        $child3 = $category->children()->create([
+            'name' => '子カテゴリ3',
+        ]);
+
+        // 評価
+        $this->assertEquals(1, $child1->order_number, '階層構造をもつカテゴリは、同一階層の中での表示順を持つこと');
+        $this->assertEquals(2, $child2->order_number, '階層構造をもつカテゴリは、同一階層の中での表示順を持つこと');
+        $this->assertEquals(3, $child3->order_number, '階層構造をもつカテゴリは、同一階層の中での表示順を持つこと');
+        // カテゴリ表示順は、作成時に自動採番されること
+        foreach ($category->children as $child) {
+            $this->assertDatabaseHas('categories', [
+                'id' => $child->id,
+                'order_number' => $child->order_number,
+            ]);
+        }
+    }
+
+    /**
+     * カテゴリ表示順
+     * 
+     * - 同じカテゴリ階層内であれば、表示順で前のカテゴリに容易にアクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ表示順
+     */
+    public function test_order_number_previous()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
+        $child1 = $category->children()->create([
+            'name' => '子カテゴリ1',
+        ]);
+        $child2 = $category->children()->create([
+            'name' => '子カテゴリ2',
+        ]);
+
+        // 実行
+        $previousCategory = $child2->previous();
+
+        // 評価
+        $this->assertEquals($child1->id, $previousCategory->id, '同じカテゴリ階層内であれば、表示順で前のカテゴリに容易にアクセスすることができること');
+    }
+
+    /**
+     * カテゴリ表示順
+     * 
+     * - 同じカテゴリ階層内であれば、表示順で後のカテゴリに容易にアクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ表示順
+     */
+    public function test_order_number_next()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
+        $child1 = $category->children()->create([
+            'name' => '子カテゴリ1',
+        ]);
+        $child2 = $category->children()->create([
+            'name' => '子カテゴリ2',
+        ]);
+
+        // 実行
+        $nextCategory = $child1->next();
+
+        // 評価
+        $this->assertEquals($child2->id, $nextCategory->id, '同じカテゴリ階層内であれば、表示順で後のカテゴリに容易にアクセスすることができること');
+    }
+
+    /**
+     * カテゴリ表示順
+     * 
+     * - 直接編集しなくても同一カテゴリ階層で表示順を上へ移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ表示順
+     */
+    public function test_order_number_up()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
+        $child1 = $category->children()->create([
+            'name' => '子カテゴリ1',
+        ]);
+        $child2 = $category->children()->create([
+            'name' => '子カテゴリ2',
+        ]);
+
+        // 実行
+        $child2->orderUp();
+
+        // 評価
+        $this->assertEquals(1, $child2->order_number, '同一カテゴリ階層で表示順を上へ移動することができること');
+        $this->assertDatabaseHas('categories', [
+            'id' => $child2->id,
+            'order_number' => 1,
+        ]);
+        $child1->refresh();
+        $this->assertEquals(2, $child1->order_number, '同一カテゴリ階層で表示順を上へ移動することができること');
+        $this->assertDatabaseHas('categories', [
+            'id' => $child1->id,
+            'order_number' => 2,
+        ]);
+    }
+
+    /**
+     * カテゴリ表示順
+     * 
+     * - 直接編集しなくても同一カテゴリ階層で表示順を下へ移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ表示順
+     */
+    public function test_order_number_down()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile' => $profile,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
+        $child1 = $category->children()->create([
+            'name' => '子カテゴリ1',
+        ]);
+        $child2 = $category->children()->create([
+            'name' => '子カテゴリ2',
+        ]);
+
+        // 実行
+        $child1->orderDown();
+
+        // 評価
+        $this->assertEquals(2, $child1->order_number, '同一カテゴリ階層で表示順を下へ移動することができること');
+        $this->assertDatabaseHas('categories', [
+            'id' => $child1->id,
+            'order_number' => 2,
+        ]);
+        $child2->refresh();
+        $this->assertEquals(1, $child2->order_number, '同一カテゴリ階層で表示順を下へ移動することができること');
+        $this->assertDatabaseHas('categories', [
+            'id' => $child2->id,
+            'order_number' => 1,
+        ]);
+    }
 }

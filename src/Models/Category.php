@@ -323,6 +323,122 @@ class Category extends Model
         );
     }
 
+    /**
+     * 表示順で前
+     * 
+     * 表示順で一つ前のカテゴリを取得します。
+     * 
+     * カテゴリが既に先頭にある場合は、nullを返します。
+     *
+     * @return Category|null 表示順で前のカテゴリ。存在しない場合null
+     */
+    public function previous(): Category|null
+    {
+        return $this->where('profile_id', '=', $this->profile->id)
+            ->where('parent_id', '=', $this->parent_id)
+            ->where('order_number', '<', $this->order_number)->orderBy('order_number', 'desc')->first();
+    }
+
+    /**
+     * 表示順で後
+     * 
+     * 表示順で一つ後のカテゴリを取得します。
+     * 
+     * カテゴリが既に最後にある場合は、nullを返します。
+     * 
+     * @return Category|null 表示順で後ろのカテゴリ。存在しない場合null
+     */
+    public function next(): Category|null
+    {
+        return $this->where('profile_id', '=', $this->profile->id)
+            ->where('parent_id', '=', $this->parent_id)
+            ->where('order_number', '>', $this->order_number)->orderBy('id', 'asc')->first();
+    }
+
+    /**
+     * 表示順を上
+     * 
+     * カテゴリの表示順を同一階層内で一つ上げます。
+     * 
+     * 表示順が既に先頭の場合は、何もしません（空振り）。
+     *
+     * @return void
+     */
+    public function orderUp(): void
+    {
+        $target = $this->previous();
+        if ($target) {
+            // 一つ前のカテゴリーが存在する場合
+            DB::transaction(
+                function () use ($target) {
+                    // 表示順を入れ替え
+                    $prev = $target->order_number;
+                    $target->order_number = $this->order_number;
+                    $this->order_number = $prev;
+
+                    $target->save();
+                    $this->save();
+                }
+            );
+        }
+    }
+
+    /**
+     * 表示順を下
+     * 
+     * カテゴリの表示順を同一階層内で一つ下げます。
+     * 
+     * 表示順が既に最後の場合は、何もしません（空振り）。
+     *
+     * @return void
+     */
+    public function orderDown(): void
+    {
+        $target = $this->next();
+        if ($target) {
+            // 一つ後のカテゴリーが存在する場合
+            DB::transaction(
+                function () use ($target) {
+                    // 表示順を入れ替え
+                    $prev = $target->order_number;
+                    $target->order_number = $this->order_number;
+                    $this->order_number = $prev;
+
+                    $target->save();
+                    $this->save();
+                }
+            );
+        }
+    }
+
+    /**
+     * タイプを条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * 名前を条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
+    {
+        $like->build($query, 'name', $name);
+    }
+
+    /**
+     * 親カテゴリ（nullの場合は、ルート）を条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfParent($query, ?Category $parent)
+    {
+        if (is_null(($parent))) {
+            $query->whereNull('parent_id');
+        } else {
+            $query->where('parent_id', $parent->id);
+        }
+    }
+
     // ========================== ここまで整理済み ==========================
 
     /**
@@ -365,72 +481,6 @@ class Category extends Model
             foreach ($this->children as $child) {
                 $child->delete();
             }
-        }
-    }
-
-    /**
-     * 表示順で一つ前のカテゴリーを取得します。
-     *
-     * @return mixed 一つ前のカテゴリー。存在しない場合null
-     */
-    public function previous(): mixed
-    {
-        return $this->where('profile_id', '=', $this->profile->id)
-            ->where('parent_id', '=', $this->parent_id)
-            ->where('order_number', '<', $this->order_number)->orderBy('order_number', 'desc')->first();
-    }
-
-    /**
-     * 表示順で一つ後のカテゴリーを取得します。
-     * 
-     * @return mixed 一つ後のカテゴリー。存在しない場合null
-     */
-    public function next(): mixed
-    {
-        return $this->where('profile_id', '=', $this->profile->id)
-            ->where('parent_id', '=', $this->parent_id)
-            ->where('order_number', '>', $this->order_number)->orderBy('id', 'asc')->first();
-    }
-
-    /**
-     * カテゴリーの表示順を同一階層内で一つ上げます。
-     * 表示順が既に先頭の場合は、何もしません（空振り）。
-     *
-     * @return void
-     */
-    public function orderUp(): void
-    {
-        $target = $this->previous();
-        if ($target) {
-            // 一つ前のカテゴリーが存在する場合
-            // 表示順を入れ替え
-            $prev = $target->order_number;
-            $target->order_number = $this->order_number;
-            $this->order_number = $prev;
-
-            $target->save();
-            $this->save();
-        }
-    }
-
-    /**
-     * カテゴリーの表示順を同一階層内で一つ下げます。
-     * 表示順が既に最後の場合は、何もしません（空振り）。
-     *
-     * @return void
-     */
-    public function orderDown(): void
-    {
-        $target = $this->next();
-        if ($target) {
-            // 一つ後のカテゴリーが存在する場合
-            // 表示順を入れ替え
-            $prev = $target->order_number;
-            $target->order_number = $this->order_number;
-            $this->order_number = $prev;
-
-            $target->save();
-            $this->save();
         }
     }
 
@@ -537,34 +587,6 @@ class Category extends Model
         $query->leftJoinSub($categorizables, 'categorizables', function (JoinClause $join) use ($categoryTableName) {
             $join->on($categoryTableName . '.id', '=', 'categorizables.category_id');
         })->select(["$categoryTableName.*", 'count_of_contents']);
-    }
-
-    /**
-     * タイプを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    /**
-     * 名前を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
-    {
-        $like->build($query, 'name', $name);
-    }
-
-    /**
-     * 親カテゴリ（nullの場合は、ルート）を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfParent($query, ?Category $parent)
-    {
-        if (is_null(($parent))) {
-            $query->whereNull('parent_id');
-        } else {
-            $query->where('parent_id', $parent->id);
-        }
     }
 
     /**
