@@ -340,7 +340,7 @@ class ReplyTest extends TestCase
     /**
      * 返信公開フラグ
      * 
-     * - デフォルトで非公開であることを確認します。
+     * - デフォルトは、非公開であることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
@@ -357,9 +357,7 @@ class ReplyTest extends TestCase
         // 実行
         $reply = Reply::create([
             'nickname' => 'テストユーザ',
-            'is_public' => true,
         ], $comment);
-        $reply->refresh();
 
         // 評価
         Assert::assertFalse($reply->isPublic, '公開フラグがデフォルトであること');
@@ -368,7 +366,7 @@ class ReplyTest extends TestCase
     /**
      * 返信公開フラグ
      * 
-     * - doPublic()メソッドを実行すると、返信が公開されることを確認します。
+     * - 公開できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
@@ -385,13 +383,13 @@ class ReplyTest extends TestCase
         $reply->doPublic();
 
         // 評価
-        Assert::assertTrue($reply->isPublic, '公開であること');
+        Assert::assertTrue($reply->isPublic, '公開できること');
     }
 
     /**
      * 返信公開フラグ
      * 
-     * - doPrivate()メソッドを実行すると、返信が非公開になることを確認します。
+     * - 非公開にできることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
      */
@@ -408,7 +406,7 @@ class ReplyTest extends TestCase
         $reply->doPrivate();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開であること');
+        Assert::assertFalse($reply->isPublic, '非公開にできること');
     }
 
     /**

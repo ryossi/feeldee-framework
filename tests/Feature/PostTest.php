@@ -65,6 +65,76 @@ class PostTest extends TestCase
     }
 
     /**
+     * コンテンツ公開フラグ
+     * 
+     * - デフォルトは、非公開であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ公開フラグ
+     */
+    public function test_is_public_default()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $post = Post::create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'profile' => $profile,
+        ]);
+
+        // 評価
+        $this->assertFalse($post->isPublic, 'デフォルトは、非公開であること');
+    }
+
+    /**
+     * コンテンツ公開フラグ
+     * 
+     * - 公開できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ公開フラグ
+     */
+    public function test_is_public_doPublic()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $post = Post::factory([
+            'is_public' => false,
+            'profile' => Profile::factory()->create(),
+        ])->create();
+
+        // 実行
+        $post->doPublic();
+
+        // 評価
+        $this->assertTrue($post->isPublic, '公開できること');
+    }
+
+    /**
+     * コンテンツ公開フラグ
+     * 
+     * - 非公開にできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ公開フラグ
+     */
+    public function test_is_public_doPrivate()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $post = Post::factory([
+            'is_public' => true,
+            'profile' => Profile::factory()->create(),
+        ])->create();
+
+        // 実行
+        $post->doPrivate();
+
+        // 評価
+        $this->assertFalse($post->isPublic, '非公開にできること');
+    }
+
+    /**
      * 投稿日
      * 
      * - 投稿した日付であることを確認します。

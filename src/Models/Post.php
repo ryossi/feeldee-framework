@@ -12,8 +12,6 @@ use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use PHPHtmlParser\Dom;
 
 /**
@@ -23,13 +21,6 @@ use PHPHtmlParser\Dom;
 class Post extends Content
 {
     /**
-     * 配列に表示する属性
-     *
-     * @var array
-     */
-    protected $visible = ['id', 'profile_id', 'post_date', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
-
-    /**
      * 複数代入可能な属性
      *
      * @var array
@@ -37,11 +28,19 @@ class Post extends Content
     protected $fillable = ['profile', 'post_date', 'title', 'value', 'public_level', 'thumbnail'];
 
     /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
+    protected $visible = ['id', 'profile', 'is_public', 'post_date', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
+
+    /**
      * キャストする必要のある属性
      *
      * @var array
      */
     protected $casts = [
+        'is_public' => 'boolean',
         'post_date' => 'date',
         'value' => Html::class,
         'thumbnail' => URL::class,

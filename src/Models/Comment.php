@@ -181,10 +181,12 @@ class Comment extends Model
      */
     protected function getIsPublicAttribute(): bool
     {
-        return $this->attributes['is_public'];
+        return $this->attributes['is_public'] ?? false;
     }
 
     /**
+     * 公開
+     * 
      * コメントを公開します。
      * 
      * @return void
@@ -196,6 +198,8 @@ class Comment extends Model
     }
 
     /**
+     * 非公開
+     * 
      * コメントを非公開にします。
      * 
      * @return void

@@ -491,7 +491,7 @@ class CommentTest extends TestCase
     /**
      * コメント公開フラグ
      * 
-     * - コメント公開フラグが指定されなかった場合は、非公開であることを確認します。
+     * - デフォルトは、非公開であることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
@@ -510,18 +510,16 @@ class CommentTest extends TestCase
         $comment = Comment::create([
             'body' => 'これはテストコメントです。',
             'nickname' => 'テストユーザ',
-            'is_public' => true
         ], $item);
-        $comment->refresh();
 
         // 評価
-        Assert::assertFalse($comment->isPublic, 'デフォルトは、非公開であること');
+        Assert::assertFalse($comment->isPublic, 'コメント公開フラグは、デフォルトで非公開であること');
     }
 
     /**
      * コメント公開フラグ
      * 
-     * - doPublic()メソッドを実行すると、コメントが公開されることを確認します。
+     * - 公開できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
@@ -536,13 +534,13 @@ class CommentTest extends TestCase
         $comment->doPublic();
 
         // 評価
-        Assert::assertTrue($comment->isPublic, '公開であること');
+        Assert::assertTrue($comment->isPublic, '公開できること');
     }
 
     /**
      * コメント公開フラグ
      * 
-     * - doPrivate()メソッドを実行すると、コメントが非公開になることを確認します。
+     * - 非公開にできることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
@@ -557,7 +555,7 @@ class CommentTest extends TestCase
         $comment->doPrivate();
 
         // 評価
-        Assert::assertFalse($comment->isPublic, '非公開であること');
+        Assert::assertFalse($comment->isPublic, '非公開にできること');
     }
 
     /**

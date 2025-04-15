@@ -46,16 +46,6 @@ abstract class Content extends Model
         return $this->belongsTo(Profile::class);
     }
 
-    // ========================== ここまで整理ずみ ==========================
-
-    /**
-     * コンテンツカテゴリ
-     */
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
-
     /**
      * コンテンツ公開フラグ
      *
@@ -63,10 +53,12 @@ abstract class Content extends Model
      */
     protected function getIsPublicAttribute(): bool
     {
-        return $this->attributes['is_public'];
+        return $this->attributes['is_public'] ?? false;
     }
 
     /**
+     * 公開
+     * 
      * コンテンツを公開します。
      * 
      * @return void
@@ -80,6 +72,8 @@ abstract class Content extends Model
     }
 
     /**
+     * 非公開
+     * 
      * コンテンツを非公開にします。
      * 
      * @return void
@@ -91,6 +85,29 @@ abstract class Content extends Model
 
         $this->afterPrivate();
     }
+
+    /**
+     * コンテンツ公開後処理
+     */
+    protected function afterPublic(): void {}
+
+
+    /**
+     * コンテンツ非公開後処理
+     */
+    protected function afterPrivate(): void {}
+
+    // ========================== ここまで整理ずみ ==========================
+
+    /**
+     * コンテンツカテゴリ
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+
 
     /**
      * コンテンツ公開レベル
@@ -118,8 +135,6 @@ abstract class Content extends Model
         );
     }
 
-    // ========================== ここまで整理ずみ ==========================
-
     /**
      * 省略テキストを取得します。
      * 
@@ -140,18 +155,6 @@ abstract class Content extends Model
      */
     protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
 
-
-
-    /**
-     * コンテンツ公開後の処理を記述します。
-     */
-    protected function afterPublic(): void {}
-
-
-    /**
-     * コンテンツ非公開後の処理を記述します。
-     */
-    protected function afterPrivate(): void {}
 
     /**
      * このコンテンツのレコーダリスト
