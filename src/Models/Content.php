@@ -97,18 +97,6 @@ abstract class Content extends Model
      */
     protected function afterPrivate(): void {}
 
-    // ========================== ここまで整理ずみ ==========================
-
-    /**
-     * コンテンツカテゴリ
-     */
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
-
-
-
     /**
      * コンテンツ公開レベル
      *
@@ -130,9 +118,19 @@ abstract class Content extends Model
         };
 
         return Attribute::make(
-            get: fn($value) => !is_null($value) ? ($value instanceof PublicLevel ? $value : PublicLevel::from($value)) : null,
+            get: fn($value) => !is_null($value) ? ($value instanceof PublicLevel ? $value : PublicLevel::from($value)) : PublicLevel::Private,
             set: fn($value, $attributes) => $setter($value, $attributes)
         );
+    }
+
+    // ========================== ここまで整理ずみ ==========================
+
+    /**
+     * コンテンツカテゴリ
+     */
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /**

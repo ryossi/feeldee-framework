@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\DB;
 class Photo extends Content
 {
     /**
+     * 複数代入可能な属性
+     *
+     * @var array
+     */
+    protected $fillable = ['profile', 'title', 'photo_type', 'src', 'regist_datetime', 'is_public', 'public_level'];
+
+    /**
      * 配列に表示する属性
      *
      * @var array
@@ -27,13 +34,6 @@ class Photo extends Content
      * @var array
      */
     protected $appends = ['albums'];
-
-    /**
-     * 複数代入可能な属性
-     *
-     * @var array
-     */
-    protected $fillable = ['profile', 'title', 'photo_type', 'src', 'regist_datetime', 'is_public', 'public_level'];
 
     /**
      * キャストする必要のある属性

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Feeldee\Framework\Contracts\HssProfile;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
+use Feeldee\Framework\Models\PublicLevel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
@@ -132,5 +133,87 @@ class PhotoTest extends TestCase
 
         // 評価
         $this->assertFalse($photo->isPublic, '非公開にできること');
+    }
+
+    /**
+     * コンテンツ公開レベル
+     * 
+     * - デフォルトは、"自分"であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開レベル
+     */
+    public function test_public_level_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $photo = Photo::factory([
+            'profile' => $profile,
+        ])->create();
+
+        // 評価
+        $this->assertEquals(PublicLevel::Private, $photo->public_level, 'デフォルトは、"自分"であること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'public_level' => PublicLevel::Private,
+        ]);
+    }
+
+    /**
+     * コンテンツ公開レベル
+     * 
+     * - コンテンツ公開レベルを指定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開レベル
+     */
+    public function test_public_level()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $photo = Photo::create([
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'profile' => $profile,
+            'public_level' => PublicLevel::Member,
+        ]);
+
+        // 評価
+        $this->assertEquals(PublicLevel::Member, $photo->public_level, 'コンテンツ公開レベルを指定できること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'public_level' => PublicLevel::Member,
+        ]);
+    }
+
+    /**
+     * コンテンツ公開レベル
+     * 
+     * - コンテンツ公開レベルを変更できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開レベル
+     */
+    public function test_public_level_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $photo = Photo::factory([
+            'profile' => Profile::factory()->create(),
+        ])->create();
+
+        // 実行
+        $photo->public_level = PublicLevel::Member;
+        $photo->save();
+
+        // 評価
+        $this->assertEquals(PublicLevel::Member, $photo->public_level, 'コンテンツ公開レベルを変更できること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'public_level' => PublicLevel::Member,
+        ]);
     }
 }

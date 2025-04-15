@@ -7,22 +7,22 @@ namespace Feeldee\Framework\Models;
  */
 enum PublicLevel: int
 {
-    /**
+/**
      * 自分
      */
     case Private = 0;
 
-    /**
+/**
      * 友達
      */
     case Friend = 2;
 
-    /**
+/**
      * 会員
      */
     case Member = 5;
 
-    /**
+/**
      * 全員
      */
     case Public = 10;
@@ -39,6 +39,6 @@ enum PublicLevel: int
      */
     public function label(): string
     {
-        return config('feeldee.content.public_level')[$this->value];
+        return config('feeldee.public_level.label')[$this->value];
     }
 }
