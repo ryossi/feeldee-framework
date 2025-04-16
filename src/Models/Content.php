@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, SetUser, WrappedId,  AccessCounter;
+    use HasFactory, SetUser,  AccessCounter;
 
     /**
      * コンテンツ種別
@@ -27,24 +26,18 @@ abstract class Content extends Model
     abstract public static function type();
 
     /**
-     * IDをラップする属性
-     * 
-     * @var array
-     */
-    protected $wrappable = [
-        'profile' => 'profile_id',
-        'category' => 'category_id',
-    ];
-
-    /**
      * コンテンツ所有プロフィール
      *
-     * @return BelongsTo
+     * @return Attribute
      */
-    public function profile(): BelongsTo
-
+    protected function profile(): Attribute
     {
-        return $this->belongsTo(Profile::class);
+        return Attribute::make(
+            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->first(),
+            set: fn($value) => [
+                'profile_id' => $value instanceof Profile ? $value->id : $value
+            ]
+        );
     }
 
     /**
@@ -134,10 +127,28 @@ abstract class Content extends Model
 
     /**
      * コンテンツカテゴリ
+     *
+     * @return Attribute
      */
-    public function category()
+    protected function category(): Attribute
     {
-        return $this->belongsTo(Category::class);
+        $setter = function ($value) {
+            if ($value instanceof Category) {
+                return $value->id;
+            } else {
+                $obj = $this->profile->categories()->ofType($this->type())->ofName($value)->first();
+                if ($obj instanceof Category) {
+                    return $obj->id;
+                }
+                return $value;
+            }
+        };
+        return Attribute::make(
+            get: fn($value) => $this->belongsTo(Category::class, 'category_id')->first(),
+            set: fn($value) => [
+                'category_id' => $setter($value)
+            ]
+        );
     }
 
     // ========================== ここまで整理ずみ ==========================
@@ -285,38 +296,6 @@ abstract class Content extends Model
         }
 
         return $this->tags()->get(['name']);
-    }
-
-    /**
-     * カテゴリー名
-     */
-    protected function categoryName(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => $this->category ? $this->category->name : null,
-        );
-    }
-
-    /**
-     * カテゴリー名を指定してコンテンツをカテゴリー分けします。
-     * $valueがnullまたは空文字の場合は、既に割り当てられているカテゴリーを解除します。
-     * 
-     * @param  mixed $value カテゴリー名
-     * @return void
-     */
-    public function categorizedByName(mixed $value): void
-    {
-        if (is_null($value) || $value == '') {
-            $this->category()->disassociate();
-        } else if ($value instanceof self && $value->profile == $this->profile) {
-            $this->category()->associate($value);
-        } else {
-            $category = $this->profile->categories()->ofType($this->type())->ofName($value)->first();
-            if ($category == null) {
-                throw new ApplicationException('CategoryNotFound', 71004, ['name' => $value]);
-            }
-            $this->category()->associate($category);
-        }
     }
 
     /**

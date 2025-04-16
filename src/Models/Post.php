@@ -6,7 +6,6 @@ use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Exceptions\ApplicationException;
-use Feeldee\Framework\Observers\ContentCategoryObserver;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
@@ -18,7 +17,7 @@ use PHPHtmlParser\Dom;
 /**
  * 投稿をあらわすモデル
  */
-#[ObservedBy([PostPhotoSyncObserver::class, ContentRecordObserver::class, ContentCategoryObserver::class, ContentTagObserver::class])]
+#[ObservedBy([PostPhotoSyncObserver::class, ContentRecordObserver::class, ContentTagObserver::class])]
 class Post extends Content
 {
     /**
@@ -57,6 +56,36 @@ class Post extends Content
      */
     protected static function booted(): void
     {
+        static::creating(
+            function (Self $model) {
+                if (!is_null($model->category)) {
+                    if ($model->profile->id !== $model->category->profile->id) {
+                        // カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致しない場合
+                        throw new ApplicationException('PostCategoryProfileMissmatch', 20001);
+                    }
+                    if ($model->category->type !== $model::type()) {
+                        // カテゴリ種別とコンテンツ種別が一致しない場合
+                        throw new ApplicationException('PostCategoryTypeMissmatch', 20002);
+                    }
+                }
+            }
+        );
+
+        static::updating(
+            function (Self $model) {
+                if (!is_null($model->category)) {
+                    if ($model->profile->id !== $model->category->profile->id) {
+                        // カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致しない場合
+                        throw new ApplicationException('PostCategoryProfileMissmatch', 20001);
+                    }
+                    if ($model->category->type !== $model::type()) {
+                        // カテゴリ種別とコンテンツ種別が一致しない場合
+                        throw new ApplicationException('PostCategoryTypeMissmatch', 20002);
+                    }
+                }
+            }
+        );
+
         static::saving(function (Self $model) {
             // テキストは、自動補完
             $model->text = strip_tags($model->value);
