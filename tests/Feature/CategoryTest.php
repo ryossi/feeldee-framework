@@ -32,8 +32,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
         ]);
@@ -965,7 +964,7 @@ class CategoryTest extends TestCase
             ->has(
                 Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
                     ->has(
-                        Category::factory(3)->for(Profile::factory()),
+                        Category::factory(3),
                         'children'
                     ),
                 'categories'
@@ -1035,7 +1034,7 @@ class CategoryTest extends TestCase
             ->has(
                 Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
                     ->has(
-                        Category::factory(3)->for(Profile::factory()),
+                        Category::factory(3),
                         'children'
                     ),
                 'categories'
@@ -1073,6 +1072,63 @@ class CategoryTest extends TestCase
     }
 
     /**
+     * 子カテゴリリスト
+     * 
+     * - 子カテゴリが存在しないカテゴリは削除できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
+     */
+    public function test_delete_not_has_child()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(0),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $category = Category::where('name', '親カテゴリ')->first();
+
+        // 実行
+        $condition = $category->delete();
+
+        // 評価
+        $this->assertTrue($condition, '子カテゴリが存在しないカテゴリは削除できること');
+    }
+
+    /**
+     * 子カテゴリリスト
+     * 
+     * - 子カテゴリが存在する場合はカテゴリを削除できないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
+     */
+    public function test_delete_has_child()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()
+            ->has(
+                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
+                    ->has(
+                        Category::factory(1),
+                        'children'
+                    ),
+                'categories'
+            )->create();
+        $category = Category::where('name', '親カテゴリ')->first();
+
+        // 実行
+        $this->assertThrows(function () use ($category) {
+            $category->delete();
+        }, ApplicationException::class, 'CategoryDeleteHasChildren');
+    }
+
+    /**
      * カテゴリ表示順
      * 
      * - 同じカテゴリ階層内でのカテゴリの表示順を決定するための番号であることを確認します。
@@ -1085,6 +1141,7 @@ class CategoryTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
+        $profile->delete();
         $category = Category::factory()->create([
             'profile' => $profile,
             'type' => Post::type(),

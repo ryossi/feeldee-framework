@@ -20,7 +20,7 @@ use Intervention\Image\Facades\Image;
  */
 class Category extends Model
 {
-    use HasFactory, SetUser, WrappedId;
+    use HasFactory, SetUser;
 
     /**
      * 複数代入可能な属性
@@ -35,16 +35,6 @@ class Category extends Model
      * @var array
      */
     protected $visible = ['profile', 'id', 'type', 'name', 'parent'];
-
-    /**
-     * IDをラップする属性
-     * 
-     * @var array
-     */
-    protected $wrappable = [
-        'profile' => 'profile_id',
-        'parent' => 'parent_id',
-    ];
 
     /**
      * 同一階層の最後に表示順を新しく割り当てます。
@@ -136,7 +126,7 @@ class Category extends Model
     }
 
     /**
-     * 子カテゴリーが存在するかどうか
+     * 子カテゴリが存在するかどうか
      * 
      * @return bool 存在する場合true、しない場合false
      */
@@ -321,6 +311,8 @@ class Category extends Model
                 }
             }
         );
+        $this->refresh();
+        $target->refresh();
     }
 
     /**
@@ -449,6 +441,24 @@ class Category extends Model
         return $this->hasMany(Relation::getMorphedModel($this->type));
     }
 
+    /**
+     * 削除
+     * 
+     * 子カテゴリが存在するカテゴリは削除できません。
+     * 
+     * @return bool|null
+     * @throws ApplicationException 子カテゴリリストが存在する場合、CategoryDeleteHasChildren[71002]
+     */
+    public function delete(): bool|null
+    {
+        if ($this->hasChild) {
+            // 子カテゴリが存在する場合エラー
+            throw new ApplicationException('CategoryDeleteHasChildren', 71002, ['type' => $this->type, 'name' => $this->name]);
+        }
+        // カテゴリー削除
+        return parent::delete();
+    }
+
     // ========================== ここまで整理済み ==========================
 
     /**
@@ -472,20 +482,6 @@ class Category extends Model
     }
 
     /**
-     * 子カテゴリーを全て削除します。
-     *
-     * @return void
-     */
-    public function deleteChildren(): void
-    {
-        if ($this->hasChild()) {
-            foreach ($this->children as $child) {
-                $child->delete();
-            }
-        }
-    }
-
-    /**
      * カテゴリー名を変更します。
      *
      * @param  mixed $new_name 新しいカテゴリー名
@@ -500,29 +496,6 @@ class Category extends Model
         }
         $this->name = $new_name;
         $this->save();
-    }
-
-    /**
-     * カテゴリーを削除します。
-     * 
-     * @param string $name カテゴリー名
-     * @param bool $hierarchically 子カテゴリーも同時に削除する場合true、削除しない場合false
-     */
-    public function delete(bool $hierarchically = false): void
-    {
-        if (!$hierarchically) {
-            // 子カテゴリーは削除しない場合
-
-            // カテゴリー取得
-            $category = $this->profile->categories()->ofType($this->type)->ofName($this->name)->first();
-            if ($category->hasChild()) {
-                // 子カテゴリーが存在する場合エラー
-                throw new ApplicationException('ChildCategoryExists', 71002, ['name' => $this->name]);
-            }
-        }
-
-        // カテゴリー削除
-        self::whereId($this->id)->delete();
     }
 
     /**
