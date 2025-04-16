@@ -23,11 +23,18 @@ class Item extends Content
     }
 
     /**
+     * 複数代入可能な属性
+     *
+     * @var array
+     */
+    protected $fillable = ['profile', 'public_level', 'category', 'title', 'value'];
+
+    /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'title', 'category_name', 'image', 'text'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'category_name', 'image', 'text'];
 
     /**
      * 配列に追加する属性
@@ -35,13 +42,6 @@ class Item extends Content
      * @var array
      */
     protected $appends = ['category_name'];
-
-    /**
-     * 複数代入可能な属性
-     *
-     * @var array
-     */
-    protected $fillable = ['profile', 'title', 'value'];
 
     /**
      * キャストする必要のある属性

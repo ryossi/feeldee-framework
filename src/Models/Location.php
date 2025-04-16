@@ -4,11 +4,9 @@ namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
-use Feeldee\Framework\Exceptions\LoginRequiredException;
 use Feeldee\Framework\Facades\ImageText;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * 場所をあらわすモデル
@@ -26,9 +24,9 @@ class Location extends Content
         return 'location';
     }
 
-    protected $fillable = ['profile', 'title', 'latitude', 'longitude', 'zoom', 'public_level', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
-    protected $visible = ['id', 'title', 'latitude', 'longitude', 'zoom', 'is_public', 'thumbnail'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
     protected $casts = [
         'latitude' => 'float',

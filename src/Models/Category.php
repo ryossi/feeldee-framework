@@ -257,18 +257,18 @@ class Category extends Model
      * 
      * @param Category $target 対象カテゴリ
      * @return void
-     * @throws ApplicationException カテゴリ所有プロフィールが異なる場合、CategoryProfileNotMatch[71001]
-     * @throws ApplicationException カテゴリタイプが異なる場合、CategoryTypeNotMatch[71002]
+     * @throws ApplicationException カテゴリ所有プロフィールが異なる場合、CategorySwapProfileMissmatch[71001]
+     * @throws ApplicationException カテゴリタイプが異なる場合、CategorySwapTypeMissmatch[71002]
      */
     public function swap(Category $target): void
     {
         if ($this->profile->id != $target->profile->id) {
             // プロフィールが異なる場合
-            throw new ApplicationException('CategoryProfileNotMatch', 71001, ['source' => $this->profile->id, 'target' => $target->profile->id]);
+            throw new ApplicationException('CategorySwapProfileMissmatch', 71001, ['source' => $this->profile->id, 'target' => $target->profile->id]);
         }
         if ($this->type != $target->type) {
             // タイプが異なる場合
-            throw new ApplicationException('CategoryTypeNotMatch', 71002, ['source' => $this->type, 'target' => $target->type]);
+            throw new ApplicationException('CategorySwapTypeMissmatch', 71002, ['source' => $this->type, 'target' => $target->type]);
         }
         if ($this->id == $target->id) {
             // 同一カテゴリの場合
@@ -439,16 +439,17 @@ class Category extends Model
         }
     }
 
-    // ========================== ここまで整理済み ==========================
-
     /**
-     * このカテゴリーに所属するコンテンツリスト
+     * コンテンツリスト
+     * 
      * 注）このリストには、未公開のコンテンツは含まれません。
      */
     public function contents()
     {
         return $this->hasMany(Relation::getMorphedModel($this->type));
     }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 直列化されたカテゴリー階層のコレクション

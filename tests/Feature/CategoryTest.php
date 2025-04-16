@@ -782,7 +782,7 @@ class CategoryTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($categoryA, $categoryB) {
             $categoryA->swap($categoryB);
-        }, ApplicationException::class, 'CategoryProfileNotMatch');
+        }, ApplicationException::class, 'CategorySwapProfileMissmatch');
     }
 
     /**
@@ -817,7 +817,7 @@ class CategoryTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($categoryA, $categoryB) {
             $categoryA->swap($categoryB);
-        }, ApplicationException::class, 'CategoryTypeNotMatch');
+        }, ApplicationException::class, 'CategorySwapTypeMissmatch');
     }
 
     /**

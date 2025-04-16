@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use Feeldee\Framework\Contracts\HssProfile;
+use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Models\Category;
+use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
@@ -218,6 +221,132 @@ class PostTest extends TestCase
             'public_level' => PublicLevel::Public,
         ]);
     }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリを指定できることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリが、投稿のカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
+     */
+    public function test_category()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ])->create();
+
+        // 実行
+        $post = Post::create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'profile' => $profile,
+            'category' => $category,
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $post->category->id, 'カテゴリを指定できること');
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
+     */
+    public function test_category_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile' => $profile,
+            'type' => Post::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($otherProfile, $category) {
+            Post::create([
+                'title' => 'テスト投稿',
+                'post_date' => now(),
+                'profile' => $otherProfile,
+                'category' => $category,
+            ]);
+        }, ApplicationException::class, 'PostCategoryProfileMissmatch');
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - コンテンツ種別と同じカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
+     */
+    public function test_category_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile' => $profile,
+            'type' => Item::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $category) {
+            Post::create([
+                'title' => 'テスト投稿',
+                'post_date' => now(),
+                'profile' => $profile,
+                'category' => $category,
+            ]);
+        }, ApplicationException::class, 'PostCategoryTypeMissmatch');
+    }
+
+    // /**
+    //  * コンテンツカテゴリ
+    //  * 
+    //  * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
+    //  * 
+    //  * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
+    //  */
+    // public function test_category_name()
+    // {
+    //     // 準備
+    //     Auth::shouldReceive('id')->andReturn(1);
+    //     $profile = Profile::factory()->create();
+    //     $category = Category::factory([
+    //         'profile' => $profile,
+    //         'name' => 'テストカテゴリ',
+    //         'type' => Post::type(),
+    //     ])->create();
+
+    //     // 実行
+    //     $post = Post::create([
+    //         'title' => 'テスト投稿',
+    //         'post_date' => now(),
+    //         'profile' => $profile,
+    //         'category' => 'テストカテゴリ',
+    //     ]);
+
+    //     // 評価
+    //     $this->assertEquals($category->id, $post->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
+    //     $this->assertDatabaseHas('posts', [
+    //         'id' => $post->id,
+    //         'category_id' => $category->id,
+    //     ]);
+    // }
 
     /**
      * 投稿日

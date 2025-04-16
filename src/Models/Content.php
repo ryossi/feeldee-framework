@@ -33,6 +33,7 @@ abstract class Content extends Model
      */
     protected $wrappable = [
         'profile' => 'profile_id',
+        'category' => 'category_id',
     ];
 
     /**
@@ -123,7 +124,13 @@ abstract class Content extends Model
         );
     }
 
-    // ========================== ここまで整理ずみ ==========================
+    /**
+     * 公開レベルが変更された場合の処理を記述します。
+     * 
+     * @param ?PublicLevel $before 変更前
+     * @param PublicLevel $after 変更後
+     */
+    protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
 
     /**
      * コンテンツカテゴリ
@@ -132,6 +139,8 @@ abstract class Content extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    // ========================== ここまで整理ずみ ==========================
 
     /**
      * 省略テキストを取得します。
@@ -144,15 +153,6 @@ abstract class Content extends Model
     {
         return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
     }
-
-    /**
-     * 公開レベルが変更された場合の処理を記述します。
-     * 
-     * @param ?PublicLevel $before 変更前
-     * @param PublicLevel $after 変更後
-     */
-    protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
-
 
     /**
      * このコンテンツのレコーダリスト

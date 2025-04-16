@@ -5,7 +5,8 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Carbon\CarbonImmutable;
-use Feeldee\Framework\Exceptions\LoginRequiredException;
+use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Observers\ContentCategoryObserver;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
@@ -17,7 +18,7 @@ use PHPHtmlParser\Dom;
 /**
  * 投稿をあらわすモデル
  */
-#[ObservedBy([PostPhotoSyncObserver::class, ContentRecordObserver::class, ContentTagObserver::class])]
+#[ObservedBy([PostPhotoSyncObserver::class, ContentRecordObserver::class, ContentCategoryObserver::class, ContentTagObserver::class])]
 class Post extends Content
 {
     /**
@@ -25,14 +26,14 @@ class Post extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'post_date', 'title', 'value', 'public_level', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'post_date', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'profile', 'is_public', 'post_date', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'post_date', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
 
     /**
      * キャストする必要のある属性
