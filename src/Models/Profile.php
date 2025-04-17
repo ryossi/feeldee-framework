@@ -17,6 +17,16 @@ class Profile extends Model
     protected $fillable = ['nickname', 'title', 'subtitle', 'introduction', 'home', 'user_id', 'show_members'];
 
     /**
+     * カテゴリリスト
+     */
+    public function categories()
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    // ========================== ここまで整理済み ==========================
+
+    /**
      * プロフィールのメディアボックスを取得
      */
     public function mediaBox(): HasOne
@@ -56,14 +66,6 @@ class Profile extends Model
     public function items()
     {
         return $this->hasMany(Item::class);
-    }
-
-    /**
-     * カテゴリーリストを取得します。
-     */
-    public function categories()
-    {
-        return $this->hasMany(Category::class);
     }
 
     /**
