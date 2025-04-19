@@ -193,6 +193,34 @@ class Category extends Model
     }
 
     /**
+     * コンテンツリスト
+     */
+    public function contents()
+    {
+        return $this->hasMany(Relation::getMorphedModel($this->type));
+    }
+
+    /**
+     * カテゴリ階層連続リスト
+     */
+    public function serials(): Attribute
+    {
+        $closure = function () {
+            $serial = collect([$this]);
+            $c = $this->parent;
+            while ($c != null) {
+                $serial->prepend($c);
+                $c = $c->parent;
+            }
+            return $serial;
+        };
+
+        return Attribute::make(
+            get: fn($value, $attributes) => $closure->call($this),
+        )->shouldCache();
+    }
+
+    /**
      * カテゴリ階層アップ
      * 
      * カテゴリ階層を一つ上げます。
@@ -439,6 +467,24 @@ class Category extends Model
     }
 
     /**
+     * 削除
+     * 
+     * 子カテゴリが存在するカテゴリは削除できません。
+     * 
+     * @return bool|null
+     * @throws ApplicationException カテゴリ削除において子カテゴリが存在する場合、CategoryDeleteHasChild[71005]
+     */
+    public function delete(): bool|null
+    {
+        if ($this->hasChild) {
+            // カテゴリ削除において子カテゴリが存在する場合エラー
+            throw new ApplicationException('CategoryDeleteHasChild', 71005, ['type' => $this->type, 'name' => $this->name]);
+        }
+        // カテゴリー削除
+        return parent::delete();
+    }
+
+    /**
      * タイプを条件に含むようにクエリのスコープを設定
      */
     public function scopeOfType($query, string $type)
@@ -466,90 +512,7 @@ class Category extends Model
         }
     }
 
-    /**
-     * コンテンツリスト
-     * 
-     * 注）このリストには、未公開のコンテンツは含まれません。
-     */
-    public function contents()
-    {
-        return $this->hasMany(Relation::getMorphedModel($this->type));
-    }
-
-    /**
-     * 削除
-     * 
-     * 子カテゴリが存在するカテゴリは削除できません。
-     * 
-     * @return bool|null
-     * @throws ApplicationException カテゴリ削除において子カテゴリが存在する場合、CategoryDeleteHasChild[71005]
-     */
-    public function delete(): bool|null
-    {
-        if ($this->hasChild) {
-            // カテゴリ削除において子カテゴリが存在する場合エラー
-            throw new ApplicationException('CategoryDeleteHasChild', 71005, ['type' => $this->type, 'name' => $this->name]);
-        }
-        // カテゴリー削除
-        return parent::delete();
-    }
-
     // ========================== ここまで整理済み ==========================
-
-    /**
-     * 直列化されたカテゴリー階層のコレクション
-     */
-    public function serial(): Attribute
-    {
-        $closure = function () {
-            $serial = collect([$this]);
-            $c = $this->parent;
-            while ($c != null) {
-                $serial->prepend($c);
-                $c = $c->parent;
-            }
-            return $serial;
-        };
-
-        return Attribute::make(
-            get: fn($value, $attributes) => $closure->call($this),
-        )->shouldCache();
-    }
-
-    /**
-     * カテゴリー名を変更します。
-     *
-     * @param  mixed $new_name 新しいカテゴリー名
-     * @return void
-     */
-    public function rename(string $new_name): void
-    {
-        $same_name_category = $this->profile->categories()->ofType($this->type)->ofName($new_name)->first();
-        if ($same_name_category != null && $same_name_category->id != $this->id) {
-            // 同一カテゴリー名のカテゴリーが既に存在する場合
-            throw new ApplicationException('CategorySameNameExists', 71003, ['name' => $new_name]);
-        }
-        $this->name = $new_name;
-        $this->save();
-    }
-
-    /**
-     * カテゴリー名を指定してカテゴリーを削除します。
-     * 
-     * @param Profile $profile プロフィール
-     * @param string $type タイプ
-     * @param string $name カテゴリー名
-     * @param bool $hierarchically 子カテゴリーも同時に削除する場合true、削除しない場合false
-     */
-    public static function deleteByName(Profile $profile, string $type, string $name, bool $hierarchically = false): void
-    {
-
-        // カテゴリー取得
-        $category = $profile->categories()->ofType($type)->ofName($name)->first();
-
-        // カテゴリー削除
-        $category->delete($hierarchically);
-    }
 
     /**
      * コンテンツカウントを追加するようにクエリのスコープを設定

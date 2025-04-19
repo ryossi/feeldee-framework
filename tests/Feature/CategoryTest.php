@@ -1342,4 +1342,77 @@ class CategoryTest extends TestCase
             'order_number' => 1,
         ]);
     }
+
+    /**
+     * コンテンツリスト
+     * 
+     * - カテゴリに分類分けされているコンテンツのコレクションであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#コンテンツリスト
+     */
+    public function test_contents()
+    {
+        //  準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+        ]);
+        Post::factory()->count(3)->create([
+            'profile_id' => $profile->id,
+            'category_id' => $category->id,
+            'is_public' => false,
+        ]);
+        $category->refresh();
+
+        // 実行
+        $contents = $category->contents;
+
+        // 評価
+        $this->assertEquals(3, $contents->count());
+        foreach ($contents as $content) {
+            $this->assertEquals($content->category->id, $category->id, 'カテゴリに分類分けされているコンテンツのリストであること');
+        }
+    }
+
+    /**
+     * カテゴリ階層連続リスト
+     * 
+     * - カテゴリ階層を親から子へ順番に直列化したカテゴリのコレクションであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ階層連続リスト
+     */
+    public function test_serials()
+    {
+        //  準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category1 = Category::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'name' => 'カテゴリ1',
+        ]);
+        $category2 = Category::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'name' => 'カテゴリ2',
+            'parent_id' => $category1->id,
+        ]);
+        $category3 = Category::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'name' => 'カテゴリ3',
+            'parent_id' => $category2->id,
+        ]);
+
+        // 実行
+        $serials = $category3->serials;
+
+        // 評価
+        $this->assertEquals(3, $serials->count());
+        foreach ($serials as $index => $serial) {
+            $this->assertEquals('カテゴリ' . ($index + 1), $serial->name, 'カテゴリ階層を親から子へ順番に直列化したカテゴリのコレクションであること');
+        }
+    }
 }
