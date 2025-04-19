@@ -42,6 +42,7 @@ class CategoryFactory extends Factory
         return $this->afterCreating(function (Category $category) use ($count, $attributes) {
             Category::factory()->count($count)->create(array_merge([
                 'parent_id' => $category->id,
+                'type' => $category->type,
             ], $attributes));
         });
     }

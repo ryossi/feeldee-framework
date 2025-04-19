@@ -81,8 +81,7 @@ class CategoryTest extends TestCase
 
         // 実行
         $this->assertThrows(function () use ($profile) {
-            Category::create([
-                'profile' => $profile,
+            $profile->categories()->create([
                 'name' => 'テストカテゴリ',
             ]);
         }, Exception::class);
@@ -102,8 +101,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
         ]);
@@ -129,8 +127,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
         ]);
@@ -156,8 +153,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Location::type(),
         ]);
@@ -183,8 +179,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Item::type(),
         ]);
@@ -210,8 +205,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
         ]);
@@ -238,8 +232,7 @@ class CategoryTest extends TestCase
 
         // 実行
         $this->assertThrows(function () use ($profile) {
-            Category::create([
-                'profile' => $profile,
+            $profile->categories()->create([
                 'type' => Post::type(),
             ]);
         }, Exception::class);
@@ -260,8 +253,7 @@ class CategoryTest extends TestCase
 
         // 実行
         $this->assertThrows(function () use ($profile) {
-            Category::create([
-                'profile' => $profile,
+            $profile->categories()->create([
                 'name' => 'テストカテゴリ',
                 'type' => Post::type(),
             ]);
@@ -283,8 +275,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->has(Category::factory(1, ['name' => 'テストカテゴリ', 'type' => Post::type()]))->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Item::type(),
         ]);
@@ -313,8 +304,7 @@ class CategoryTest extends TestCase
         $otherProfile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $otherProfile,
+        $category = $otherProfile->categories()->create([
             'name' => 'テストカテゴリ',
             'type' => Post::type(),
         ]);
@@ -342,18 +332,18 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $categoryB = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $categoryA,
+            'parent_id' => $categoryA->id,
         ]);
 
         // 実行
@@ -380,9 +370,8 @@ class CategoryTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => Profile::factory()->create()->id,
             'type' => Post::type(),
         ]);
 
@@ -406,13 +395,13 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
 
         // 実行
@@ -442,36 +431,52 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
+            'name' => 'ルート',
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
+            'name' => 'カテゴリA',
         ]);
         $categoryB = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $categoryA,
+            'parent_id' => $categoryA->id,
+            'name' => 'カテゴリB',
         ]);
         $categoryC = Category::factory()->create([
-            'profile' => $rootCategory->profile,
+            'profile_id' => $rootCategory->profile->id,
             'type' => Post::type(),
-            'parent' => $rootCategory,
+            'parent_id' => $categoryA->id,
+            'name' => 'カテゴリC',
+        ]);
+        $categoryD = Category::factory()->create([
+            'profile_id' => $rootCategory->profile->id,
+            'type' => Post::type(),
+            'parent_id' => $categoryA->id,
+            'name' => 'カテゴリD',
+        ]);
+        $categoryE = Category::factory()->create([
+            'profile_id' => $rootCategory->profile->id,
+            'type' => Post::type(),
+            'parent_id' => $rootCategory->id,
+            'name' => 'カテゴリE',
         ]);
 
         // 実行
-        $categoryC->hierarchyDown();
+        $categoryE->hierarchyDown();
 
         // 評価
-        $this->assertEquals(3, $categoryC->level, 'カテゴリ階層を一つ下げることができること');
-        $this->assertEquals($categoryA->id, $categoryC->parent->id, '新たな親カテゴリは、移動前のカテゴリ階層のカテゴリ表示順で直前のカテゴリとなること');
+        $this->assertEquals(3, $categoryE->level, 'カテゴリ階層を一つ下げることができること');
+        $this->assertEquals($categoryA->id, $categoryE->parent->id, '新たな親カテゴリは、移動前のカテゴリ階層のカテゴリ表示順で直前のカテゴリとなること');
         // 移動先のカテゴリ階層のカテゴリ表示順で最後に移動すること
         $this->assertDatabaseHas('categories', [
-            'id' => $categoryC->id,
+            'id' => $categoryE->id,
             'parent_id' => $categoryA->id,
-            'order_number' => 2,
+            'order_number' => 4,
         ]);
     }
 
@@ -488,7 +493,7 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
         ]);
 
@@ -512,23 +517,13 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $rootCategory,
-        ]);
-        $categoryB = Category::factory()->create([
-            'profile' => $profile,
-            'type' => Post::type(),
-            'parent' => $categoryA,
-        ]);
-        $categoryC = Category::factory()->create([
-            'profile' => $rootCategory->profile,
-            'type' => Post::type(),
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
 
 
@@ -552,23 +547,23 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $categoryB = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $categoryA,
+            'parent_id' => $categoryA->id,
         ]);
         $categoryC = Category::factory()->create([
-            'profile' => $rootCategory->profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
 
         // 実行
@@ -603,33 +598,33 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'ルート'
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリA',
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $categoryB = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリB',
-            'parent' => $categoryA,
+            'parent_id' => $categoryA->id,
         ]);
         $categoryC = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリC',
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $categoryD = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリD',
-            'parent' => $categoryB,
+            'parent_id' => $categoryB->id,
         ]);
 
         // 実行
@@ -684,33 +679,33 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'ルート'
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリA',
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $categoryB = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリB',
-            'parent' => $categoryA,
+            'parent_id' => $categoryA->id,
         ]);
         $categoryC = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリC',
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $categoryD = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリD',
-            'parent' => $categoryB,
+            'parent_id' => $categoryB->id,
         ]);
 
         // 実行
@@ -761,19 +756,19 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'ルート'
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリA',
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $otherProfile = Profile::factory()->create();
         $categoryB = Category::factory()->create([
-            'profile' => $otherProfile,
+            'profile_id' => $otherProfile->id,
             'type' => Post::type(),
             'name' => 'カテゴリB',
         ]);
@@ -797,18 +792,18 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'ルート'
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリA',
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
         $categoryB = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Item::type(),
             'name' => 'カテゴリB',
         ]);
@@ -832,15 +827,15 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $rootCategory = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'ルート'
         ]);
         $categoryA = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => 'カテゴリA',
-            'parent' => $rootCategory,
+            'parent_id' => $rootCategory->id,
         ]);
 
         // 実行
@@ -875,16 +870,12 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $parentCategory = Category::create([
-            'profile' => $profile,
+        $parentCategory = $profile->categories()->create([
             'name' => '親カテゴリ',
             'type' => Post::type(),
         ]);
-        $childCategory = Category::create([
-            'profile' => $profile,
+        $childCategory = $parentCategory->children()->create([
             'name' => '子カテゴリ',
-            'type' => Post::type(),
-            'parent' => $parentCategory,
         ]);
 
         // 評価
@@ -909,8 +900,7 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $category = Category::create([
-            'profile' => $profile,
+        $category = $profile->categories()->create([
             'name' => 'ルートカテゴリ',
             'type' => Post::type(),
         ]);
@@ -933,16 +923,12 @@ class CategoryTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $parentCategory = Category::create([
-            'profile' => $profile,
+        $parentCategory = $profile->categories()->create([
             'name' => '親カテゴリ',
             'type' => Post::type(),
         ]);
-        $childCategory = Category::create([
-            'profile' => $profile,
+        $childCategory = $parentCategory->children()->create([
             'name' => '子カテゴリ',
-            'type' => Post::type(),
-            'parent' => $parentCategory,
         ]);
 
         // 評価
@@ -964,7 +950,7 @@ class CategoryTest extends TestCase
             ->has(
                 Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
                     ->has(
-                        Category::factory(3),
+                        Category::factory(3, ['type' => Post::type()]),
                         'children'
                     ),
                 'categories'
@@ -981,6 +967,63 @@ class CategoryTest extends TestCase
     /**
      * 子カテゴリリスト
      * 
+     * - 子カテゴリリストに追加する全てのカテゴリは、親カテゴリのカテゴリ所有プロフィールと同じにしなければならないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
+     */
+    public function test_children_create_different_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
+        $otherCategory = Category::factory()->create([
+            'profile_id' => $otherProfile->id,
+            'type' => Post::type(),
+            'name' => '他カテゴリ'
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($category, $otherCategory) {
+            $category->children()->save($otherCategory);
+        }, ApplicationException::class, 'CategoryParentProfileMissmatch');
+    }
+
+    /**
+     * 子カテゴリリスト
+     * 
+     * - 子カテゴリリストに追加する全てのカテゴリは、親カテゴリのカテゴリタイプと同じにしなければならないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#子カテゴリリスト
+     */
+    public function test_children_create_different_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'name' => '親カテゴリ'
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($category) {
+            $category->children()->create([
+                'type' => Item::type(),
+                'name' => '子カテゴリ'
+            ]);
+        }, ApplicationException::class, 'CategoryParentTypeMissmatch');
+    }
+
+    /**
+     * 子カテゴリリスト
+     * 
      * - 親カテゴリのカテゴリ所有プロフィールを継承していることを確認します。
      * - 親カテゴリのカテゴリタイプを継承していることを確認します。
      * 
@@ -991,9 +1034,8 @@ class CategoryTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $otherProfile = Profile::factory()->create();
         $category = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => '親カテゴリ'
         ]);
@@ -1005,19 +1047,15 @@ class CategoryTest extends TestCase
         $category->children()->create([
             'name' => '子カテゴリ2',
         ]);
-        $category->children()->create([
-            'name' => '子カテゴリ3',
-            'profile' => $otherProfile,
-            'type' => Item::type(),
-        ]);
 
         // 評価
-        $this->assertEquals(3, $category->children->count());
+        $this->assertEquals(2, $category->children->count());
         foreach ($category->children as $child) {
             $this->assertEquals($category->profile, $child->profile, '親カテゴリのカテゴリ所有プロフィールを継承していること');
             $this->assertEquals($category->type, $child->type, '親カテゴリのカテゴリタイプを継承していること');
         }
     }
+
 
     /**
      * 子カテゴリリスト
@@ -1033,9 +1071,8 @@ class CategoryTest extends TestCase
         Profile::factory()
             ->has(
                 Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
-                    ->has(
-                        Category::factory(3),
-                        'children'
+                    ->withChildren(
+                        3
                     ),
                 'categories'
             )->create();
@@ -1058,11 +1095,7 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory()
             ->has(
-                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
-                    ->has(
-                        Category::factory(0)->for(Profile::factory()),
-                        'children'
-                    ),
+                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()]),
                 'categories'
             )->create();
         $category = Category::where('name', '親カテゴリ')->first();
@@ -1084,11 +1117,7 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory()
             ->has(
-                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
-                    ->has(
-                        Category::factory(0),
-                        'children'
-                    ),
+                Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()]),
                 'categories'
             )->create();
         $category = Category::where('name', '親カテゴリ')->first();
@@ -1114,9 +1143,8 @@ class CategoryTest extends TestCase
         Profile::factory()
             ->has(
                 Category::factory(1, ['name' => '親カテゴリ', 'type' => Post::type()])
-                    ->has(
-                        Category::factory(1),
-                        'children'
+                    ->withChildren(
+                        3
                     ),
                 'categories'
             )->create();
@@ -1125,7 +1153,7 @@ class CategoryTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($category) {
             $category->delete();
-        }, ApplicationException::class, 'CategoryDeleteHasChildren');
+        }, ApplicationException::class, 'CategoryDeleteHasChild');
     }
 
     /**
@@ -1141,9 +1169,8 @@ class CategoryTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $profile->delete();
         $category = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => '親カテゴリ'
         ]);
@@ -1185,7 +1212,7 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $category = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => '親カテゴリ'
         ]);
@@ -1216,7 +1243,7 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $category = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => '親カテゴリ'
         ]);
@@ -1247,7 +1274,7 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $category = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => '親カテゴリ'
         ]);
@@ -1288,7 +1315,7 @@ class CategoryTest extends TestCase
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $category = Category::factory()->create([
-            'profile' => $profile,
+            'profile_id' => $profile->id,
             'type' => Post::type(),
             'name' => '親カテゴリ'
         ]);
