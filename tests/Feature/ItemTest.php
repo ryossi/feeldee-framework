@@ -28,9 +28,8 @@ class ItemTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $item = Item::create([
+        $item = $profile->items()->create([
             'title' => 'テストアイテム',
-            'profile' => $profile,
         ]);
 
         // 検証
@@ -51,9 +50,8 @@ class ItemTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $item = Item::create([
+        $item = $profile->items()->create([
             'title' => 'テストアイテム',
-            'profile' => $profile,
         ]);
 
         // 検証
@@ -77,9 +75,8 @@ class ItemTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $item = Item::create([
+        $item = $profile->items()->create([
             'title' => 'テストアイテム',
-            'profile' => $profile,
         ]);
 
         // 評価
@@ -97,9 +94,10 @@ class ItemTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $item = Item::factory([
             'is_public' => false,
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行
@@ -120,9 +118,10 @@ class ItemTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $item = Item::factory([
             'is_public' => true,
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行
@@ -146,9 +145,9 @@ class ItemTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $item = Item::factory([
-            'profile' => $profile,
-        ])->create();
+        $item = $profile->items()->create([
+            'title' => 'テストアイテム',
+        ]);
 
         // 評価
         $this->assertEquals(PublicLevel::Private, $item->public_level, 'デフォルトは、"自分"であること');
@@ -172,9 +171,8 @@ class ItemTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $item = Item::create([
+        $item = $profile->items()->create([
             'title' => 'テストアイテム',
-            'profile' => $profile,
             'public_level' => PublicLevel::Private,
         ]);
 
@@ -197,8 +195,9 @@ class ItemTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $item = Item::factory([
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
             'public_level' => PublicLevel::Public,
         ])->create();
 

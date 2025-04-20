@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,14 +31,9 @@ abstract class Content extends Model
      *
      * @return Attribute
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->first(),
-            set: fn($value) => [
-                'profile_id' => $value instanceof Profile ? $value->id : $value
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
 
     /**
@@ -136,6 +132,7 @@ abstract class Content extends Model
             if ($value instanceof Category) {
                 return $value->id;
             } else {
+                $this->refresh();
                 $obj = $this->profile->categories()->ofType($this->type())->ofName($value)->first();
                 if ($obj instanceof Category) {
                     return $obj->id;

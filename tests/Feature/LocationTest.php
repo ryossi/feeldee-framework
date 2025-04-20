@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use Auth;
-use Feeldee\Framework\Contracts\HssProfile;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
@@ -28,12 +27,11 @@ class LocationTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $location = Location::create([
+        $location = $profile->locations()->create([
             'title' => 'テスト',
             'latitude' => 35.681236,
             'longitude' => 139.767125,
             'zoom' => 15,
-            'profile' => $profile,
         ]);
 
         // 検証
@@ -54,12 +52,11 @@ class LocationTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $location = Location::create([
+        $location = $profile->locations()->create([
             'title' => 'テスト',
             'latitude' => 35.681236,
             'longitude' => 139.767125,
             'zoom' => 15,
-            'profile' => $profile,
         ]);
 
         // 検証
@@ -83,12 +80,11 @@ class LocationTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $location = Location::create([
+        $location = $profile->locations()->create([
             'title' => 'テスト',
             'latitude' => 35.681236,
             'longitude' => 139.767125,
             'zoom' => 15,
-            'profile' => $profile,
         ]);
 
         // 評価
@@ -106,9 +102,10 @@ class LocationTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $location = Location::factory([
             'is_public' => false,
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行
@@ -129,9 +126,10 @@ class LocationTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $location = Location::factory([
             'is_public' => true,
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行
@@ -155,9 +153,12 @@ class LocationTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $location = Location::factory([
-            'profile' => $profile,
-        ])->create();
+        $location = $profile->locations()->create([
+            'title' => 'テスト',
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+        ]);
 
         // 評価
         $this->assertEquals(PublicLevel::Private, $location->public_level, 'デフォルトは、"自分"であること');
@@ -181,12 +182,11 @@ class LocationTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $location = Location::create([
+        $location = $profile->locations()->create([
             'title' => 'テスト',
             'latitude' => 35.681236,
             'longitude' => 139.767125,
             'zoom' => 15,
-            'profile' => $profile,
             'public_level' => PublicLevel::Friend,
         ]);
 
@@ -209,8 +209,9 @@ class LocationTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $location = Location::factory([
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行

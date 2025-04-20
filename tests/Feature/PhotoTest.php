@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Feeldee\Framework\Contracts\HssProfile;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
@@ -28,10 +27,9 @@ class PhotoTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $photo = Photo::create([
+        $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
-            'profile' => $profile,
         ]);
 
         // 検証
@@ -52,10 +50,9 @@ class PhotoTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $photo = Photo::create([
+        $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
-            'profile' => $profile,
         ]);
 
         // 検証
@@ -79,10 +76,9 @@ class PhotoTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $photo = Photo::create([
+        $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
-            'profile' => $profile,
         ]);
 
         // 評価
@@ -100,9 +96,10 @@ class PhotoTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $photo = Photo::factory([
             'is_public' => false,
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行
@@ -123,9 +120,10 @@ class PhotoTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $photo = Photo::factory([
             'is_public' => true,
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行
@@ -149,9 +147,10 @@ class PhotoTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $photo = Photo::factory([
-            'profile' => $profile,
-        ])->create();
+        $photo = $profile->photos()->create([
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+        ]);
 
         // 評価
         $this->assertEquals(PublicLevel::Private, $photo->public_level, 'デフォルトは、"自分"であること');
@@ -175,10 +174,9 @@ class PhotoTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $photo = Photo::create([
+        $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
-            'profile' => $profile,
             'public_level' => PublicLevel::Member,
         ]);
 
@@ -201,8 +199,9 @@ class PhotoTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $photo = Photo::factory([
-            'profile' => Profile::factory()->create(),
+            'profile_id' => $profile->id,
         ])->create();
 
         // 実行
