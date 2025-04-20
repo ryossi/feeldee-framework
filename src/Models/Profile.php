@@ -24,6 +24,38 @@ class Profile extends Model
         return $this->hasMany(Category::class);
     }
 
+    /**
+     * 投稿リスト
+     */
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    /**
+     * 写真リスト
+     */
+    public function photos()
+    {
+        return $this->hasMany(Photo::class);
+    }
+
+    /**
+     * 場所リスト
+     */
+    public function locations()
+    {
+        return $this->hasMany(Location::class);
+    }
+
+    /**
+     * アイテムリスト。
+     */
+    public function items()
+    {
+        return $this->hasMany(Item::class);
+    }
+
     // ========================== ここまで整理済み ==========================
 
     /**
@@ -32,40 +64,6 @@ class Profile extends Model
     public function mediaBox(): HasOne
     {
         return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
-    }
-
-    /**
-     * 投稿リストを取得します。
-     */
-    public function posts()
-    {
-        return $this->hasMany(Post::class);
-    }
-
-    /**
-     * 写真リストを取得します。
-     */
-    public function photos()
-    {
-        return $this->hasMany(Photo::class);
-    }
-
-    /**
-     * 場所リストを取得します。
-     * 
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function locations()
-    {
-        return $this->hasMany(Location::class);
-    }
-
-    /**
-     * アイテムリストを取得します。
-     */
-    public function items()
-    {
-        return $this->hasMany(Item::class);
     }
 
     /**
