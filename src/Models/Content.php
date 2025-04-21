@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory,  HasCategory, SetUser, AccessCounter;
+    use HasFactory, HasCategory, Required, SetUser, AccessCounter;
 
     /**
      * コンテンツ種別

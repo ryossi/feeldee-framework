@@ -446,52 +446,46 @@ class PostTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日
      */
-    // public function test_post_date()
-    // {
-    //     // 準備
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory()->create();
-    //     $user = $this->mock(HssProfile::class);
-    //     $user->shouldReceive('getProfile')->andReturn($profile);
-    //     Auth::shouldReceive('user')->andReturn($user);
-    //     $post_date = '2025-04-01';
+    public function test_post_date()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $post_date = '2025-04-01';
 
-    //     // 実行
-    //     $post = Post::create([
-    //         'title' => 'テスト投稿',
-    //         'post_date' => $post_date,
-    //     ]);
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => $post_date,
+        ]);
 
-    //     // 検証
-    //     $this->assertEquals($post_date, $post->post_date->format('Y-m-d'), '投稿した日付であること');
-    //     $this->assertDatabaseHas('posts', [
-    //         'post_date' => $post_date . ' 00:00:00',
-    //     ]);
-    // }
+        // 検証
+        $this->assertEquals($post_date, $post->post_date->format('Y-m-d'), '投稿した日付であること');
+        $this->assertDatabaseHas('posts', [
+            'post_date' => $post_date . ' 00:00:00',
+        ]);
+    }
 
-    // /**
-    //  * 投稿日
-    //  * 
-    //  * - 投稿時に必ず指定する必要があることを確認します。
-    //  * 
-    //  * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日
-    //  */
-    // public function test_post_date_required()
-    // {
-    //     // 準備
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory()->create();
-    //     $user = $this->mock(HssProfile::class);
-    //     $user->shouldReceive('getProfile')->andReturn($profile);
-    //     Auth::shouldReceive('user')->andReturn($user);
-
-    //     // 実行
-    //     $this->assertThrows(function () {
-    //         Post::create([
-    //             'title' => 'テスト投稿',
-    //         ]);
-    //     }, \Illuminate\Validation\ValidationException::class);
-    // }
+    /**
+     * 投稿日
+     * 
+     * - 投稿時に必ず指定する必要があることを確認します。
+     * - 例外コード:20001のメッセージであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日
+     */
+    public function test_post_date_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->posts()->create([
+                'title' => 'テスト投稿',
+            ]);
+        }, ApplicationException::class, config('feeldee.exception.20001'));
+    }
 
     // /**
     //  * 記事タイトル
