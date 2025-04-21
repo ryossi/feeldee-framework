@@ -43,6 +43,7 @@ return [
     */
     'exception' => [
         // 投稿関連
-        20001 => 'PostDateRequired'                 // 投稿日が指定されていない
+        20001 => 'PostDateRequired',                 // 投稿日が指定されていない
+        20002 => 'PostTitleRequired',                // 記事タイトルが指定されていない
     ]
 ];

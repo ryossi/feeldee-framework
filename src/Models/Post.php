@@ -53,7 +53,10 @@ class Post extends Content
     /**
      * 必須にする属性
      */
-    protected $required = ['post_date' => 20001];
+    protected $required = [
+        'post_date' => 20001,
+        'title' => 20002,
+    ];
 
     /**
      * モデルの「起動」メソッド

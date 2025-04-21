@@ -484,59 +484,54 @@ class PostTest extends TestCase
             $profile->posts()->create([
                 'title' => 'テスト投稿',
             ]);
-        }, ApplicationException::class, config('feeldee.exception.20001'));
+        }, ApplicationException::class, 'PostDateRequired');
     }
 
-    // /**
-    //  * 記事タイトル
-    //  * 
-    //  * - 投稿記事のタイトルであることを確認します。
-    //  * 
-    //  * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#タイトル
-    //  */
-    // public function test_title()
-    // {
-    //     // 準備
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory()->create();
-    //     $user = $this->mock(HssProfile::class);
-    //     $user->shouldReceive('getProfile')->andReturn($profile);
-    //     Auth::shouldReceive('user')->andReturn($user);
-    //     $title = '投稿のタイトル';
+    /**
+     * 記事タイトル
+     * 
+     * - 投稿記事のタイトルであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#タイトル
+     */
+    public function test_title()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = '投稿のタイトル';
 
-    //     // 実行
-    //     $post = Post::create([
-    //         'title' => $title,
-    //         'post_date' => now(),
-    //     ]);
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => $title,
+            'post_date' => now(),
+        ]);
 
-    //     // 検証
-    //     $this->assertEquals($title, $post->title, '投稿のタイトルであること');
-    // }
+        // 検証
+        $this->assertEquals($title, $post->title, '投稿のタイトルであること');
+    }
 
-    // /**
-    //  * 記事タイトル
-    //  * 
-    //  * - 投稿時に必ず指定する必要があることを確認します。
-    //  * 
-    //  * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#タイトル
-    //  */
-    // public function test_title_required()
-    // {
-    //     // 準備
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory()->create();
-    //     $user = $this->mock(HssProfile::class);
-    //     $user->shouldReceive('getProfile')->andReturn($profile);
-    //     Auth::shouldReceive('user')->andReturn($user);
+    /**
+     * 記事タイトル
+     * 
+     * - 投稿時に必ず指定する必要があることを確認します。
+     * - 例外コード:20002のメッセージであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#タイトル
+     */
+    public function test_title_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
 
-    //     // 実行
-    //     $this->assertThrows(function () {
-    //         Post::create([
-    //             'post_date' => now(),
-    //         ]);
-    //     }, \Illuminate\Validation\ValidationException::class);
-    // }
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->posts()->create([
+                'post_date' => now(),
+            ]);
+        }, ApplicationException::class, 'PostTitleRequired');
+    }
 
     // /**
     //  * 記事内容
