@@ -3,9 +3,7 @@
 namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Casts\URL;
-use Feeldee\Framework\Exceptions\LoginRequiredException;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -19,7 +17,7 @@ class Photo extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'photo_type', 'src', 'regist_datetime'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'value', 'photo_type', 'src', 'regist_datetime'];
 
     /**
      * 配列に表示する属性
@@ -54,9 +52,13 @@ class Photo extends Content
      */
     protected static function booted(): void
     {
-        static::creating(function (Photo $photo) {
+        static::saving(function (Self $model) {
+            // 記事テキスト
+            $model->text = strip_tags($model->value);
+        });
+        static::creating(function (Self $model) {
             // 写真準備
-            $photo->prepare();
+            $model->prepare();
         });
     }
 

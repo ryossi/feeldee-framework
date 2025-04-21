@@ -240,7 +240,6 @@ class PhotoTest extends TestCase
 
         // 実行
         $photo = $profile->photos()->create([
-            'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
             'category' => $category,
@@ -275,7 +274,6 @@ class PhotoTest extends TestCase
 
         // 実行
         $photo = $profile->photos()->create([
-            'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
             'category_id' => $category->id,
@@ -310,7 +308,6 @@ class PhotoTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($otherProfile, $category) {
             $otherProfile->photos()->create([
-                'title' => 'テスト写真',
                 'src' => '/mbox/photo.jpg',
                 'regist_datetime' => now(),
                 'category_id' => $category->id,
@@ -338,7 +335,6 @@ class PhotoTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($profile, $category) {
             $profile->photos()->create([
-                'title' => 'テスト写真',
                 'src' => '/mbox/photo.jpg',
                 'regist_datetime' => now(),
                 'category' => $category,
@@ -366,7 +362,6 @@ class PhotoTest extends TestCase
 
         // 実行
         $photo = $profile->photos()->create([
-            'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
             'regist_datetime' => now(),
             'category' => 'テストカテゴリ',
@@ -443,5 +438,151 @@ class PhotoTest extends TestCase
 
         // 評価
         $this->assertNull($photo->category, '対応するカテゴリが削除された場合は、自動的にNullが設定されること');
+    }
+
+    /**
+     * 写真タイトル
+     * 
+     * - 登録した写真に付けるタイトルであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真タイトル
+     */
+    public function test_title()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = '写真のタイトル';
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => $title,
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+        ]);
+
+        // 検証
+        $this->assertEquals($title, $photo->title, '登録した写真に付けるタイトルであること');
+    }
+
+    /**
+     * 写真内容
+     * 
+     * - 写真の説明またはメモ書きなどであることを確認します。
+     * - HTMLが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真内容
+     */
+    public function test_value_html()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>写真内容の本文</p>';
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $photo->value, '写真の説明またはメモ書きなどであること');
+        // HTMLが使用できること
+        $this->assertDatabaseHas('photos', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 写真内容
+     * 
+     * - 写真の説明またはメモ書きなどであることを確認します。
+     * - テキストが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真内容
+     */
+    public function test_value_text()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '写真の本文';
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $photo->value, '写真の説明またはメモ書きなどであること');
+        // テキストが使用できること
+        $this->assertDatabaseHas('photos', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 写真テキスト
+     * 
+     * - 写真の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 写真の登録時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真テキスト
+     */
+    public function test_text_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>写真内容の本文</p>';
+        $expected = '写真内容の本文';
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $photo->text, '写真の内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 写真の登録時に、自動変換されること
+        $this->assertDatabaseHas('photos', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
+     * 写真テキスト
+     * 
+     * - 写真の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 写真の編集時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真テキスト
+     */
+    public function test_text_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Photo::factory()->count(1))->create();
+        $photo = $profile->photos->first();
+        $value = '<p>写真内容の本文</p>';
+        $expected = '写真内容の本文';
+
+        // 実行
+        $photo->update([
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $photo->text, '写真の内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 写真の編集時に、自動変換されること
+        $this->assertDatabaseHas('photos', [
+            'text' => $expected,
+        ]);
     }
 }

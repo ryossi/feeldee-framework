@@ -492,7 +492,7 @@ class PostTest extends TestCase
      * 
      * - 投稿記事のタイトルであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#タイトル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事タイトル
      */
     public function test_title()
     {
@@ -517,7 +517,7 @@ class PostTest extends TestCase
      * - 投稿時に必ず指定する必要があることを確認します。
      * - 例外コード:20002のメッセージであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#タイトル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事タイトル
      */
     public function test_title_required()
     {
@@ -539,7 +539,7 @@ class PostTest extends TestCase
      * - 投稿記事の本文であることを確認します。
      * - HTMLが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事内容
      */
     public function test_value_html()
     {
@@ -569,7 +569,7 @@ class PostTest extends TestCase
      * - 投稿記事の本文であることを確認します。
      * - テキストが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事内容
      */
     public function test_value_text()
     {
@@ -597,9 +597,9 @@ class PostTest extends TestCase
      * 記事テキスト
      * 
      * - 投稿記事の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - 記事の投稿時に、自動補完されることを確認します。
+     * - 記事の投稿時に、自動変換されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#テキスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事テキスト
      */
     public function test_text_create()
     {
@@ -618,7 +618,7 @@ class PostTest extends TestCase
 
         // 検証
         $this->assertEquals($expected, $post->text, '投稿記事の内容から、HTMLタグのみを排除したテキスト表現であること');
-        // 記事の投稿時に、自動補完されること
+        // 記事の投稿時に、自動変換されること
         $this->assertDatabaseHas('posts', [
             'text' => $expected,
         ]);
@@ -628,9 +628,9 @@ class PostTest extends TestCase
      * 記事テキスト
      * 
      * - 投稿記事の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - 記事の更新時に、自動補完されることを確認します。
+     * - 記事の編集時に、自動変換されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#テキスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事テキスト
      */
     public function test_text_update()
     {
@@ -648,7 +648,7 @@ class PostTest extends TestCase
 
         // 検証
         $this->assertEquals($expected, $post->text, '投稿記事の内容から、HTMLタグのみを排除したテキスト表現であること');
-        // 記事の更新時に、自動補完されること
+        // 記事の編集時に、自動変換されること
         $this->assertDatabaseHas('posts', [
             'text' => $expected,
         ]);
@@ -660,7 +660,7 @@ class PostTest extends TestCase
      * - 投稿記事のサムネイルイメージであることを確認します。
      * - URL形式で保存できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#サムネイル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事サムネイル
      */
     public function test_thumbnail_url()
     {
@@ -690,7 +690,7 @@ class PostTest extends TestCase
      * - 投稿記事のサムネイルイメージであることを確認します。
      * - Base64形式で保存できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#サムネイル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事サムネイル
      */
     public function test_thumbnail_base64()
     {
