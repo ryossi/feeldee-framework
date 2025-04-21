@@ -12,7 +12,7 @@ trait Required
             if ($model->required && is_array($model->required)) {
                 foreach ($model->required as $key => $value) {
                     if ($model->$key == null && $model->$key == '') {
-                        throw new ApplicationException(config('feeldee.exception.' . $value), $value);
+                        throw new ApplicationException($value);
                     }
                 }
             }

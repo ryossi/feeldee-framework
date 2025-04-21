@@ -30,7 +30,7 @@ class ContentCategoryObserver
     {
         if (!is_null($content->category) && $content->profile->id !== $content->category->profile->id) {
             // カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致しない場合
-            throw new ApplicationException('CategoryContentProfileMissmatch', 71006);
+            throw new ApplicationException(71006);
         }
     }
 
@@ -38,7 +38,7 @@ class ContentCategoryObserver
     {
         if (!is_null($content->category) && $content->category->type !== $content::type()) {
             // カテゴリ種別とコンテンツ種別が一致しない場合
-            throw new ApplicationException('CategoryContentTypeMissmatch', 71007);
+            throw new ApplicationException(71007);
         }
     }
 

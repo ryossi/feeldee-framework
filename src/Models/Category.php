@@ -48,7 +48,7 @@ class Category extends Model
                 // カテゴリ所有プロフィールIDが指定されている場合
                 if ($profile?->id !== $model->profile_id) {
                     // カテゴリと親カテゴリでカテゴリ所有プロフィールが異なる場合
-                    throw new ApplicationException('CategoryParentProfileMissmatch', 71003);
+                    throw new ApplicationException(71003);
                 }
             } else {
                 // 親カテゴリのものを継承
@@ -65,7 +65,7 @@ class Category extends Model
                 // カテゴリタイプが指定されている場合
                 if ($model->parent->type !== $model->type) {
                     // カテゴリと親カテゴリでカテゴリタイプが異なる場合
-                    throw new ApplicationException('CategoryParentTypeMissmatch', 71004);
+                    throw new ApplicationException(71004);
                 }
             } else {
                 // 親カテゴリのものを継承
@@ -310,18 +310,18 @@ class Category extends Model
      * 
      * @param Category $target 対象カテゴリ
      * @return void
-     * @throws ApplicationException カテゴリ所有プロフィールが異なる場合、CategorySwapProfileMissmatch[71001]
-     * @throws ApplicationException カテゴリタイプが異なる場合、CategorySwapTypeMissmatch[71002]
+     * @throws ApplicationException カテゴリ所有プロフィールが異なる場合、71001
+     * @throws ApplicationException カテゴリタイプが異なる場合、71002
      */
     public function swap(Category $target): void
     {
         if ($this->profile->id != $target->profile->id) {
             // プロフィールが異なる場合
-            throw new ApplicationException('CategorySwapProfileMissmatch', 71001, ['source' => $this->profile->id, 'target' => $target->profile->id]);
+            throw new ApplicationException(71001, ['source' => $this->profile->id, 'target' => $target->profile->id]);
         }
         if ($this->type != $target->type) {
             // タイプが異なる場合
-            throw new ApplicationException('CategorySwapTypeMissmatch', 71002, ['source' => $this->type, 'target' => $target->type]);
+            throw new ApplicationException(71002, ['source' => $this->type, 'target' => $target->type]);
         }
         if ($this->id == $target->id) {
             // 同一カテゴリの場合
@@ -472,13 +472,13 @@ class Category extends Model
      * 子カテゴリが存在するカテゴリは削除できません。
      * 
      * @return bool|null
-     * @throws ApplicationException カテゴリ削除において子カテゴリが存在する場合、CategoryDeleteHasChild[71005]
+     * @throws ApplicationException カテゴリ削除において子カテゴリが存在する場合、71005
      */
     public function delete(): bool|null
     {
         if ($this->hasChild) {
             // カテゴリ削除において子カテゴリが存在する場合エラー
-            throw new ApplicationException('CategoryDeleteHasChild', 71005, ['type' => $this->type, 'name' => $this->name]);
+            throw new ApplicationException(71005, ['type' => $this->type, 'name' => $this->name]);
         }
         // カテゴリー削除
         return parent::delete();

@@ -44,6 +44,12 @@ class FeeldeeServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
+        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'feeldee');
+
+        $this->publishes([
+            __DIR__ . '/../lang' => $this->app->langPath('vendor/feeldee'),
+        ]);
+
         $this->publishes([
             __DIR__ . '/../config/feeldee.php' => config_path('feeldee.php'),
         ], 'feeldee');

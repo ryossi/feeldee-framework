@@ -1,0 +1,20 @@
+<?php
+
+return [
+    // *************************
+    // *** 2xxxx 投稿関連     ***
+    // *************************
+    20001 => 'PostDateRequired',                        // 投稿日が指定されていない
+    20002 => 'PostTitleRequired',                       // 記事タイトルが指定されていない 
+
+    // *************************
+    // *** 71xxx カテゴリ関連  ***
+    // *************************
+    71001 => 'CategorySwapProfileMissmatch',            // カテゴリ入替において対象カテゴリのカテゴリ所有プロフィールが異なる
+    71002 => 'CategorySwapTypeMissmatch',               // カテゴリ入替において対象カテゴリのカテゴリタイプが異なる
+    71003 => 'CategoryParentProfileMissmatch',          // カテゴリと親カテゴリでカテゴリ所有プロフィールが異なる
+    71004 => 'CategoryParentTypeMissmatch',             // カテゴリと親カテゴリでカテゴリタイプが異なる
+    71005 => 'CategoryDeleteHasChild',                  // カテゴリ削除において子カテゴリが存在する
+    71006 => 'CategoryContentProfileMissmatch',         // カテゴリ所有プロフィールとコンテンツ所有プロフィールが異なる
+    71007 => 'CategoryContentTypeMissmatch',            // カテゴリタイプとコンテンツ種別が異なる
+];
