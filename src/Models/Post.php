@@ -64,7 +64,7 @@ class Post extends Content
     protected static function booted(): void
     {
         static::saving(function (Self $model) {
-            // テキストは、自動補完
+            // 記事テキスト
             $model->text = strip_tags($model->value);
         });
     }
