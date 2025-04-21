@@ -29,7 +29,7 @@ abstract class Content extends Model
     /**
      * コンテンツ所有プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
     public function profile(): BelongsTo
     {
@@ -124,28 +124,11 @@ abstract class Content extends Model
     /**
      * コンテンツカテゴリ
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function category(): Attribute
+    public function category(): BelongsTo
     {
-        $setter = function ($value) {
-            if ($value instanceof Category) {
-                return $value->id;
-            } else {
-                $this->refresh();
-                $obj = $this->profile->categories()->ofType($this->type())->ofName($value)->first();
-                if ($obj instanceof Category) {
-                    return $obj->id;
-                }
-                return $value;
-            }
-        };
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Category::class, 'category_id')->first(),
-            set: fn($value) => [
-                'category_id' => $setter($value)
-            ]
-        );
+        return $this->belongsTo(Category::class);
     }
 
     // ========================== ここまで整理ずみ ==========================

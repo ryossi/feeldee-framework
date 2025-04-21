@@ -5,7 +5,6 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Carbon\CarbonImmutable;
-use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Observers\ContentCategoryObserver;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
@@ -26,7 +25,7 @@ class Post extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'post_date', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'post_date', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性

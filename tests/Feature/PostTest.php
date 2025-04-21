@@ -256,6 +256,40 @@ class PostTest extends TestCase
     /**
      * コンテンツカテゴリ
      * 
+     * - カテゴリIDを指定できることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリが、投稿のカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
+     */
+    public function test_category_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+        ])->create();
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'category_id' => $category->id,
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $post->category->id, 'カテゴリを指定できること');
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
      * - カテゴリ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
@@ -341,69 +375,69 @@ class PostTest extends TestCase
         ]);
     }
 
-    // /**
-    //  * コンテンツカテゴリ
-    //  * 
-    //  * - 一致するカテゴリが存在しない場合は無視されることを確認します。
-    //  * 
-    //  * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
-    //  */
-    // public function test_category_name_nomatch()
-    // {
-    //     // 準備
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory()->create();
-    //     Category::factory([
-    //         'profile' => $profile,
-    //         'name' => 'テストカテゴリ',
-    //         'type' => Post::type(),
-    //     ])->create();
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - 一致するカテゴリが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
+     */
+    public function test_category_name_nomatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+        ])->create();
 
-    //     // 実行
-    //     $post = Post::create([
-    //         'title' => 'テスト投稿',
-    //         'post_date' => now(),
-    //         'profile' => $profile,
-    //         'category' => 'テストカテゴリ2',
-    //     ]);
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'category' => 'テストカテゴリ2',
+        ]);
 
-    //     // 評価
-    //     $this->assertNull($post->category, '一致するカテゴリが存在しない場合は無視されること');
-    //     $this->assertDatabaseHas('posts', [
-    //         'id' => $post->id,
-    //         'category_id' => null,
-    //     ]);
-    // }
+        // 評価
+        $this->assertNull($post->category, '一致するカテゴリが存在しない場合は無視されること');
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'category_id' => null,
+        ]);
+    }
 
-    // /**
-    //  * コンテンツカテゴリ
-    //  * 
-    //  * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
-    //  * 
-    //  * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
-    //  */
-    // public function test_category_delete()
-    // {
-    //     // 準備
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory()->create();
-    //     $category = Category::factory([
-    //         'profile' => $profile,
-    //         'name' => 'テストカテゴリ',
-    //         'type' => Post::type(),
-    //     ])->create();
-    //     $post = Post::factory([
-    //         'profile' => $profile,
-    //         'category' => $category,
-    //     ])->create();
-    //     $this->assertNotNull($post->category);
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツカテゴリ
+     */
+    public function test_category_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Post::type(),
+        ])->create();
+        $post = Post::factory([
+            'profile_id' => $profile->id,
+            'category_id' => $category->id,
+        ])->create();
+        $this->assertNotNull($post->category);
 
-    //     // 実行
-    //     $category->delete();
+        // 実行
+        $category->delete();
+        $post->refresh();
 
-    //     // 評価
-    //     $this->assertNull($post->category, '対応するカテゴリが削除された場合は、自動的にNullが設定されること');
-    // }
+        // 評価
+        $this->assertNull($post->category, '対応するカテゴリが削除された場合は、自動的にNullが設定されること');
+    }
 
     /**
      * 投稿日
