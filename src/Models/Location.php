@@ -24,7 +24,7 @@ class Location extends Content
         return 'location';
     }
 
-    protected $fillable = ['profile', 'public_level', 'category', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
     protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 

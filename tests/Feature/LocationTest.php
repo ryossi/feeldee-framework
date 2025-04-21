@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use Auth;
+use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Models\Category;
+use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
@@ -224,5 +227,237 @@ class LocationTest extends TestCase
             'id' => $location->id,
             'public_level' => PublicLevel::Friend,
         ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリを指定できることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリが、場所のカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     */
+    public function test_category()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Location::type(),
+        ])->create();
+
+        // 実行
+        $location = $profile->locations()->create([
+            'title' => 'テスト場所',
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'category' => $category,
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $location->category->id, 'カテゴリを指定できること');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリIDを指定できることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリが、場所のカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     */
+    public function test_category_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Location::type(),
+        ])->create();
+
+        // 実行
+        $location = $profile->locations()->create([
+            'title' => 'テスト場所',
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'category_id' => $category->id,
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $location->category->id, 'カテゴリを指定できること');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     */
+    public function test_category_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Location::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($otherProfile, $category) {
+            $otherProfile->locations()->create([
+                'title' => 'テスト場所',
+                'latitude' => 35.681236,
+                'longitude' => 139.767125,
+                'zoom' => 15,
+                'category_id' => $category->id,
+            ]);
+        }, ApplicationException::class, 'CategoryContentProfileMissmatch');
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - コンテンツ種別と同じカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     */
+    public function test_category_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $category) {
+            $profile->locations()->create([
+                'title' => 'テスト場所',
+                'latitude' => 35.681236,
+                'longitude' => 139.767125,
+                'zoom' => 15,
+                'category' => $category,
+            ]);
+        }, ApplicationException::class, 'CategoryContentTypeMissmatch');
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     */
+    public function test_category_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Location::type(),
+        ])->create();
+
+        // 実行
+        $location = $profile->locations()->create([
+            'title' => 'テスト場所',
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'category' => 'テストカテゴリ',
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $location->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - 一致するカテゴリが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     */
+    public function test_category_name_nomatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Location::type(),
+        ])->create();
+
+        // 実行
+        $location = $profile->locations()->create([
+            'title' => 'テスト場所',
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'category' => 'テストカテゴリ2',
+        ]);
+
+        // 評価
+        $this->assertNull($location->category, '一致するカテゴリが存在しない場合は無視されること');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'category_id' => null,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     */
+    public function test_category_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Location::type(),
+        ])->create();
+        $location = Location::factory([
+            'profile_id' => $profile->id,
+            'category_id' => $category->id,
+        ])->create();
+        $this->assertNotNull($location->category);
+
+        // 実行
+        $category->delete();
+        $location->refresh();
+
+        // 評価
+        $this->assertNull($location->category, '対応するカテゴリが削除された場合は、自動的にNullが設定されること');
     }
 }

@@ -27,7 +27,7 @@ class Item extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'title', 'value'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'value'];
 
     /**
      * 配列に表示する属性

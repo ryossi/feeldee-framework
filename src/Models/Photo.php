@@ -19,7 +19,7 @@ class Photo extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'title', 'photo_type', 'src', 'regist_datetime'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'photo_type', 'src', 'regist_datetime'];
 
     /**
      * 配列に表示する属性

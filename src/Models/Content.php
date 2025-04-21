@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, SetUser,  AccessCounter;
+    use HasFactory,  HasCategory, SetUser, AccessCounter;
 
     /**
      * コンテンツ種別
@@ -120,16 +120,6 @@ abstract class Content extends Model
      * @param PublicLevel $after 変更後
      */
     protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
-
-    /**
-     * コンテンツカテゴリ
-     *
-     * @return BelongsTo
-     */
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(Category::class);
-    }
 
     // ========================== ここまで整理ずみ ==========================
 

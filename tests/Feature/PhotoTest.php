@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Models\Category;
+use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
@@ -214,5 +217,231 @@ class PhotoTest extends TestCase
             'id' => $photo->id,
             'public_level' => PublicLevel::Member,
         ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリを指定できることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリが、写真のカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     */
+    public function test_category()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Photo::type(),
+        ])->create();
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'category' => $category,
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $photo->category->id, 'カテゴリを指定できること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリIDを指定できることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリが、写真のカテゴリであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     */
+    public function test_category_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Photo::type(),
+        ])->create();
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'category_id' => $category->id,
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $photo->category->id, 'カテゴリを指定できること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     */
+    public function test_category_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Photo::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($otherProfile, $category) {
+            $otherProfile->photos()->create([
+                'title' => 'テスト写真',
+                'src' => '/mbox/photo.jpg',
+                'regist_datetime' => now(),
+                'category_id' => $category->id,
+            ]);
+        }, ApplicationException::class, 'CategoryContentProfileMissmatch');
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - コンテンツ種別と同じカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     */
+    public function test_category_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $category) {
+            $profile->photos()->create([
+                'title' => 'テスト写真',
+                'src' => '/mbox/photo.jpg',
+                'regist_datetime' => now(),
+                'category' => $category,
+            ]);
+        }, ApplicationException::class, 'CategoryContentTypeMissmatch');
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     */
+    public function test_category_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Photo::type(),
+        ])->create();
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'category' => 'テストカテゴリ',
+        ]);
+
+        // 評価
+        $this->assertEquals($category->id, $photo->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - 一致するカテゴリが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     */
+    public function test_category_name_nomatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Photo::type(),
+        ])->create();
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'category' => 'テストカテゴリ2',
+        ]);
+
+        // 評価
+        $this->assertNull($photo->category, '一致するカテゴリが存在しない場合は無視されること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'category_id' => null,
+        ]);
+    }
+
+    /**
+     * コンテンツカテゴリ
+     * 
+     * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     */
+    public function test_category_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'name' => 'テストカテゴリ',
+            'type' => Photo::type(),
+        ])->create();
+        $photo = Photo::factory([
+            'profile_id' => $profile->id,
+            'category_id' => $category->id,
+        ])->create();
+        $this->assertNotNull($photo->category);
+
+        // 実行
+        $category->delete();
+        $photo->refresh();
+
+        // 評価
+        $this->assertNull($photo->category, '対応するカテゴリが削除された場合は、自動的にNullが設定されること');
     }
 }

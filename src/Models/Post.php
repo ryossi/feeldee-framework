@@ -5,7 +5,6 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Carbon\CarbonImmutable;
-use Feeldee\Framework\Observers\ContentCategoryObserver;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
@@ -17,7 +16,7 @@ use PHPHtmlParser\Dom;
 /**
  * 投稿をあらわすモデル
  */
-#[ObservedBy([ContentCategoryObserver::class, ContentRecordObserver::class, ContentTagObserver::class, PostPhotoSyncObserver::class])]
+#[ObservedBy([ContentRecordObserver::class, ContentTagObserver::class, PostPhotoSyncObserver::class])]
 class Post extends Content
 {
     /**
