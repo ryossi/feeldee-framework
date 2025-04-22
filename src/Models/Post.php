@@ -7,16 +7,14 @@ use Feeldee\Framework\Casts\URL;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
-use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use PHPHtmlParser\Dom;
 
 /**
  * 投稿をあらわすモデル
  */
-#[ObservedBy([ContentRecordObserver::class, ContentTagObserver::class, PostPhotoSyncObserver::class])]
+#[ObservedBy([ContentRecordObserver::class, ContentTagObserver::class])]
 class Post extends Content
 {
     /**
@@ -58,6 +56,11 @@ class Post extends Content
         'title' => 20002,
     ];
 
+    protected static function bootedText(self $model): void
+    {
+        $model->text = strip_tags($model->value);
+    }
+
     /**
      * モデルの「起動」メソッド
      */
@@ -65,7 +68,7 @@ class Post extends Content
     {
         static::saving(function (Self $model) {
             // 記事テキスト
-            $model->text = strip_tags($model->value);
+            static::bootedText($model);
         });
     }
 
@@ -79,54 +82,15 @@ class Post extends Content
         return 'post';
     }
 
-
-    // ========================== ここまで整理ずみ ==========================
-
-
     /**
-     * この投稿に添付されている写真リスト
+     * 写真リスト
      */
     public function photos()
     {
         return $this->belongsToMany(Photo::class, 'posted_photos');
     }
 
-    /**
-     * 内容に合わせて投稿写真リストをシンクロします。
-     */
-    public function syncPhotos(): void
-    {
-        // モデルリフレッシュ
-        $this->refresh();
-
-        // 投稿写真の登録と削除
-        $value = $this->getRawOriginal('value');
-        $photo_ids = array();
-        if (!empty($value)) {
-            $dom = new Dom();
-            $dom->loadStr($value);
-            $images = $dom->find('img');
-            foreach ($images as $image) {
-                $photo = $this->photos()->src($image->src)->first();
-                if ($photo === null) {
-                    $photo = $this->profile->photos()->create([
-                        'src' => $image->src,
-                        'regist_datetime' => $this->post_date,
-                        'is_public' => $this->is_public,
-                        'public_level' => $this->public_level
-                    ]);
-                }
-                array_push($photo_ids, $photo->id);
-            }
-        }
-        foreach ($this->photos as $photo) {
-            if (!in_array($photo->id, $photo_ids)) {
-                // 投稿で使用されなくなった写真は削除
-                $photo->delete();
-            }
-        }
-        $this->photos()->sync($photo_ids);
-    }
+    // ========================== ここまで整理ずみ ==========================
 
     /**
      * システム日時現在からの投稿日の〇〇前

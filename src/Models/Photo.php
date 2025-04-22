@@ -47,14 +47,19 @@ class Photo extends Content
      */
     protected $order_column = 'regist_datetime';
 
+    protected static function bootedText(self $model): void
+    {
+        $model->text = strip_tags($model->value);
+    }
+
     /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
     {
         static::saving(function (Self $model) {
-            // 記事テキスト
-            $model->text = strip_tags($model->value);
+            // 写真テキスト
+            static::bootedText($model);
         });
         static::creating(function (Self $model) {
             // 写真準備
@@ -70,6 +75,14 @@ class Photo extends Content
     public static function type()
     {
         return 'photo';
+    }
+
+    /**
+     * 投稿リスト
+     */
+    public function posts()
+    {
+        return $this->belongsToMany(Post::class, 'posted_photos');
     }
 
     // ========================== ここまで整理済み ==========================
@@ -116,14 +129,6 @@ class Photo extends Content
             get: fn($value) => empty($value) ? null : PhotoType::from($value),
             set: fn($value) => $value->value,
         );
-    }
-
-    /**
-     * この写真が使用されている投稿リスト
-     */
-    public function posts()
-    {
-        return $this->belongsToMany(Post::class);
     }
 
     /**
