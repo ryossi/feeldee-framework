@@ -2,7 +2,6 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Observers\ContentRecordObserver;
@@ -10,6 +9,7 @@ use Feeldee\Framework\Observers\ContentTagObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * 投稿をあらわすモデル
@@ -39,7 +39,6 @@ class Post extends Content
     protected $casts = [
         'is_public' => 'boolean',
         'post_date' => 'date',
-        'value' => Html::class,
         'thumbnail' => URL::class,
     ];
 
@@ -84,8 +83,10 @@ class Post extends Content
 
     /**
      * 写真リスト
+     * 
+     * @return BelongsToMany
      */
-    public function photos()
+    public function photos(): BelongsToMany
     {
         return $this->belongsToMany(Photo::class, 'posted_photos');
     }

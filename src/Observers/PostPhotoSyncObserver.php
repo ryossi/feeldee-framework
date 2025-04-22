@@ -9,11 +9,8 @@ class PostPhotoSyncObserver
 {
     protected function sync(Post $model): void
     {
-        // モデルリフレッシュ
-        $model->refresh();
-
         // 投稿写真の登録と削除
-        $value = $model->getRawOriginal('value');
+        $value = $model->value;
         $photo_ids = array();
         if (!empty($value)) {
             $dom = new Dom();
@@ -25,8 +22,6 @@ class PostPhotoSyncObserver
                     $photo = $model->profile->photos()->create([
                         'src' => $image->src,
                         'regist_datetime' => $model->post_date,
-                        'is_public' => $model->is_public,
-                        'public_level' => $model->public_level
                     ]);
                 }
                 array_push($photo_ids, $photo->id);
@@ -47,10 +42,13 @@ class PostPhotoSyncObserver
      * @param  \Feeldee\Framework\Models\Post  $model
      * @return void
      */
-    public function saving(Post $model)
+    public function saved(Post $model)
     {
         // 写真リスト同期
         $this->sync($model);
+
+        // モデルリフレッシュ
+        $model->refresh();
     }
 
     /**

@@ -2,8 +2,8 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Casts\URL;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -39,7 +39,7 @@ class Photo extends Content
      * @var array
      */
     protected $casts = [
-        'src' => URL::class,
+        'regist_datetime' => 'date',
     ];
 
     /**
@@ -79,8 +79,10 @@ class Photo extends Content
 
     /**
      * 投稿リスト
+     * 
+     * @return BelongsToMany
      */
-    public function posts()
+    public function posts(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'posted_photos');
     }
