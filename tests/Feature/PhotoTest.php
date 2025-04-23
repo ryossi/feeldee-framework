@@ -2,12 +2,16 @@
 
 namespace Tests\Feature;
 
+use Carbon\Carbon;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Photo;
+use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
+use Feeldee\Framework\Observers\PostPhotoShareObserver;
+use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
@@ -584,5 +588,51 @@ class PhotoTest extends TestCase
         $this->assertDatabaseHas('photos', [
             'text' => $expected,
         ]);
+    }
+
+    /**
+     * 投稿リスト
+     * 
+     * - 記事内容に写真が使用されている投稿のコレクションであることを確認します。
+     * - 写真を削除しても、関連する投稿の記事内容には影響はないことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿リスト
+     */
+    public function test_posts()
+    {
+        // 準備
+        Post::observe(PostPhotoShareObserver::class);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = 'これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/2.png" /><br3
+                ';
+
+        // 実行
+        $postA = $profile->posts()->create([
+            'post_date' => Carbon::parse('2025-04-22'),
+            'title' => '投稿A',
+            'value' => $value,
+        ]);
+        $postB = $profile->posts()->create([
+            'post_date' => Carbon::parse('2025-04-23'),
+            'title' => '投稿B',
+        ]);
+        $postB->value = '
+                これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
+                ';
+        $postB->save();
+        $photo1 = $profile->photos()->ofSrc('http://photo.test/img/1.png')->first();
+        $photo1->delete();
+
+        // 評価
+        $photo2 = $profile->photos()->ofSrc('http://photo.test/img/2.png')->first();
+        $this->assertEquals(2, $photo2->posts->count(), '記事内容に写真が使用されている投稿のコレクションであること');
+        $this->assertEquals($value, $postA->value, '写真を削除しても、関連する投稿の記事内容には影響はないこと');
     }
 }
