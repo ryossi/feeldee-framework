@@ -87,6 +87,17 @@ class Photo extends Content
         return $this->belongsToMany(Post::class, 'posted_photos');
     }
 
+    /**
+     * 写真ソースで絞り込むクエリのスコープを設定
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param mixed $src 写真ソース
+     */
+    public function scopeOfSrc($query, mixed $src)
+    {
+        $query->where('src', $src);
+    }
+
     // ========================== ここまで整理済み ==========================
 
     /**
@@ -131,17 +142,6 @@ class Photo extends Content
             get: fn($value) => empty($value) ? null : PhotoType::from($value),
             set: fn($value) => $value->value,
         );
-    }
-
-    /**
-     * ソースで絞り込むクエリのスコープを設定
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param ?string $src ソース
-     */
-    public function scopeSrc($query, ?string $src)
-    {
-        $query->where('src', $src);
     }
 
     /**
