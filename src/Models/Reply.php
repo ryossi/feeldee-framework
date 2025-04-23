@@ -130,10 +130,12 @@ class Reply extends Model
     protected function getIsPublicAttribute(): bool
     {
         // 返信対象のコメント公開フラグとのAND条件
-        return $this->attributes['is_public'] && $this->comment->isPublic;
+        return ($this->attributes['is_public'] ?? false) && $this->comment->isPublic;
     }
 
     /**
+     * 公開
+     * 
      * 返信を公開します。
      * 
      * @return void
@@ -145,6 +147,8 @@ class Reply extends Model
     }
 
     /**
+     * 非公開
+     * 
      * 返信を非公開にします。
      * 
      * @return void

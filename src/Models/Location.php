@@ -16,12 +16,17 @@ class Location extends Content
 {
     /**
      * コンテンツ種別
+     * 
+     * @return string
      */
-    const TYPE = 'location';
+    public static function type()
+    {
+        return 'location';
+    }
 
-    protected $fillable = ['profile', 'title', 'latitude', 'longitude', 'zoom', 'public_level', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
-    protected $visible = ['id', 'title', 'latitude', 'longitude', 'zoom', 'is_public', 'thumbnail'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
     protected $casts = [
         'latitude' => 'float',
@@ -38,6 +43,11 @@ class Location extends Content
      */
     protected static function booted(): void
     {
+        static::saving(function (Self $model) {
+            // テキストは、自動補完
+            $model->text = strip_tags($model->value);
+        });
+
         static::created(function (Location $location) {
             // サムネイルイメージアップロード
             if (ImageText::isImageText($location->thumbnail)) {
@@ -64,13 +74,7 @@ class Location extends Content
         });
     }
 
-    /**
-     * 場所のタイプ文字列
-     */
-    public static function type()
-    {
-        return 'location';
-    }
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 場所の中央の位置情報（緯度,経度のカンマ区切り文字列）

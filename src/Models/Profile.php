@@ -17,15 +17,15 @@ class Profile extends Model
     protected $fillable = ['nickname', 'title', 'subtitle', 'introduction', 'home', 'user_id', 'show_members'];
 
     /**
-     * プロフィールのメディアボックスを取得
+     * カテゴリリスト
      */
-    public function mediaBox(): HasOne
+    public function categories()
     {
-        return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
+        return $this->hasMany(Category::class);
     }
 
     /**
-     * 投稿リストを取得します。
+     * 投稿リスト
      */
     public function posts()
     {
@@ -33,7 +33,7 @@ class Profile extends Model
     }
 
     /**
-     * 写真リストを取得します。
+     * 写真リスト
      */
     public function photos()
     {
@@ -41,9 +41,7 @@ class Profile extends Model
     }
 
     /**
-     * 場所リストを取得します。
-     * 
-     * @return \Illuminate\Database\Eloquent\Builder
+     * 場所リスト
      */
     public function locations()
     {
@@ -51,19 +49,21 @@ class Profile extends Model
     }
 
     /**
-     * アイテムリストを取得します。
+     * アイテムリスト。
      */
     public function items()
     {
         return $this->hasMany(Item::class);
     }
 
+    // ========================== ここまで整理済み ==========================
+
     /**
-     * カテゴリーリストを取得します。
+     * プロフィールのメディアボックスを取得
      */
-    public function categories()
+    public function mediaBox(): HasOne
     {
-        return $this->hasMany(Category::class);
+        return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
     }
 
     /**

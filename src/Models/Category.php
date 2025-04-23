@@ -8,6 +8,7 @@ use Feeldee\Framework\Models\SqlLikeBuilder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\Auth;
@@ -26,70 +27,131 @@ class Category extends Model
      *
      * @var array
      */
-    protected $fillable = ['profile', 'type', 'name', 'parent'];
+    protected $fillable = ['type', 'name'];
+
+    /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
+    protected $visible = ['id', 'profile', 'type', 'name', 'parent'];
+
+    protected static function bootedProfile(self $model)
+    {
+        if ($model->parent_id) {
+            // 親カテゴリが存在する場合
+            if ($model->profile_id) {
+                $profile = $model->parent?->profile;
+                if (!$profile) {
+                    $profile = $model->parent()->first()?->profile;
+                }
+                // カテゴリ所有プロフィールIDが指定されている場合
+                if ($profile?->id !== $model->profile_id) {
+                    // カテゴリと親カテゴリでカテゴリ所有プロフィールが異なる場合
+                    throw new ApplicationException(71003);
+                }
+            } else {
+                // 親カテゴリのものを継承
+                $model->profile_id = $model->parent->profile->id;
+            }
+        }
+    }
+
+    protected static function bootedType(self $model)
+    {
+        if ($model->parent) {
+            // 親カテゴリが存在する場合
+            if ($model->type) {
+                // カテゴリタイプが指定されている場合
+                if ($model->parent->type !== $model->type) {
+                    // カテゴリと親カテゴリでカテゴリタイプが異なる場合
+                    throw new ApplicationException(71004);
+                }
+            } else {
+                // 親カテゴリのものを継承
+                $model->type = $model->parent->type;
+            }
+        }
+    }
+
+    protected static function bootedOrderNumber(self $model)
+    {
+        if (!$model->profile) {
+            // カテゴリ所有プロフィールが存在しない場合
+            return;
+        }
+
+        // 同一階層のカテゴリリスト取得
+        $categories = $model->profile->categories()->ofParent($model->parent)->get();
+
+        // 表示順生成
+        if ($categories->isEmpty()) {
+            $model->order_number = 1;
+        } else {
+            $last = $categories->last();
+            $model->order_number = $last->order_number + 1;
+        }
+    }
 
     /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
     {
+        // デフォルトの並び順は、カテゴリ表示順
         static::addGlobalScope('order_number', function ($builder) {
             $builder->orderBy('order_number');
         });
 
-        static::creating(function (self $category) {
-            // 表示順割り当て
-            $category->newOrderNumber();
+        static::creating(function (self $model) {
+            // カテゴリ所有プロフィール
+            static::bootedProfile($model);
+            // カテゴリタイプ
+            static::bootedType($model);
+            // カテゴリ表示順
+            static::bootedOrderNumber($model);
+        });
+
+        static::updating(function (self $model) {
+            // カテゴリ所有プロフィール
+            static::bootedProfile($model);
+            // カテゴリタイプ
+            static::bootedType($model);
         });
     }
 
     /**
-     * 同一階層の最後に表示順を新しく割り当てます。
-     */
-    protected function newOrderNumber()
-    {
-        // 同一階層のカテゴリリスト取得
-        $categories = $this->profile->categories()->ofParent($this->parent)->get();
-
-        // 表示順生成
-        if ($categories->isEmpty()) {
-            $this->order_number = 1;
-        } else {
-            $last = $categories->last();
-            $this->order_number = $last->order_number + 1;
-        }
-    }
-
-    /**
-     * カテゴリーを所有するプロフィール
+     * カテゴリ所有プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
 
     /**
-     * このカテゴリーの親カテゴリー
+     * 親カテゴリ
+     * 
+     * @return BelongsTo
      */
-    public function parent(): Attribute
+    public function parent(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Category::class, 'parent_id')->get()->first(),
-            set: fn($value) => [
-                'parent_id' => $value ? $value->id : null
-            ]
-        );
+        return $this->belongsTo(Category::class, 'parent_id');
     }
 
     /**
-     * このカテゴリーの子カテゴリーリスト
+     * ルートカテゴリかどうか
+     *
+     * @return bool ルートカテゴリの場合true、そうでない場合false
+     */
+    protected function getIsRootAttribute(): bool
+    {
+        return empty($this->attributes['parent_id']);
+    }
+
+    /**
+     * 子カテゴリリスト
      */
     public function children()
     {
@@ -97,36 +159,21 @@ class Category extends Model
     }
 
     /**
-     * このカテゴリーに所属するコンテンツリスト
-     * 注）このリストには、未公開のコンテンツは含まれません。
+     * 子カテゴリが存在するかどうか
+     * 
+     * @return bool 存在する場合true、しない場合false
      */
-    public function contents()
+    public function getHasChildAttribute(): bool
     {
-        return $this->hasMany(Relation::getMorphedModel($this->type));
+        return $this->children()->count() > 0;
     }
 
     /**
-     * 直列化されたカテゴリー階層のコレクション
-     */
-    public function serial(): Attribute
-    {
-        $closure = function () {
-            $serial = collect([$this]);
-            $c = $this->parent;
-            while ($c != null) {
-                $serial->prepend($c);
-                $c = $c->parent;
-            }
-            return $serial;
-        };
-
-        return Attribute::make(
-            get: fn($value, $attributes) => $closure->call($this),
-        )->shouldCache();
-    }
-    /**
-     * カテゴリーの階層を取得します。
-     * ルート階層を1として階層が下がるごとにプラス1されま
+     * カテゴリ階層レベル
+     * 
+     * ルート階層を1として階層が下がるごとにプラス1されます。
+     * 
+     * @return Attribute
      */
     public function level(): Attribute
     {
@@ -142,39 +189,205 @@ class Category extends Model
 
         return Attribute::make(
             get: fn($value, $attributes) => $closure->call($this, $attributes),
+        );
+    }
+
+    /**
+     * コンテンツリスト
+     */
+    public function contents()
+    {
+        return $this->hasMany(Relation::getMorphedModel($this->type));
+    }
+
+    /**
+     * カテゴリ階層連続リスト
+     */
+    public function serials(): Attribute
+    {
+        $closure = function () {
+            $serial = collect([$this]);
+            $c = $this->parent;
+            while ($c != null) {
+                $serial->prepend($c);
+                $c = $c->parent;
+            }
+            return $serial;
+        };
+
+        return Attribute::make(
+            get: fn($value, $attributes) => $closure->call($this),
         )->shouldCache();
     }
 
     /**
-     * 子カテゴリーが存在するかどうかを判定します。
+     * カテゴリ階層アップ
      * 
-     * @return bool 存在する場合true、しない場合false
+     * カテゴリ階層を一つ上げます。
+     * 
+     * カテゴリ表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整されます。
+     * 
+     * カテゴリがルートカテゴリまたは移動することによりルートとなってしまう2階層目のカテゴリの場合は、何もしません（空振り）。
+     * 
+     * @return void
      */
-    public function hasChild(): bool
+    public function hierarchyUp(): void
     {
-        return $this->children()->count() > 0;
+        if ($this->level <= 2) {
+            // カテゴリがルートカテゴリまたは移動することによりルートとなってしまう2階層目のカテゴリの場合
+            return;
+        }
+
+        DB::transaction(function () {
+            // 階層を一つ上げる
+            $parent = $this->parent;
+            $this->order_number = $parent->order_number + 1;
+            $this->parent_id = $parent->parent?->id;
+
+            // 表示順は、移動前に親カテゴリだったカテゴリの次に並ぶように調整
+            $categories = $this->profile->categories()->ofParent($this->parent)->get();
+            $inc = false;
+            foreach ($categories as $category) {
+                if ($category->is($parent)) {
+                    $inc = true;
+                } else if ($inc) {
+                    $category->order_number++;
+                    $category->save();
+                }
+            }
+
+            $this->save();
+            $this->refresh();
+        });
     }
 
     /**
-     * 子カテゴリーを全て削除します。
+     * カテゴリ階層ダウン
+     * 
+     * カテゴリの階層を一つ下げます。
+     * 
+     * 新たな親カテゴリは、移動前の階層の表示順でつ上のカテゴリとなります。
+     * 
+     * 表示順は、移動後のカテゴリ階層の最後になります。
+     * 
+     * カテゴリが同階層の表示順で先頭の場合は、何もしません（空振り）。
      *
      * @return void
      */
-    public function deleteChildren(): void
+    public function hierarchyDown(): void
     {
-        if ($this->hasChild()) {
-            foreach ($this->children as $child) {
-                $child->delete();
-            }
+        $prev = $this->previous();
+        if ($prev == null) {
+            // カテゴリが同階層の表示順で先頭の場合
+            return;
         }
+
+        // 表示順
+        $categories = $this->profile->categories()->ofParent($prev)->get();
+        if ($categories->isEmpty()) {
+            // 最初の子カテゴリの場合
+            $order_number = 1;
+        } else {
+            // 既に子カテゴリが存在する場合
+            // 表示順は、移動後のカテゴリ階層の最後
+            $order_number = $categories->last()->order_number + 1;
+        }
+
+        // 階層をつ下げる
+        // 新たな親カテゴリは、移動前の階層の表示順で一つ上のカテゴリ
+        $this->parent_id = $prev->id;
+        $this->order_number = $order_number;
+        $this->save();
+        $this->refresh();
     }
 
     /**
-     * 表示順で一つ前のカテゴリーを取得します。
-     *
-     * @return mixed 一つ前のカテゴリー。存在しない場合null
+     * カテゴリ入替
+     * 
+     * 対象カテゴリを指定してカテゴリどうしを入替えします。
+     * 
+     * 入替は、カテゴリ所有プロフィールとカテゴリタイプが同じ場合のみ行われます。
+     * 
+     * @param Category $target 対象カテゴリ
+     * @return void
+     * @throws ApplicationException カテゴリ所有プロフィールが異なる場合、71001
+     * @throws ApplicationException カテゴリタイプが異なる場合、71002
      */
-    public function previous(): mixed
+    public function swap(Category $target): void
+    {
+        if ($this->profile->id != $target->profile->id) {
+            // プロフィールが異なる場合
+            throw new ApplicationException(71001, ['source' => $this->profile->id, 'target' => $target->profile->id]);
+        }
+        if ($this->type != $target->type) {
+            // タイプが異なる場合
+            throw new ApplicationException(71002, ['source' => $this->type, 'target' => $target->type]);
+        }
+        if ($this->id == $target->id) {
+            // 同一カテゴリの場合
+            return;
+        }
+
+        DB::transaction(
+            function () use ($target) {
+                if ($this->parent?->id == $target->parent?->id) {
+                    // 同一階層のカテゴリどうしの場合
+
+                    // 表示順のみ入れ替え
+                    $order_number = $this->order_number;
+                    $this->order_number = $target->order_number;
+                    $target->order_number = $order_number;
+
+                    $this->save();
+                    $target->save();
+                } else {
+                    // 異なる階層のカテゴリどうしの場合
+
+                    // 対象カテゴリの親カテゴリを自カテゴリに変更しておく
+                    $new_childres = array();
+                    foreach ($target->children as $child) {
+                        $child->parent_id = $this->id;
+                        $child->save();
+                        array_push($new_childres, $child->id);
+                    }
+                    // 対象カテゴリの親カテゴリと入替
+                    $target_parent = $target->parent;
+                    if ($target_parent?->id == $this->id) {
+                        // 対象カテゴリの親カテゴリが入替元カテゴリの場合
+                        $target->parent_id = $this->parent?->id;
+                        $this->parent_id = $target->id;
+                    } else {
+                        // 対象カテゴリの親カテゴリが入替元カテゴリでない場合
+                        $target->parent_id = $this->parent?->id;
+                        $this->parent_id = $target_parent?->id;
+                    }
+                    $this->save();
+                    $target->save();
+                    // 子カテゴリの親カテゴリを対象カテゴリに変更
+                    foreach ($this->children as $child) {
+                        if (!in_array($child->id, $new_childres)) {
+                            // 既に入替済みの子カテゴリは除外
+                            $child->parent_id = $target->id;
+                            $child->save();
+                        };
+                    }
+                }
+            }
+        );
+        $this->refresh();
+        $target->refresh();
+    }
+
+    /**
+     * 表示順で前
+     * 
+     * 表示順で一つ前のカテゴリを取得します。
+     * 
+     * カテゴリが既に先頭にある場合は、nullを返します。
+     *
+     * @return Category|null 表示順で前のカテゴリ。存在しない場合null
+     */
+    public function previous(): Category|null
     {
         return $this->where('profile_id', '=', $this->profile->id)
             ->where('parent_id', '=', $this->parent_id)
@@ -182,11 +395,15 @@ class Category extends Model
     }
 
     /**
-     * 表示順で一つ後のカテゴリーを取得します。
+     * 表示順で後
      * 
-     * @return mixed 一つ後のカテゴリー。存在しない場合null
+     * 表示順で一つ後のカテゴリを取得します。
+     * 
+     * カテゴリが既に最後にある場合は、nullを返します。
+     * 
+     * @return Category|null 表示順で後ろのカテゴリ。存在しない場合null
      */
-    public function next(): mixed
+    public function next(): Category|null
     {
         return $this->where('profile_id', '=', $this->profile->id)
             ->where('parent_id', '=', $this->parent_id)
@@ -194,7 +411,10 @@ class Category extends Model
     }
 
     /**
-     * カテゴリーの表示順を同一階層内で一つ上げます。
+     * 表示順を上
+     * 
+     * カテゴリの表示順を同一階層内で一つ上げます。
+     * 
      * 表示順が既に先頭の場合は、何もしません（空振り）。
      *
      * @return void
@@ -204,18 +424,25 @@ class Category extends Model
         $target = $this->previous();
         if ($target) {
             // 一つ前のカテゴリーが存在する場合
-            // 表示順を入れ替え
-            $prev = $target->order_number;
-            $target->order_number = $this->order_number;
-            $this->order_number = $prev;
+            DB::transaction(
+                function () use ($target) {
+                    // 表示順を入れ替え
+                    $prev = $target->order_number;
+                    $target->order_number = $this->order_number;
+                    $this->order_number = $prev;
 
-            $target->save();
-            $this->save();
+                    $target->save();
+                    $this->save();
+                }
+            );
         }
     }
 
     /**
-     * カテゴリーの表示順を同一階層内で一つ下げます。
+     * 表示順を下
+     * 
+     * カテゴリの表示順を同一階層内で一つ下げます。
+     * 
      * 表示順が既に最後の場合は、何もしません（空振り）。
      *
      * @return void
@@ -225,222 +452,67 @@ class Category extends Model
         $target = $this->next();
         if ($target) {
             // 一つ後のカテゴリーが存在する場合
-            // 表示順を入れ替え
-            $prev = $target->order_number;
-            $target->order_number = $this->order_number;
-            $this->order_number = $prev;
+            DB::transaction(
+                function () use ($target) {
+                    // 表示順を入れ替え
+                    $prev = $target->order_number;
+                    $target->order_number = $this->order_number;
+                    $this->order_number = $prev;
 
-            $target->save();
-            $this->save();
+                    $target->save();
+                    $this->save();
+                }
+            );
         }
     }
 
     /**
-     * カテゴリーの階層を一つ上げます。
-     * 表示順は、移動前に親カテゴリーだったカテゴリーの次に並ぶように調整されます。
-     * カテゴリーがルートカテゴリーまたは移動することによりルートとなってしまう2階層目のカテゴリーの場合は、何もしません（空振り）。
+     * 削除
      * 
-     * @return void
-     */
-    public function hierarchyUp(): void
-    {
-        if ($this->level <= 2) {
-            // カテゴリーがルートカテゴリーまたは移動することによりルートとなってしまう2階層目のカテゴリーの場合
-            return;
-        }
-
-        // 階層を一つ上げる
-        $parent = $this->parent;
-        $this->order_number = $parent->order_number + 1;
-        $this->parent = $parent->parent;
-
-        // 表示順は、移動前に親カテゴリーだったカテゴリーの次に並ぶように調整
-        $categories = $this->profile->categories()->ofParent($this->parent)->get();
-        $inc = false;
-        foreach ($categories as $category) {
-            if ($category->is($parent)) {
-                $inc = true;
-            } else if ($inc) {
-                $category->order_number++;
-                $category->save();
-            }
-        }
-
-        $this->save();
-    }
-
-    /**
-     * カテゴリーの階層を一つ下げます。
-     * 新たな親カテゴリーは、移動前の階層の表示順で一つ上のカテゴリーとなります。
-     * 表示順は、移動後のカテゴリー階層の最後になります。
-     * カテゴリーが同階層の表示順で先頭の場合は、何もしません（空振り）。
-     *
-     * @return void
-     */
-    public function hierarchyDown(): void
-    {
-        $prev = $this->previous();
-        if ($prev == null) {
-            // カテゴリーが同階層の表示順で先頭の場合
-            return;
-        }
-
-        // 階層を一つ下げる
-        // 新たな親カテゴリーは、移動前の階層の表示順で一つ上のカテゴリー
-        $this->parent = $prev;
-
-        // 表示中調整
-        $categories = $this->profile->categories()->ofParent($this->parent)->get();
-        if ($categories->isEmpty()) {
-            // 最初の子カテゴリーの場合
-            $this->order_number = 1;
-        } else {
-            // 既に子カテゴリーが存在する場合
-            // 表示順は、移動後のカテゴリー階層の最後
-            $this->order_number = $categories->last()->order_number + 1;
-        }
-
-        $this->save();
-    }
-
-    /**
-     * ソース名とターゲット名を指定してカテゴリを入れ替えます。
+     * 子カテゴリが存在するカテゴリは削除できません。
      * 
-     * @param Profile $profile プロフィール
-     * @param string $type タイプ
-     * @param string $source_name ソースカテゴリ名
-     * @param string $target_name ターゲットカテゴリ名
-     * @return bool 入れ替えした場合true
+     * @return bool|null
+     * @throws ApplicationException カテゴリ削除において子カテゴリが存在する場合、71005
      */
-    public static function swap(Profile $profile, string $type, string $source_name, string $target_name): bool
+    public function delete(): bool|null
     {
-        $source = $profile->categories()->ofType($type)->ofName($source_name)->first();
-        if ($source === null) {
-            return false;
+        if ($this->hasChild) {
+            // カテゴリ削除において子カテゴリが存在する場合エラー
+            throw new ApplicationException(71005, ['type' => $this->type, 'name' => $this->name]);
         }
-
-        $target = $profile->categories()->ofType($type)->ofName($target_name)->first();
-        if ($target === null) {
-            return false;
-        }
-
-        if ($source->parent === $target->parent) {
-            // 同一階層のカテゴリどうしの場合
-
-            // 表示順のみ入れ替え
-            $order_number = $source->order_number;
-            $source->order_number = $target->order_number;
-            $target->order_number = $order_number;
-        } else {
-            // 異なる階層のカテゴリどうしの場合
-
-            // 階層を入れ替える（表示順は、それぞれを維持）
-            $parent = $source->parent;
-            $source->parent = $target->parent;
-            $target->parent = $parent;
-        }
-
-        $source->save();
-        $target->save();
-        return true;
-    }
-
-    /**
-     * カテゴリー名を変更します。
-     *
-     * @param  mixed $new_name 新しいカテゴリー名
-     * @return void
-     */
-    public function rename(string $new_name): void
-    {
-        $same_name_category = $this->profile->categories()->ofType($this->type)->ofName($new_name)->first();
-        if ($same_name_category != null && $same_name_category->id != $this->id) {
-            // 同一カテゴリー名のカテゴリーが既に存在する場合
-            throw new ApplicationException('CategorySameNameExists', 71003, ['name' => $new_name]);
-        }
-        $this->name = $new_name;
-        $this->save();
-    }
-
-    /**
-     * カテゴリーを追加します。
-     * 
-     * @param Profile $profile プロフィール
-     * @param string $type タイプ
-     * @param string $name カテゴリー名
-     * @param mixed $parent 親カテゴリー（カテゴリー|カテゴリー名）
-     * @return self 追加したカテゴリー
-     */
-    public static function add(Profile $profile, string $type, string $name, mixed $parent = null): self
-    {
-        // カテゴリー名重複チェック
-        if ($profile->categories()->ofType($type)->ofName($name)->exists()) {
-            // 同一カテゴリー名のカテゴリーが既に存在する場合
-            throw new ApplicationException('CategorySameNameExists', 71003, ['name' => $name]);
-        }
-
-        if (is_string($parent)) {
-            // カテゴリー名の場合
-
-            // 親カテゴリー存在チェック
-            $parent_name = $parent;
-            $parent = $profile->categories()->ofType($type)->ofName($parent_name)->first();
-            if ($parent == null) {
-                // 親カテゴリーが見つからない場合
-                throw new ApplicationException('CategoryParentNotFound', 71001, ['parent_name' => $parent_name]);
-            }
-        }
-
-        // 投稿カテゴリー新規作成
-        $category = Category::create([
-            'profile' => $profile,
-            'type' => $type,
-            'name' => $name,
-            'parent' => $parent
-        ]);
-        return $category;
-    }
-
-    /**
-     * カテゴリーを削除します。
-     * 
-     * @param string $name カテゴリー名
-     * @param bool $hierarchically 子カテゴリーも同時に削除する場合true、削除しない場合false
-     */
-    public function delete(bool $hierarchically = false): void
-    {
-        if (!$hierarchically) {
-            // 子カテゴリーは削除しない場合
-
-            // カテゴリー取得
-            $category = $this->profile->categories()->ofType($this->type)->ofName($this->name)->first();
-            if ($category->hasChild()) {
-                // 子カテゴリーが存在する場合エラー
-                throw new ApplicationException('ChildCategoryExists', 71002, ['name' => $this->name]);
-            }
-        }
-
         // カテゴリー削除
-        self::whereId($this->id)->delete();
+        return parent::delete();
     }
 
     /**
-     * カテゴリー名を指定してカテゴリーを削除します。
-     * 
-     * @param Profile $profile プロフィール
-     * @param string $type タイプ
-     * @param string $name カテゴリー名
-     * @param bool $hierarchically 子カテゴリーも同時に削除する場合true、削除しない場合false
+     * タイプを条件に含むようにクエリのスコープを設定
      */
-    public static function deleteByName(Profile $profile, string $type, string $name, bool $hierarchically = false): void
+    public function scopeOfType($query, string $type)
     {
-
-        // カテゴリー取得
-        $category = $profile->categories()->ofType($type)->ofName($name)->first();
-
-        // カテゴリー削除
-        $category->delete($hierarchically);
+        return $query->where('type', $type);
     }
+
+    /**
+     * 名前を条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
+    {
+        $like->build($query, 'name', $name);
+    }
+
+    /**
+     * 親カテゴリ（nullの場合は、ルート）を条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfParent($query, ?Category $parent)
+    {
+        if (is_null(($parent))) {
+            $query->whereNull('parent_id');
+        } else {
+            $query->where('parent_id', $parent->id);
+        }
+    }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * コンテンツカウントを追加するようにクエリのスコープを設定
@@ -487,34 +559,6 @@ class Category extends Model
         $query->leftJoinSub($categorizables, 'categorizables', function (JoinClause $join) use ($categoryTableName) {
             $join->on($categoryTableName . '.id', '=', 'categorizables.category_id');
         })->select(["$categoryTableName.*", 'count_of_contents']);
-    }
-
-    /**
-     * タイプを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    /**
-     * 名前を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
-    {
-        $like->build($query, 'name', $name);
-    }
-
-    /**
-     * 親カテゴリ（nullの場合は、ルート）を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfParent($query, ?Category $parent)
-    {
-        if (is_null(($parent))) {
-            $query->whereNull('parent_id');
-        } else {
-            $query->where('parent_id', $parent->id);
-        }
     }
 
     /**

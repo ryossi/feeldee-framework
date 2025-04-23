@@ -2,42 +2,34 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Feeldee\Framework\Observers\ContentRecordObserver;
 use Feeldee\Framework\Observers\ContentTagObserver;
-use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use PHPHtmlParser\Dom;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
  * 投稿をあらわすモデル
  */
-#[ObservedBy([PostPhotoSyncObserver::class, ContentRecordObserver::class, ContentTagObserver::class])]
+#[ObservedBy([ContentRecordObserver::class, ContentTagObserver::class])]
 class Post extends Content
 {
     /**
-     * コンテンツ種別
+     * 複数代入可能な属性
+     *
+     * @var array
      */
-    const TYPE = 'post';
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'post_date', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'profile_id', 'post_date', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
-
-    /**
-     * 複数代入可能な属性
-     *
-     * @var array
-     */
-    protected $fillable = ['profile', 'post_date', 'title', 'value', 'public_level', 'thumbnail'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'post_date', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
 
     /**
      * キャストする必要のある属性
@@ -45,9 +37,9 @@ class Post extends Content
      * @var array
      */
     protected $casts = [
+        'is_public' => 'boolean',
         'post_date' => 'date',
         'thumbnail' => URL::class,
-        'value' => Html::class,
     ];
 
     /**
@@ -56,7 +48,33 @@ class Post extends Content
     protected $order_column = 'post_date';
 
     /**
-     * 投稿のタイプ文字列
+     * 必須にする属性
+     */
+    protected $required = [
+        'post_date' => 20001,
+        'title' => 20002,
+    ];
+
+    protected static function bootedText(self $model): void
+    {
+        $model->text = strip_tags($model->value);
+    }
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Self $model) {
+            // 記事テキスト
+            static::bootedText($model);
+        });
+    }
+
+    /**
+     * コンテンツ種別
+     * 
+     * @return string
      */
     public static function type()
     {
@@ -64,49 +82,16 @@ class Post extends Content
     }
 
     /**
-     * この投稿に添付されている写真リスト
+     * 写真リスト
+     * 
+     * @return BelongsToMany
      */
-    public function photos()
+    public function photos(): BelongsToMany
     {
         return $this->belongsToMany(Photo::class, 'posted_photos');
     }
 
-    /**
-     * 内容に合わせて投稿写真リストをシンクロします。
-     */
-    public function syncPhotos(): void
-    {
-        // モデルリフレッシュ
-        $this->refresh();
-
-        // 投稿写真の登録と削除
-        $value = $this->getRawOriginal('value');
-        $photo_ids = array();
-        if (!empty($value)) {
-            $dom = new Dom();
-            $dom->loadStr($value);
-            $images = $dom->find('img');
-            foreach ($images as $image) {
-                $photo = $this->photos()->src($image->src)->first();
-                if ($photo === null) {
-                    $photo = $this->profile->photos()->create([
-                        'src' => $image->src,
-                        'regist_datetime' => $this->post_date,
-                        'is_public' => $this->is_public,
-                        'public_level' => $this->public_level
-                    ]);
-                }
-                array_push($photo_ids, $photo->id);
-            }
-        }
-        foreach ($this->photos as $photo) {
-            if (!in_array($photo->id, $photo_ids)) {
-                // 投稿で使用されなくなった写真は削除
-                $photo->delete();
-            }
-        }
-        $this->photos()->sync($photo_ids);
-    }
+    // ========================== ここまで整理ずみ ==========================
 
     /**
      * システム日時現在からの投稿日の〇〇前
@@ -115,7 +100,7 @@ class Post extends Content
     {
         $ago = function ($value, $attributes) {
             $post_date = strtotime($attributes['post_date']);
-            $today = strtotime(Carbon::now());
+            $today = strtotime(CarbonImmutable::now());
             $seconds = $today - $post_date;
             $hours = floor($seconds / 60 / 60);
             if ($hours < config('feeldee.post.ago.boundary.hour')) {

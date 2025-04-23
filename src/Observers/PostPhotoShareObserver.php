@@ -5,7 +5,7 @@ namespace Feeldee\Framework\Observers;
 use Feeldee\Framework\Models\Post;
 use PHPHtmlParser\Dom;
 
-class PostPhotoSyncObserver
+class PostPhotoShareObserver
 {
     protected function sync(Post $model): void
     {
@@ -17,23 +17,17 @@ class PostPhotoSyncObserver
             $dom->loadStr($value);
             $images = $dom->find('img');
             foreach ($images as $image) {
-                $photo = $model->photos()->ofSrc($image->src)->first();
+                $photo = $model->profile->photos()->ofSrc($image->src)->first();
                 if ($photo === null) {
                     $photo = $model->profile->photos()->create([
                         'src' => $image->src,
                         'regist_datetime' => $model->post_date,
                     ]);
-                    $model->photos()->attach($photo->id);
                 }
                 array_push($photo_ids, $photo->id);
             }
         }
-        // 投稿で使用されなくなった写真は削除
-        foreach ($model->photos as $photo) {
-            if (!in_array($photo->id, $photo_ids)) {
-                $photo->delete();
-            }
-        }
+        $model->photos()->sync($photo_ids);
     }
 
     /**
@@ -49,17 +43,5 @@ class PostPhotoSyncObserver
 
         // モデルリフレッシュ
         $model->refresh();
-    }
-
-    /**
-     * Handle the Post "deleting" event.
-     *
-     * @param  \Feeldee\Framework\Models\Post  $model
-     * @return void
-     */
-    public function deleting(Post $model)
-    {
-        // 投稿写真リスト削除
-        $model->photos()->delete();
     }
 }

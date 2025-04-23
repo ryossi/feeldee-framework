@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,42 +17,78 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, SetUser, AccessCounter;
+    use HasFactory, HasCategory, Required, SetUser, AccessCounter;
 
     /**
-     * コンテンツの種類に応じたタイプ
+     * コンテンツ種別
+     * 
+     * @return string コンテンツ種別
      */
     abstract public static function type();
 
     /**
-     * 省略テキストを取得します。
-     * 
-     * @param int $width 文字数
-     * @param string $trim_marker 省略文字 
-     * @param ?string $encoding エンコード
-     */
-    public function textTruncate(int $width, string $trim_marker, ?string $encoding)
-    {
-        return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
-    }
-
-    /**
-     * コンテンツを所有するプロフィール
+     * コンテンツ所有プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
 
     /**
-     * コンテンツの公開レベル
+     * コンテンツ公開フラグ
+     *
+     * @return bool
+     */
+    protected function getIsPublicAttribute(): bool
+    {
+        return $this->attributes['is_public'] ?? false;
+    }
+
+    /**
+     * 公開
+     * 
+     * コンテンツを公開します。
+     * 
+     * @return void
+     */
+    public function doPublic(): void
+    {
+        $this->is_public = true;
+        $this->save();
+
+        $this->afterPublic();
+    }
+
+    /**
+     * 非公開
+     * 
+     * コンテンツを非公開にします。
+     * 
+     * @return void
+     */
+    public function doPrivate(): void
+    {
+        $this->is_public = false;
+        $this->save();
+
+        $this->afterPrivate();
+    }
+
+    /**
+     * コンテンツ公開後処理
+     */
+    protected function afterPublic(): void {}
+
+
+    /**
+     * コンテンツ非公開後処理
+     */
+    protected function afterPrivate(): void {}
+
+    /**
+     * コンテンツ公開レベル
      *
      * @return Attribute
      */
@@ -71,7 +108,7 @@ abstract class Content extends Model
         };
 
         return Attribute::make(
-            get: fn($value) => !is_null($value) ? ($value instanceof PublicLevel ? $value : PublicLevel::from($value)) : null,
+            get: fn($value) => !is_null($value) ? ($value instanceof PublicLevel ? $value : PublicLevel::from($value)) : PublicLevel::Private,
             set: fn($value, $attributes) => $setter($value, $attributes)
         );
     }
@@ -84,51 +121,19 @@ abstract class Content extends Model
      */
     protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
 
+    // ========================== ここまで整理ずみ ==========================
+
     /**
-     * コンテンツが公開中かどうかを判定します。
+     * 省略テキストを取得します。
      * 
-     * @return bool 公開中の場合true
+     * @param int $width 文字数
+     * @param string $trim_marker 省略文字 
+     * @param ?string $encoding エンコード
      */
-    public function isPublic(): bool
+    public function textTruncate(int $width, string $trim_marker, ?string $encoding)
     {
-        return $this->is_public;
+        return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
     }
-
-    /**
-     * コンテンツを公開します。
-     * 
-     * @return void
-     */
-    public function doPublic(): void
-    {
-        $this->is_public = true;
-        $this->save();
-
-        $this->afterPublic();
-    }
-
-    /**
-     * コンテンツ公開後の処理を記述します。
-     */
-    protected function afterPublic(): void {}
-
-    /**
-     * コンテンツを非公開にします。
-     * 
-     * @return void
-     */
-    public function doPrivate(): void
-    {
-        $this->is_public = false;
-        $this->save();
-
-        $this->afterPrivate();
-    }
-
-    /**
-     * コンテンツ非公開後の処理を記述します。
-     */
-    protected function afterPrivate(): void {}
 
     /**
      * このコンテンツのレコーダリスト
@@ -261,46 +266,6 @@ abstract class Content extends Model
         }
 
         return $this->tags()->get(['name']);
-    }
-
-    /**
-     * カテゴリー
-     */
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
-
-    /**
-     * カテゴリー名
-     */
-    protected function categoryName(): Attribute
-    {
-        return Attribute::make(
-            get: fn() => $this->category ? $this->category->name : null,
-        );
-    }
-
-    /**
-     * カテゴリー名を指定してコンテンツをカテゴリー分けします。
-     * $valueがnullまたは空文字の場合は、既に割り当てられているカテゴリーを解除します。
-     * 
-     * @param  mixed $value カテゴリー名
-     * @return void
-     */
-    public function categorizedByName(mixed $value): void
-    {
-        if (is_null($value) || $value == '') {
-            $this->category()->disassociate();
-        } else if ($value instanceof self && $value->profile == $this->profile) {
-            $this->category()->associate($value);
-        } else {
-            $category = $this->profile->categories()->ofType($this->type())->ofName($value)->first();
-            if ($category == null) {
-                throw new ApplicationException('CategoryNotFound', 71004, ['name' => $value]);
-            }
-            $this->category()->associate($category);
-        }
     }
 
     /**

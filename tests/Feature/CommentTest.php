@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Reply;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -197,7 +198,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($post->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Post::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Post::TYPE,
+            'commentable_type' => Post::type(),
         ]);
     }
 
@@ -231,7 +232,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($photo->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Photo::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Photo::TYPE,
+            'commentable_type' => Photo::type()
         ]);
     }
 
@@ -265,7 +266,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($location->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Location::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Location::TYPE,
+            'commentable_type' => Location::type(),
         ]);
     }
 
@@ -299,7 +300,7 @@ class CommentTest extends TestCase
         Assert::assertEquals($item->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
         Assert::assertInstanceOf(Item::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Item::TYPE,
+            'commentable_type' => Item::type(),
         ]);
     }
 
@@ -490,7 +491,7 @@ class CommentTest extends TestCase
     /**
      * コメント公開フラグ
      * 
-     * - コメント公開フラグが指定されなかった場合は、非公開であることを確認します。
+     * - デフォルトは、非公開であることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
@@ -509,18 +510,16 @@ class CommentTest extends TestCase
         $comment = Comment::create([
             'body' => 'これはテストコメントです。',
             'nickname' => 'テストユーザ',
-            'is_public' => true
         ], $item);
-        $comment->refresh();
 
         // 評価
-        Assert::assertFalse($comment->isPublic, 'デフォルトは、非公開であること');
+        Assert::assertFalse($comment->isPublic, 'コメント公開フラグは、デフォルトで非公開であること');
     }
 
     /**
      * コメント公開フラグ
      * 
-     * - doPublic()メソッドを実行すると、コメントが公開されることを確認します。
+     * - 公開できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
@@ -535,13 +534,13 @@ class CommentTest extends TestCase
         $comment->doPublic();
 
         // 評価
-        Assert::assertTrue($comment->isPublic, '公開であること');
+        Assert::assertTrue($comment->isPublic, '公開できること');
     }
 
     /**
      * コメント公開フラグ
      * 
-     * - doPrivate()メソッドを実行すると、コメントが非公開になることを確認します。
+     * - 非公開にできることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
      */
@@ -556,6 +555,28 @@ class CommentTest extends TestCase
         $comment->doPrivate();
 
         // 評価
-        Assert::assertFalse($comment->isPublic, '非公開であること');
+        Assert::assertFalse($comment->isPublic, '非公開にできること');
+    }
+
+    /**
+     * 返信リスト
+     * 
+     * - 返信リストが取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リスト
+     */
+    public function test_replies()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $count = 5;
+        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1)->has(Reply::factory($count))))->create();
+        $comment = $profile->items->first()->comments->first();
+
+        // 実行
+        $replies = $comment->replies;
+
+        // 評価
+        Assert::assertEquals($count, $replies->count(), '返信リストが取得できること');
     }
 }

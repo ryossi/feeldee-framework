@@ -44,6 +44,12 @@ class FeeldeeServiceProvider extends ServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
+        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'feeldee');
+
+        $this->publishes([
+            __DIR__ . '/../lang' => $this->app->langPath('vendor/feeldee'),
+        ]);
+
         $this->publishes([
             __DIR__ . '/../config/feeldee.php' => config_path('feeldee.php'),
         ], 'feeldee');
@@ -52,10 +58,10 @@ class FeeldeeServiceProvider extends ServiceProvider
 
         // カスタムポリモーフィックタイプ
         Relation::enforceMorphMap([
-            Post::TYPE => 'Feeldee\Framework\Models\Post',
-            Photo::TYPE => 'Feeldee\Framework\Models\Photo',
-            Location::TYPE => 'Feeldee\Framework\Models\Location',
-            Item::TYPE => 'Feeldee\Framework\Models\Item',
+            Post::type() => 'Feeldee\Framework\Models\Post',
+            Photo::type() => 'Feeldee\Framework\Models\Photo',
+            Location::type() => 'Feeldee\Framework\Models\Location',
+            Item::type() => 'Feeldee\Framework\Models\Item',
         ]);
     }
 }

@@ -2,9 +2,8 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Casts\URL;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -14,16 +13,18 @@ use Illuminate\Support\Facades\DB;
 class Photo extends Content
 {
     /**
-     * コンテンツ種別
+     * 複数代入可能な属性
+     *
+     * @var array
      */
-    const TYPE = 'photo';
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'value', 'photo_type', 'src', 'regist_datetime'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'profile_id', 'title', 'photo_type', 'src', 'regist_datetime', 'albums'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'photo_type', 'src', 'regist_datetime', 'albums'];
 
     /**
      * 配列に追加する属性
@@ -33,19 +34,12 @@ class Photo extends Content
     protected $appends = ['albums'];
 
     /**
-     * 複数代入可能な属性
-     *
-     * @var array
-     */
-    protected $fillable = ['profile', 'title', 'photo_type', 'src', 'regist_datetime', 'is_public', 'public_level'];
-
-    /**
      * キャストする必要のある属性
      *
      * @var array
      */
     protected $casts = [
-        'src' => URL::class,
+        'regist_datetime' => 'date',
     ];
 
     /**
@@ -53,16 +47,58 @@ class Photo extends Content
      */
     protected $order_column = 'regist_datetime';
 
+    protected static function bootedText(self $model): void
+    {
+        $model->text = strip_tags($model->value);
+    }
+
     /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
     {
-        static::creating(function (Photo $photo) {
+        static::saving(function (Self $model) {
+            // 写真テキスト
+            static::bootedText($model);
+        });
+        static::creating(function (Self $model) {
             // 写真準備
-            $photo->prepare();
+            $model->prepare();
         });
     }
+
+    /**
+     * コンテンツ種別
+     * 
+     * @return string
+     */
+    public static function type()
+    {
+        return 'photo';
+    }
+
+    /**
+     * 投稿リスト
+     * 
+     * @return BelongsToMany
+     */
+    public function posts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'posted_photos');
+    }
+
+    /**
+     * 写真ソースで絞り込むクエリのスコープを設定
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param mixed $src 写真ソース
+     */
+    public function scopeOfSrc($query, mixed $src)
+    {
+        $query->where('src', $src);
+    }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 写真を準備します。
@@ -106,33 +142,6 @@ class Photo extends Content
             get: fn($value) => empty($value) ? null : PhotoType::from($value),
             set: fn($value) => $value->value,
         );
-    }
-
-    /**
-     * 写真のタイプ文字列
-     */
-    public static function type()
-    {
-        return 'photo';
-    }
-
-    /**
-     * この写真が使用されている投稿リスト
-     */
-    public function posts()
-    {
-        return $this->belongsToMany(Post::class);
-    }
-
-    /**
-     * ソースで絞り込むクエリのスコープを設定
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param ?string $src ソース
-     */
-    public function scopeSrc($query, ?string $src)
-    {
-        $query->where('src', $src);
     }
 
     /**
