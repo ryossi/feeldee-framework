@@ -70,6 +70,183 @@ class LocationTest extends TestCase
     }
 
     /**
+     * コンテンツタイトル
+     * 
+     * - 登録した場所に付けるタイトルであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタイトル
+     */
+    public function test_title()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = '場所のタイトル';
+
+        // 実行
+        $location = $profile->locations()->create([
+            'title' => $title,
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+        ]);
+
+        // 検証
+        $this->assertEquals($title, $location->title, '登録した場所に付けるタイトルであること');
+    }
+
+    /**
+     * コンテンツタイトル
+     * 
+     * - 登録時に必ず指定する必要があることを確認します。
+     * - 例外コード:40001のメッセージであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタイトル
+     */
+    public function test_title_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->locations()->create([
+                'latitude' => 35.681236,
+                'longitude' => 139.767125,
+                'zoom' => 15,
+            ]);
+        }, ApplicationException::class, 'LocationTitleRequired');
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 場所の説明またはメモ書きなどであることを確認します。
+     * - HTMLが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     */
+    public function test_value_html()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>場所内容の本文</p>';
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'title' => '場所タイトル',
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $location->value, '場所の説明またはメモ書きなどであること');
+        // HTMLが使用できること
+        $this->assertDatabaseHas('locations', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 場所の説明またはメモ書きなどであることを確認します。
+     * - テキストが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     */
+    public function test_value_text()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '場所の本文';
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'title' => '場所タイトル',
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $location->value, '場所の説明またはメモ書きなどであること');
+        // テキストが使用できること
+        $this->assertDatabaseHas('locations', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツテキスト
+     * 
+     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - コンテンツ内容の登録時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツテキスト
+     */
+    public function test_text_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>場所内容の本文</p>';
+        $expected = '場所内容の本文';
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'title' => '場所タイトル',
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $location->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
+        // コンテンツ内容の登録時に、自動変換されること
+        $this->assertDatabaseHas('locations', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
+     * コンテンツテキスト
+     * 
+     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - コンテンツ内容の編集時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツテキスト
+     */
+    public function test_text_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Location::factory()->count(1))->create();
+        $location = $profile->locations->first();
+        $value = '<p>場所内容の本文</p>';
+        $expected = '場所内容の本文';
+
+        // 実行
+        $location->update([
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $location->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
+        // コンテンツ内容の編集時に、自動変換されること
+        $this->assertDatabaseHas('locations', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
      * コンテンツ公開フラグ
      * 
      * - デフォルトは、非公開であることを確認します。

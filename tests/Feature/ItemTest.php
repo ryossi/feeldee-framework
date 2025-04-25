@@ -65,6 +65,167 @@ class ItemTest extends TestCase
     }
 
     /**
+     * コンテンツタイトル
+     * 
+     * - 登録したアイテムに付けるタイトルであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタイトル
+     */
+    public function test_title()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = 'アイテムのタイトル';
+
+        // 実行
+        $item = $profile->items()->create([
+            'title' => $title,
+        ]);
+
+        // 検証
+        $this->assertEquals($title, $item->title, '登録したアイテムに付けるタイトルであること');
+    }
+
+    /**
+     * コンテンツタイトル
+     * 
+     * - 登録時に必ず指定する必要があることを確認します。
+     * - 例外コード:50001のメッセージであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタイトル
+     */
+    public function test_title_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->items()->create();
+        }, ApplicationException::class, 'ItemTitleRequired');
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - アイテムの説明またはメモ書きなどであることを確認します。
+     * - HTMLが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ内容
+     */
+    public function test_value_html()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>アイテム内容の本文</p>';
+
+        // 実行
+        $item = $profile->items()->create([
+            'title' => 'アイテムタイトル',
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $item->value, 'アイテムの説明またはメモ書きなどであること');
+        // HTMLが使用できること
+        $this->assertDatabaseHas('items', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - アイテムの説明またはメモ書きなどであることを確認します。
+     * - テキストが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ内容
+     */
+    public function test_value_text()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = 'アイテムの本文';
+
+        // 実行
+        $item = $profile->items()->create([
+            'title' => 'アイテムタイトル',
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $item->value, 'アイテムの説明またはメモ書きなどであること');
+        // テキストが使用できること
+        $this->assertDatabaseHas('items', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツテキスト
+     * 
+     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - コンテンツ内容の登録時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツテキスト
+     */
+    public function test_text_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>アイテム内容の本文</p>';
+        $expected = 'アイテム内容の本文';
+
+        // 実行
+        $item = $profile->items()->create([
+            'title' => 'アイテムタイトル',
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $item->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
+        // コンテンツ内容の登録時に、自動変換されること
+        $this->assertDatabaseHas('items', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
+     * コンテンツテキスト
+     * 
+     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - コンテンツ内容の編集時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツテキスト
+     */
+    public function test_text_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1))->create();
+        $item = $profile->items->first();
+        $value = '<p>アイテム内容の本文</p>';
+        $expected = 'アイテム内容の本文';
+
+        // 実行
+        $item->update([
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $item->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
+        // コンテンツ内容の編集時に、自動変換されること
+        $this->assertDatabaseHas('items', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
      * コンテンツ公開フラグ
      * 
      * - デフォルトは、非公開であることを確認します。

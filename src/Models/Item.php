@@ -53,15 +53,26 @@ class Item extends Content
     ];
 
     /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'title' => 50001,
+    ];
+
+    /**
+     * 文字列から HTML および PHP タグを取り除く属性
+     * 
+     * @var array
+     */
+    protected $strip_tags = ['value' => 'text'];
+
+    /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
     {
-        static::saving(function (Self $model) {
-            // テキストは、自動補完
-            $model->text = strip_tags($model->value);
-        });
-
         static::addGlobalScope('order_number', function ($builder) {
             $builder->orderBy('order_number');
         });

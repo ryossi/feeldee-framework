@@ -69,6 +69,173 @@ class PostTest extends TestCase
     }
 
     /**
+     * コンテンツタイトル
+     * 
+     * - 投稿した記事のタイトルであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタイトル
+     */
+    public function test_title()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = '投稿のタイトル';
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => $title,
+            'post_date' => now(),
+        ]);
+
+        // 検証
+        $this->assertEquals($title, $post->title, '投稿した記事のタイトルであること');
+    }
+
+    /**
+     * コンテンツタイトル
+     * 
+     * - 投稿時に必ず指定する必要があることを確認します。
+     * - 例外コード:20002のメッセージであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタイトル
+     */
+    public function test_title_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->posts()->create([
+                'post_date' => now(),
+            ]);
+        }, ApplicationException::class, 'PostTitleRequired');
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 投稿した記事の本文であることを確認します。
+     * - HTMLが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ内容
+     */
+    public function test_value_html()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>投稿記事の本文</p>';
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $post->value, '投稿した記事の本文であること');
+        // HTMLが使用できること
+        $this->assertDatabaseHas('posts', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 投稿した記事の本文であることを確認します。
+     * - テキストが使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ内容
+     */
+    public function test_value_text()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '投稿記事の本文';
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($value, $post->value, '投稿した記事の本文であること');
+        // テキストが使用できること
+        $this->assertDatabaseHas('posts', [
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツテキスト
+     * 
+     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - コンテンツ内容の投稿時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツテキスト
+     */
+    public function test_text_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>投稿記事の本文</p>';
+        $expected = '投稿記事の本文';
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $post->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
+        // コンテンツ内容の投稿時に、自動変換されること
+        $this->assertDatabaseHas('posts', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
+     * コンテンツテキスト
+     * 
+     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - コンテンツ内容の編集時に、自動変換されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツテキスト
+     */
+    public function test_text_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $post = $profile->posts->first();
+        $value = '<p>投稿記事の本文</p>';
+        $expected = '投稿記事の本文';
+
+        // 実行
+        $post->update([
+            'value' => $value,
+        ]);
+
+        // 検証
+        $this->assertEquals($expected, $post->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
+        // コンテンツ内容の編集時に、自動変換されること
+        $this->assertDatabaseHas('posts', [
+            'text' => $expected,
+        ]);
+    }
+
+    /**
      * コンテンツ公開フラグ
      * 
      * - デフォルトは、非公開であることを確認します。
@@ -488,173 +655,6 @@ class PostTest extends TestCase
                 'title' => 'テスト投稿',
             ]);
         }, ApplicationException::class, 'PostDateRequired');
-    }
-
-    /**
-     * 記事タイトル
-     * 
-     * - 投稿記事のタイトルであることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事タイトル
-     */
-    public function test_title()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $title = '投稿のタイトル';
-
-        // 実行
-        $post = $profile->posts()->create([
-            'title' => $title,
-            'post_date' => now(),
-        ]);
-
-        // 検証
-        $this->assertEquals($title, $post->title, '投稿のタイトルであること');
-    }
-
-    /**
-     * 記事タイトル
-     * 
-     * - 投稿時に必ず指定する必要があることを確認します。
-     * - 例外コード:20002のメッセージであることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事タイトル
-     */
-    public function test_title_required()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $this->assertThrows(function () use ($profile) {
-            $profile->posts()->create([
-                'post_date' => now(),
-            ]);
-        }, ApplicationException::class, 'PostTitleRequired');
-    }
-
-    /**
-     * 記事内容
-     * 
-     * - 投稿記事の本文であることを確認します。
-     * - HTMLが使用できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事内容
-     */
-    public function test_value_html()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $value = '<p>投稿記事の本文</p>';
-
-        // 実行
-        $post = $profile->posts()->create([
-            'title' => 'テスト投稿',
-            'post_date' => now(),
-            'value' => $value,
-        ]);
-
-        // 検証
-        $this->assertEquals($value, $post->value, '投稿記事の本文であること');
-        // HTMLが使用できること
-        $this->assertDatabaseHas('posts', [
-            'value' => $value,
-        ]);
-    }
-
-    /**
-     * 記事内容
-     * 
-     * - 投稿記事の本文であることを確認します。
-     * - テキストが使用できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事内容
-     */
-    public function test_value_text()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $value = '投稿記事の本文';
-
-        // 実行
-        $post = $profile->posts()->create([
-            'title' => 'テスト投稿',
-            'post_date' => now(),
-            'value' => $value,
-        ]);
-
-        // 検証
-        $this->assertEquals($value, $post->value, '投稿記事の本文であること');
-        // テキストが使用できること
-        $this->assertDatabaseHas('posts', [
-            'value' => $value,
-        ]);
-    }
-
-    /**
-     * 記事テキスト
-     * 
-     * - 投稿記事の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - 記事の投稿時に、自動変換されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事テキスト
-     */
-    public function test_text_create()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $value = '<p>投稿記事の本文</p>';
-        $expected = '投稿記事の本文';
-
-        // 実行
-        $post = $profile->posts()->create([
-            'title' => 'テスト投稿',
-            'post_date' => now(),
-            'value' => $value,
-        ]);
-
-        // 検証
-        $this->assertEquals($expected, $post->text, '投稿記事の内容から、HTMLタグのみを排除したテキスト表現であること');
-        // 記事の投稿時に、自動変換されること
-        $this->assertDatabaseHas('posts', [
-            'text' => $expected,
-        ]);
-    }
-
-    /**
-     * 記事テキスト
-     * 
-     * - 投稿記事の内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - 記事の編集時に、自動変換されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事テキスト
-     */
-    public function test_text_update()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
-        $post = $profile->posts->first();
-        $value = '<p>投稿記事の本文</p>';
-        $expected = '投稿記事の本文';
-
-        // 実行
-        $post->update([
-            'value' => $value,
-        ]);
-
-        // 検証
-        $this->assertEquals($expected, $post->text, '投稿記事の内容から、HTMLタグのみを排除したテキスト表現であること');
-        // 記事の編集時に、自動変換されること
-        $this->assertDatabaseHas('posts', [
-            'text' => $expected,
-        ]);
     }
 
     /**
