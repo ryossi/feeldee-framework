@@ -24,10 +24,25 @@ class Location extends Content
         return 'location';
     }
 
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
+    /**
+     * 複数代入可能な属性
+     *
+     * @var array
+     */
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'title', 'value', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
+    /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
     protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
+    /**
+     * キャストする必要のある属性
+     *
+     * @var array
+     */
     protected $casts = [
         'latitude' => 'float',
         'longitude' => 'float',
@@ -36,6 +51,22 @@ class Location extends Content
         'value' => Html::class,
     ];
 
+    /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'title' => 40001,
+    ];
+
+    /**
+     * 文字列から HTML および PHP タグを取り除く属性
+     * 
+     * @var array
+     */
+    protected $strip_tags = ['value' => 'text'];
+
     protected const THUMBNAIL_UPLOAD_DIRECTORY = 'location';
 
     /**
@@ -43,11 +74,6 @@ class Location extends Content
      */
     protected static function booted(): void
     {
-        static::saving(function (Self $model) {
-            // テキストは、自動補完
-            $model->text = strip_tags($model->value);
-        });
-
         static::created(function (Location $location) {
             // サムネイルイメージアップロード
             if (ImageText::isImageText($location->thumbnail)) {

@@ -20,16 +20,16 @@ return new class extends Migration
 
             $table->id();
             $table->foreignId('profile_id')->comment('コンテンツ所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
-            $table->string('title')->comment('タイトル');
-            $table->mediumText('value')->nullable()->comment('内容');
-            $table->mediumText('text')->nullable()->comment('テキスト');
+            $table->string('title')->comment('コンテンツタイトル');
+            $table->mediumText('value')->nullable()->comment('コンテンツ内容');
+            $table->mediumText('text')->nullable()->comment('コンテンツテキスト');
+            $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
+            $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
+            $table->foreignId('category_id')->nullable()->comment('カテゴリーID')->constrained('categories')->onDelete('set null');;
             $table->decimal('latitude', $precision_latitude + 2, $precision_latitude, true)->comment('緯度');
             $table->decimal('longitude', $precision_longitude + 3, $precision_longitude, true)->comment('経度');
             $table->integer('zoom')->comment('縮尺');
             $table->mediumText('thumbnail')->nullable()->comment('サムネイル');
-            $table->foreignId('category_id')->nullable()->comment('カテゴリーID')->constrained('categories')->onDelete('set null');;
-            $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
-            $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();

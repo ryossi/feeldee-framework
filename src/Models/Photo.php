@@ -44,23 +44,23 @@ class Photo extends Content
 
     /**
      * コンテンツをソートするカラム名
+     * 
+     * @var array
      */
     protected $order_column = 'regist_datetime';
 
-    protected static function bootedText(self $model): void
-    {
-        $model->text = strip_tags($model->value);
-    }
+    /**
+     * 文字列から HTML および PHP タグを取り除く属性
+     * 
+     * @var array
+     */
+    protected $strip_tags = ['value' => 'text'];
 
     /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
     {
-        static::saving(function (Self $model) {
-            // 写真テキスト
-            static::bootedText($model);
-        });
         static::creating(function (Self $model) {
             // 写真準備
             $model->prepare();

@@ -49,27 +49,20 @@ class Post extends Content
 
     /**
      * 必須にする属性
+     * 
+     * @var array
      */
     protected $required = [
         'post_date' => 20001,
         'title' => 20002,
     ];
 
-    protected static function bootedText(self $model): void
-    {
-        $model->text = strip_tags($model->value);
-    }
-
     /**
-     * モデルの「起動」メソッド
+     * 文字列から HTML および PHP タグを取り除く属性
+     * 
+     * @var array
      */
-    protected static function booted(): void
-    {
-        static::saving(function (Self $model) {
-            // 記事テキスト
-            static::bootedText($model);
-        });
-    }
+    protected $strip_tags = ['value' => 'text'];
 
     /**
      * コンテンツ種別
