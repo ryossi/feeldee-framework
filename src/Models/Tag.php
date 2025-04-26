@@ -40,6 +40,7 @@ class Tag extends Model
      */
     protected $required = [
         'profile_id' => 72001,
+        'type' => 72002,
     ];
 
     /**

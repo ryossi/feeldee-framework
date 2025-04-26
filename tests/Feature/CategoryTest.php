@@ -8,6 +8,7 @@ use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
+use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -129,13 +130,13 @@ class CategoryTest extends TestCase
         // 実行
         $category = $profile->categories()->create([
             'name' => 'テストカテゴリ',
-            'type' => Post::type(),
+            'type' => Photo::type(),
         ]);
 
         // 評価
-        $this->assertEquals(Post::type(), $category->type, '写真のカテゴリタイプであること');
+        $this->assertEquals(Photo::type(), $category->type, '写真のカテゴリタイプであること');
         $this->assertDatabaseHas('categories', [
-            'type' => Post::type(),
+            'type' => Photo::type(),
         ]);
     }
 

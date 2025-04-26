@@ -3,6 +3,9 @@
 namespace Tests\Feature;
 
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Models\Item;
+use Feeldee\Framework\Models\Location;
+use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Tag;
@@ -43,11 +46,11 @@ class TagTest extends TestCase
     }
 
     /** 
-     * カテゴリ所有プロフィール
+     * タグ所有プロフィール
      * 
-     * - カテゴリ所有プロフィールは必須項目であることを確認します。
+     * - タグ所有プロフィールは必須項目であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ所有プロフィール
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ所有プロフィール
      */
     public function test_profile_required()
     {
@@ -61,5 +64,130 @@ class TagTest extends TestCase
                 'type' => Post::type(),
             ]);
         }, ApplicationException::class, 'TagProfileRequired');
+    }
+
+    /**
+     * タグタイプ
+     * 
+     * - タグタイプは必須項目であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグタイプ
+     */
+    public function test_type_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->tags()->create([
+                'name' => 'テストタグ',
+            ]);
+        }, ApplicationException::class, 'TagTypeRequired');
+    }
+
+    /**
+     * タグタイプ
+     * 
+     * - 投稿のタグは、投稿のタグタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグタイプ
+     */
+    public function test_type_post()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag = $profile->categories()->create([
+            'name' => 'テストタグ',
+            'type' => Post::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals(Post::type(), $tag->type, '投稿のタグタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Post::type(),
+        ]);
+    }
+
+    /**
+     * タグタイプ
+     * 
+     * - 写真のタグは、写真のタグタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグタイプ
+     */
+    public function test_type_photo()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag = $profile->categories()->create([
+            'name' => 'テストタグ',
+            'type' => Photo::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals(Photo::type(), $tag->type, '写真のタグタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Photo::type(),
+        ]);
+    }
+
+    /**
+     * タグタイプ
+     * 
+     * - 場所のタグは、場所のタグタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグタイプ
+     */
+    public function test_type_location()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag = $profile->categories()->create([
+            'name' => 'テストタグ',
+            'type' => Location::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals(Location::type(), $tag->type, '場所のタグタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Location::type(),
+        ]);
+    }
+
+    /**
+     * タグタイプ
+     * 
+     * - アイテムのタグは、アイテムのタグタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグタイプ
+     */
+    public function test_type_item()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag = $profile->categories()->create([
+            'name' => 'テストタグ',
+            'type' => Item::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals(Item::type(), $tag->type, 'アイテムのタグタイプであること');
+        $this->assertDatabaseHas('categories', [
+            'type' => Item::type(),
+        ]);
     }
 }
