@@ -37,6 +37,7 @@ class Category extends Model
     protected $required = [
         'profile_id' => 71008,
         'type' => 71009,
+        'name' => 71010,
     ];
 
     /**
@@ -46,7 +47,7 @@ class Category extends Model
      */
     protected $visible = ['id', 'profile', 'type', 'name', 'parent'];
 
-    protected static function bootedProfile(self $model)
+    protected static function bootedProfile(Self $model)
     {
         if ($model->parent_id) {
             // 親カテゴリが存在する場合
@@ -67,7 +68,7 @@ class Category extends Model
         }
     }
 
-    protected static function bootedType(self $model)
+    protected static function bootedType(Self $model)
     {
         if ($model->parent) {
             // 親カテゴリが存在する場合
@@ -81,6 +82,14 @@ class Category extends Model
                 // 親カテゴリのものを継承
                 $model->type = $model->parent->type;
             }
+        }
+    }
+
+    protected static function bootedName(Self $model)
+    {
+        if ($model->profile->categories()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+            // カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している場合
+            throw new ApplicationException(71011, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
         }
     }
 
@@ -121,8 +130,15 @@ class Category extends Model
         });
 
         static::creating(function (Self $model) {
+            // カテゴリ名
+            static::bootedName($model);
             // カテゴリ表示順
             static::bootedOrderNumber($model);
+        });
+
+        static::updating(function (Self $model) {
+            // カテゴリ名
+            static::bootedName($model);
         });
     }
 

@@ -41,7 +41,17 @@ class Tag extends Model
     protected $required = [
         'profile_id' => 72001,
         'type' => 72002,
+        'name' => 72003,
     ];
+
+
+    protected static function bootedName(Self $model)
+    {
+        if ($model->profile->tags()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+            // タグ所有プロフィールとタグタイプの中でタグ名が重複している場合
+            throw new ApplicationException(72004, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
+        }
+    }
 
     /**
      * モデルの「起動」メソッド
@@ -53,9 +63,16 @@ class Tag extends Model
             $builder->orderBy('order_number');
         });
 
-        static::creating(function (self $tag) {
+        static::creating(function (Self $model) {
+            // タグ名
+            static::bootedName($model);
             // 表示順割り当て
-            $tag->newOrderNumber();
+            $model->newOrderNumber();
+        });
+
+        static::updating(function (Self $model) {
+            // タグ名
+            static::bootedName($model);
         });
     }
 
@@ -84,6 +101,22 @@ class Tag extends Model
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
+    }
+
+    /**
+     * タグタイプを条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * タグ名を条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
+    {
+        $like->build($query, 'name', $name);
     }
 
     // ========================== ここまで整理済み ==========================
@@ -312,21 +345,5 @@ class Tag extends Model
         $source->save();
         $target->save();
         return true;
-    }
-
-    /**
-     * タイプを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    /**
-     * 名前を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
-    {
-        $like->build($query, 'name', $name);
     }
 }

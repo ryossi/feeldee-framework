@@ -190,4 +190,131 @@ class TagTest extends TestCase
             'type' => Item::type(),
         ]);
     }
+
+    /**
+     * タグ名
+     * 
+     * - タグの名前であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名
+     */
+    public function test_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag = $profile->tags()->create([
+            'name' => 'テストタグ',
+            'type' => Post::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals('テストタグ', $tag->name, 'タグの名前であること');
+        $this->assertDatabaseHas('tags', [
+            'name' => 'テストタグ',
+        ]);
+    }
+
+    /**
+     * タグ名
+     * 
+     * - タグ名は必須項目であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名
+     */
+    public function test_name_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->tags()->create([
+                'type' => Post::type(),
+            ]);
+        }, ApplicationException::class, 'TagNameRequired');
+    }
+
+    /**
+     * タグ名
+     * 
+     * - タグ所有プロフィールとタグタイプの中でユニークであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名
+     */
+    public function test_name_unique()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Post::type()]))->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->tags()->create([
+                'name' => 'テストタグ',
+                'type' => Post::type(),
+            ]);
+        }, ApplicationException::class, 'TagNameDuplicated');
+    }
+
+    /**
+     * タグ名
+     * 
+     * - タグ所有プロフィールとタグタイプの中でユニークであることを確認します。
+     * - タグタイプが異なる場合は、登録できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名
+     */
+    public function test_name_unique_with_different_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Post::type()]))->create();
+
+        // 実行
+        $tag = $profile->categories()->create([
+            'name' => 'テストタグ',
+            'type' => Item::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals('テストタグ', $tag->name, 'タグタイプが異なる場合は、登録できること');
+        $this->assertDatabaseHas('categories', [
+            'name' => 'テストタグ',
+            'type' => Item::type(),
+        ]);
+    }
+
+    /**
+     * タグ名
+     * 
+     * - タグ所有プロフィールとタグタイプの中でユニークであることを確認します。
+     * - タグ所有プロフィールが異なる場合は、登録できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名
+     */
+    public function test_name_unique_with_different_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Post::type()]))->create();
+        $otherProfile = Profile::factory()->create();
+
+        // 実行
+        $tag = $otherProfile->categories()->create([
+            'name' => 'テストタグ',
+            'type' => Post::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals('テストタグ', $tag->name, 'タグ所有プロフィールが異なる場合は、登録できること');
+        $this->assertDatabaseHas('categories', [
+            'name' => 'テストタグ',
+            'type' => Post::type(),
+            'profile_id' => $otherProfile->id,
+        ]);
+    }
 }
