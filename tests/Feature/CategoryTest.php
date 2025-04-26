@@ -64,7 +64,7 @@ class CategoryTest extends TestCase
                 'name' => 'テストカテゴリ',
                 'type' => Post::type(),
             ]);
-        }, Exception::class);
+        }, ApplicationException::class, 'CategoryProfileRequired');
     }
 
     /**
@@ -85,7 +85,7 @@ class CategoryTest extends TestCase
             $profile->categories()->create([
                 'name' => 'テストカテゴリ',
             ]);
-        }, Exception::class);
+        }, ApplicationException::class, 'CategoryTypeRequired');
     }
 
     /**

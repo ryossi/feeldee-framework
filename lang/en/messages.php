@@ -27,6 +27,8 @@ return [
     71005 => 'CategoryDeleteHasChild',                  // カテゴリ削除において子カテゴリが存在する
     71006 => 'CategoryContentProfileMissmatch',         // カテゴリ所有プロフィールとコンテンツ所有プロフィールが異なる
     71007 => 'CategoryContentTypeMissmatch',            // カテゴリタイプとコンテンツ種別が異なる
+    71008 => 'CategoryProfileRequired',                 // カテゴリ所有プロフィールが指定されていない
+    71009 => 'CategoryTypeRequired',                    // カテゴリタイプが指定されていない
 
     // *************************
     // *** 72xxx タグ関連     ***

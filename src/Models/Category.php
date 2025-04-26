@@ -20,7 +20,7 @@ use Intervention\Image\Facades\Image;
  */
 class Category extends Model
 {
-    use HasFactory, SetUser;
+    use HasFactory, Required, SetUser;
 
     /**
      * 複数代入可能な属性
@@ -28,6 +28,16 @@ class Category extends Model
      * @var array
      */
     protected $fillable = ['type', 'name'];
+
+    /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'profile_id' => 71008,
+        'type' => 71009,
+    ];
 
     /**
      * 配列に表示する属性
@@ -103,20 +113,16 @@ class Category extends Model
             $builder->orderBy('order_number');
         });
 
-        static::creating(function (self $model) {
+        static::saving(function (Self $model) {
             // カテゴリ所有プロフィール
             static::bootedProfile($model);
             // カテゴリタイプ
             static::bootedType($model);
-            // カテゴリ表示順
-            static::bootedOrderNumber($model);
         });
 
-        static::updating(function (self $model) {
-            // カテゴリ所有プロフィール
-            static::bootedProfile($model);
-            // カテゴリタイプ
-            static::bootedType($model);
+        static::creating(function (Self $model) {
+            // カテゴリ表示順
+            static::bootedOrderNumber($model);
         });
     }
 
