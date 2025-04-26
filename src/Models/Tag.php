@@ -6,7 +6,7 @@ use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Profile;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Tag extends Model
 {
-    use HasFactory, SetUser;
+    use HasFactory, Required, SetUser;
 
     /**
      * 配列に表示する属性
@@ -34,10 +34,20 @@ class Tag extends Model
     protected $fillable = ['profile', 'type', 'name'];
 
     /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'profile_id' => 72001,
+    ];
+
+    /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
     {
+        // デフォルトの並び順は、カテゴリ表示順
         static::addGlobalScope('order_number', function ($builder) {
             $builder->orderBy('order_number');
         });
@@ -66,19 +76,16 @@ class Tag extends Model
     }
 
     /**
-     * タグを所有するプロフィール
+     * タグ所有プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * このタグに所属するコンテンツリスト
