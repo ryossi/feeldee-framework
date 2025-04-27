@@ -317,4 +317,181 @@ class TagTest extends TestCase
             'profile_id' => $otherProfile->id,
         ]);
     }
+
+    /**
+     * タグ表示順
+     * 
+     * - 同じタグ所有プロフィール、タグタイプでタグの表示順を決定するための番号であることを確認します。
+     * - 作成時に自動採番されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ表示順
+     */
+    public function test_order_number()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+        $tag3 = $profile->tags()->create([
+            'name' => 'タグ3',
+            'type' => Post::type(),
+        ]);
+
+        // 評価
+        $this->assertEquals(1, $tag1->order_number, '同じタグ所有プロフィール、タグタイプの中での表示順を持つこと');
+        $this->assertEquals(2, $tag2->order_number, '同じタグ所有プロフィール、タグタイプの中での表示順を持つこと');
+        $this->assertEquals(3, $tag3->order_number, '同じタグ所有プロフィール、タグタイプの中での表示順を持つこと');
+        // タグ表示順は、作成時に自動採番されること
+        foreach ($profile->tags as $tag) {
+            $this->assertDatabaseHas('tags', [
+                'id' => $tag->id,
+                'order_number' => $tag->order_number,
+            ]);
+        }
+    }
+
+    /**
+     * タグ表示順
+     * 
+     * - 表示順で前のタグに容易にアクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ表示順
+     */
+    public function test_order_number_previous()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $previousTag = $tag2->previous();
+
+        // 評価
+        $this->assertEquals($tag1->id, $previousTag->id, '表示順で前のタグに容易にアクセスすることができること');
+    }
+
+    /**
+     * タグ表示順
+     * 
+     * - 表示順で後のタグに容易にアクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ表示順
+     */
+    public function test_order_number_next()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $nextTag = $tag1->next();
+
+        // 評価
+        $this->assertEquals($tag2->id, $nextTag->id, '表示順で後のタグに容易にアクセスすることができること');
+    }
+
+    /**
+     * タグ表示順
+     * 
+     * - 直接編集しなくても同じタグ所有プロフィール、タグタイプの中で表示順を上へ移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ表示順
+     */
+    public function test_order_number_up()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $tag2->orderUp();
+
+        // 評価
+        $this->assertEquals(1, $tag2->order_number, '同じタグ所有プロフィール、タグタイプの中で表示順を上へ移動することができること');
+        $this->assertDatabaseHas('tags', [
+            'id' => $tag2->id,
+            'order_number' => 1,
+        ]);
+        $tag1->refresh();
+        $this->assertEquals(2, $tag1->order_number, '同じタグ所有プロフィール、タグタイプの中で表示順を上へ移動することができること');
+        $this->assertDatabaseHas('tags', [
+            'id' => $tag1->id,
+            'order_number' => 2,
+        ]);
+    }
+
+    /**
+     * タグ表示順
+     * 
+     * - 直接編集しなくても同じタグ所有プロフィール、タグタイプの中で表示順を下へ移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ表示順
+     */
+    public function test_order_number_down()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $tag1->orderDown();
+
+        // 評価
+        $this->assertEquals(2, $tag1->order_number, '同じタグ所有プロフィール、タグタイプの中で表示順を下へ移動することができること');
+        $this->assertDatabaseHas('tags', [
+            'id' => $tag1->id,
+            'order_number' => 2,
+        ]);
+        $tag2->refresh();
+        $this->assertEquals(1, $tag2->order_number, '同じタグ所有プロフィール、タグタイプの中で表示順を下へ移動することができること');
+        $this->assertDatabaseHas('tags', [
+            'id' => $tag2->id,
+            'order_number' => 1,
+        ]);
+    }
 }

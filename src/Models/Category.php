@@ -93,7 +93,7 @@ class Category extends Model
         }
     }
 
-    protected static function bootedOrderNumber(self $model)
+    protected static function bootedOrderNumber(Self $model)
     {
         if (!$model->profile) {
             // カテゴリ所有プロフィールが存在しない場合

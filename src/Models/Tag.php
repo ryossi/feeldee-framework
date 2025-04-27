@@ -53,6 +53,25 @@ class Tag extends Model
         }
     }
 
+    protected static function bootedOrderNumber(Self $model)
+    {
+        // 同一タイプの全てのタグリスト取得
+        $tag_list = $model->profile->tags()->ofType($model->type)->get();
+
+        // 表示順生成
+        if ($tag_list->isEmpty()) {
+            $model->order_number = 1;
+        } else {
+            $last = $tag_list->last();
+            $model->order_number = $last->order_number + 1;
+        }
+
+        if (!$model->profile) {
+            // カテゴリ所有プロフィールが存在しない場合
+            return;
+        }
+    }
+
     /**
      * モデルの「起動」メソッド
      */
@@ -66,31 +85,14 @@ class Tag extends Model
         static::creating(function (Self $model) {
             // タグ名
             static::bootedName($model);
-            // 表示順割り当て
-            $model->newOrderNumber();
+            // カテゴリ表示順
+            static::bootedOrderNumber($model);
         });
 
         static::updating(function (Self $model) {
             // タグ名
             static::bootedName($model);
         });
-    }
-
-    /**
-     * 同一タイプのタグの最後に表示順を新しく割り当てます。
-     */
-    protected function newOrderNumber()
-    {
-        // 同一タイプの全てのタグリスト取得
-        $tag_list = $this->profile->tags()->ofType($this->type)->get();
-
-        // 表示順生成
-        if ($tag_list->isEmpty()) {
-            $this->order_number = 1;
-        } else {
-            $last = $tag_list->last();
-            $this->order_number = $last->order_number + 1;
-        }
     }
 
     /**
@@ -101,48 +103,6 @@ class Tag extends Model
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
-    }
-
-    /**
-     * タグタイプを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    /**
-     * タグ名を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
-    {
-        $like->build($query, 'name', $name);
-    }
-
-    // ========================== ここまで整理済み ==========================
-
-    /**
-     * このタグに所属するコンテンツリスト
-     * 注）このリストには、未公開のコンテンツは含まれません。
-     */
-    public function contents()
-    {
-        return $this->belongsToMany(Relation::getMorphedModel($this->type), 'taggables', 'tag_id', 'taggable_id');
-    }
-
-    /**
-     * このタグから該当のコンテンツを除去します。
-     * 
-     * @param ?array $ids ID配列
-     */
-    public function unlink(?array $ids): void
-    {
-        if (!is_array($ids)) return;
-
-        $eliminates = $this->contents()->whereIn('id', $ids)->get();
-        foreach ($eliminates as $content) {
-            $content->delete();
-        }
     }
 
     /**
@@ -210,63 +170,44 @@ class Tag extends Model
     }
 
     /**
-     * タグ名を変更します。
-     *
-     * @param  mixed $new_name 新しいタグ名
-     * @return void
+     * タグタイプを条件に含むようにクエリのスコープを設定
      */
-    public function rename(string $new_name): void
+    public function scopeOfType($query, string $type)
     {
-        $same_name_tag = $this->profile->tags()->ofType($this->type)->ofName($new_name)->first();
-        if ($same_name_tag != null && $same_name_tag->id != $this->id) {
-            // 同一タグ名のカテゴリーが既に存在する場合
-            throw new ApplicationException('TagSameNameExists', 72001, ['name' => $new_name]);
-        }
-        $this->name = $new_name;
-        $this->save();
+        return $query->where('type', $type);
     }
 
     /**
-     * タグを追加します。
-     * 
-     * @param Profile $profile プロフィール
-     * @param string type タイプ
-     * @param string $name タグ名
-     * @return Tag 追加したタグ
+     * タグ名を条件に含むようにクエリのスコープを設定
      */
-    public static function add(Profile $profile, string $type, string $name): Tag
+    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
     {
-        // タグ名重複チェック
-        if ($profile->tags()->ofType($type)->ofName($name)->exists()) {
-            // 同一タグ名のタグが既に存在する場合
-            throw new ApplicationException('TagSameNameExists', 72001, ['name' => $name]);
-        }
+        $like->build($query, 'name', $name);
+    }
 
-        // タグ新規作成
-        $tag = Tag::create([
-            'profile' => $profile,
-            'type' => $type,
-            'name' => $name
-        ]);
+    // ========================== ここまで整理済み ==========================
 
-        return $tag;
+    /**
+     * このタグに所属するコンテンツリスト
+     * 注）このリストには、未公開のコンテンツは含まれません。
+     */
+    public function contents()
+    {
+        return $this->belongsToMany(Relation::getMorphedModel($this->type), 'taggables', 'tag_id', 'taggable_id');
     }
 
     /**
-     * タグ名を指定してタグを削除します。
-     * 既にタグが削除済みの場合は、何もしません（空振り）。
+     * このタグから該当のコンテンツを除去します。
      * 
-     * @param Profile $profile プロフィール
-     * @param string type タイプ
-     * @param string $name タグ名
+     * @param ?array $ids ID配列
      */
-    public static function deleteByName(Profile $profile, string $type, string $name): void
+    public function unlink(?array $ids): void
     {
-        // タグ取得
-        $tag = $profile->tags()->ofType($type)->ofName($name)->first();
-        if ($tag != null) {
-            // タグ削除
-            $tag->delete();
+        if (!is_array($ids)) return;
+
+        $eliminates = $this->contents()->whereIn('id', $ids)->get();
+        foreach ($eliminates as $content) {
+            $content->delete();
         }
     }
 
