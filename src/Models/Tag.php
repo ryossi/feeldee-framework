@@ -106,6 +106,14 @@ class Tag extends Model
     }
 
     /**
+     * コンテンツリスト
+     */
+    public function contents()
+    {
+        return $this->belongsToMany(Relation::getMorphedModel($this->type), 'taggables', 'tag_id', 'taggable_id');
+    }
+
+    /**
      * 表示順で一つ前のタグを取得します。
      *
      * @return mixed 一つ前のタグ。存在しない場合null
@@ -186,15 +194,6 @@ class Tag extends Model
     }
 
     // ========================== ここまで整理済み ==========================
-
-    /**
-     * このタグに所属するコンテンツリスト
-     * 注）このリストには、未公開のコンテンツは含まれません。
-     */
-    public function contents()
-    {
-        return $this->belongsToMany(Relation::getMorphedModel($this->type), 'taggables', 'tag_id', 'taggable_id');
-    }
 
     /**
      * このタグから該当のコンテンツを除去します。

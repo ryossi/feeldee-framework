@@ -494,4 +494,37 @@ class TagTest extends TestCase
             'order_number' => 1,
         ]);
     }
+
+    /**
+     * コンテンツリスト
+     * 
+     * - タグ付けされているコンテンツのコレクションであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     */
+    public function test_contents()
+    {
+        //  準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag = Tag::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+        ]);
+
+        $tag->contents()->attach([
+            Post::factory()->create(['profile_id' => $profile->id])->id => ['taggable_type' => Post::type(), 'created_by' => Auth::id(), 'updated_by' => Auth::id()],
+            Post::factory()->create(['profile_id' => $profile->id])->id => ['taggable_type' => Post::type(), 'created_by' => Auth::id(), 'updated_by' => Auth::id()],
+            Post::factory()->create(['profile_id' => $profile->id])->id => ['taggable_type' => Post::type(), 'created_by' => Auth::id(), 'updated_by' => Auth::id()]
+        ]);
+
+        // 実行
+        $contents = $tag->contents;
+
+        // 評価
+        $this->assertEquals(3, $contents->count());
+        foreach ($contents as $content) {
+            $this->assertEquals($content->tags()->first()->id, $tag->id, 'タグ付けされているコンテンツのリストであること');
+        }
+    }
 }

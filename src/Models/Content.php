@@ -47,6 +47,14 @@ abstract class Content extends Model
     }
 
     /**
+     * コンテンツタグリスト
+     */
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
+    }
+
+    /**
      * 公開
      * 
      * コンテンツを公開します。
@@ -221,14 +229,6 @@ abstract class Content extends Model
             // レコード記録
             $recorder->record($value['value']);
         }
-    }
-
-    /**
-     * このコンテンツのタグリスト
-     */
-    public function tags()
-    {
-        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
     }
 
     /**
