@@ -2,8 +2,8 @@
 
 namespace Feeldee\Framework\Models;
 
-use Auth;
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Illuminate\Support\Facades\Auth;
 
 trait HasTag
 {
@@ -59,5 +59,13 @@ trait HasTag
             }
             $model->_tags = null;
         });
+    }
+
+    /**
+     * コンテンツタグリスト
+     */
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
     }
 }

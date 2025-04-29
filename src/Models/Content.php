@@ -120,14 +120,6 @@ abstract class Content extends Model
      */
     protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
 
-    /**
-     * コンテンツタグリスト
-     */
-    public function tags()
-    {
-        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
-    }
-
     // ========================== ここまで整理ずみ ==========================
 
     /**
@@ -344,28 +336,5 @@ abstract class Content extends Model
         } else if ($direction == 'asc' || $direction == 'oldest') {
             $query->oldest($this->order_column);
         }
-    }
-
-    /**
-     * カテゴリを条件に含むようにクエリのスコープを設定
-     *
-     * @param Category|string|null $category カテゴリ条件
-     */
-    public function scopeOfCategory($query, Category|string|null $category)
-    {
-        if (!is_null($category)) {
-            if ($category instanceof Category) {
-                $query->where('category_id', $category->id);
-            } else {
-                $table = (new $this)->getTable();
-                $query->leftJoin('categories', "$table.category_id", '=', 'categories.id')
-                    ->select("$table.*")
-                    ->where('categories.name', $category);
-            }
-        } else {
-            $query->whereNull('category_id');
-        }
-
-        return $query;
     }
 }
