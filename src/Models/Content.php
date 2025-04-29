@@ -121,6 +121,14 @@ abstract class Content extends Model
      */
     protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
 
+    /**
+     * コンテンツタグリスト
+     */
+    public function tags()
+    {
+        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**

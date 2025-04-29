@@ -21,7 +21,7 @@ class Post extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'post_date', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'post_date', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性

@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
+use Feeldee\Framework\Models\Tag;
 use Feeldee\Framework\Observers\PostPhotoShareObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -607,6 +608,225 @@ class PostTest extends TestCase
 
         // 評価
         $this->assertNull($post->category, '対応するカテゴリが削除された場合は、自動的にNullが設定されること');
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグ付けできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタグリスト
+     */
+    public function test_tags()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'tags' => [$tag1, $tag2],
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $post->tags->count(), 'タグ付けできること');
+        foreach ($post->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $post->id,
+                'taggable_type' => Post::type(),
+            ]);
+        }
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグIDを指定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタグリスト
+     */
+    public function test_tags_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'tags' => [$tag1->id, $tag2->id],
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $post->tags->count(), 'タグIDを指定できること');
+        foreach ($post->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $post->id,
+                'taggable_type' => Post::type(),
+            ]);
+        }
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタグリスト
+     */
+    public function test_tags_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($otherProfile, $tag1, $tag2) {
+            $otherProfile->posts()->create([
+                'title' => 'テスト投稿',
+                'post_date' => now(),
+                'tags' => [$tag1->id, $tag2->id],
+            ]);
+        }, ApplicationException::class, 'TagContentProfileMissmatch');
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグタイプがコンテンツ種別と一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタグリスト
+     */
+    public function test_tags_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Item::type(),
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $tag1, $tag2) {
+            $profile->posts()->create([
+                'title' => 'テスト投稿',
+                'post_date' => now(),
+                'tags' => [$tag1->id, $tag2->id],
+            ]);
+        }, ApplicationException::class, 'TagContentTypeMissmatch');
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタグリスト
+     */
+    public function test_tags_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'tags' => ['タグ1', 'タグ2'],
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $post->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
+        foreach ($post->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $post->id,
+                'taggable_type' => Post::type(),
+            ]);
+        }
+    }
+
+    /**
+     * コンテンツタグリス
+     * 
+     * - 一致するタグが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタグリスト
+     */
+    public function test_tags_name_nomatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'tags' => ['タグ3', 'タグ2'],
+        ]);
+
+        // 評価
+        $this->assertEquals(1, $post->tags->count(), '一致するタグが存在しない場合は無視されること');
+        foreach ($post->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $post->id,
+                'taggable_type' => Post::type(),
+            ]);
+        }
     }
 
     /**
