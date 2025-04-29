@@ -106,7 +106,7 @@ class Tag extends Model
         });
 
         static::saved(function (Self $model) {
-            if ($model->_contents->isNotEmpty()) {
+            if (!empty($model->_contents) || $model->_contents->isNotEmpty()) {
                 // ローカルコンテンツリストを
                 $id = Auth::id();
                 $ids = array();

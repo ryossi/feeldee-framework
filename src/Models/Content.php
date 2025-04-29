@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -229,43 +228,6 @@ abstract class Content extends Model
             // レコード記録
             $recorder->record($value['value']);
         }
-    }
-
-    /**
-     * タグ名を指定してコンテンツをタグ付けします。
-     * $valueが文字列の場合は、既存のタグリストに追加します。
-     * $valueが配列の場合は、既存のタグリストを置換します。
-     * $valueがnullまたは空文字の場合は、既に割り当てられているタグリストを全て解除します。
-     * 
-     * @param  mixed $value
-     * @param bool $ignoreNotExists 存在しないタグを無視する場合true（デフォルトはfalse）
-     * @return Collection タグ名リスト
-     */
-    public function taggedByName(mixed $value, bool $ignoreNotExists = false): Collection
-    {
-        if (is_null($value) || $value == '' || $value == array()) {
-            $this->tags()->detach();
-        } else if (is_string($value)) {
-            // タグ取得
-            $tag = $this->profile->tags()->ofType($this->type())->ofName($value)->first();
-            if ($tag == null) {
-                throw new ApplicationException('TagNotFound', 72002, ['name' => $value]);
-            }
-            $this->tags()->attach($tag->id, ['created_by' => Auth::id(), 'updated_by' => Auth::id()]);
-        } else {
-            $ids = array();
-            foreach ($value as $name) {
-                // タグ取得
-                $tag = $this->profile->tags()->ofType($this->type())->ofName($name)->first();
-                if ($tag == null) {
-                    throw new ApplicationException('TagNotFound', 72002, ['name' => $name]);
-                }
-                $ids[$tag->id] = ['created_by' => Auth::id(), 'updated_by' => Auth::id()];
-            }
-            $this->tags()->sync($ids);
-        }
-
-        return $this->tags()->get(['name']);
     }
 
     /**

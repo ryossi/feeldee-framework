@@ -830,6 +830,46 @@ class PostTest extends TestCase
     }
 
     /**
+     * コンテンツタグリスト
+     * 
+     * - 対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタグリスト
+     */
+    public function test_tags_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Post::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Post::type(),
+        ]);
+        $post = $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'tags' => [$tag1, $tag2],
+        ]);
+
+        // 実行
+        $tag1->delete();
+
+        // 評価
+        $this->assertEquals(1, $post->tags->count(), '対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されること');
+        foreach ($post->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $post->id,
+                'taggable_type' => Post::type(),
+            ]);
+        }
+    }
+
+    /**
      * 投稿日
      * 
      * - 投稿した日付であることを確認します。

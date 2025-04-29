@@ -525,6 +525,37 @@ class TagTest extends TestCase
     /**
      * コンテンツリスト
      * 
+     * - タグ付けされているコンテンツを削除すると、コンテンツリストからも自動的に除外されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     */
+    public function test_contents_delete()
+    {
+        //  準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $content1 = Post::factory()->create(['profile_id' => $profile->id]);
+        $content2 = Post::factory()->create(['profile_id' => $profile->id]);
+        $content3 = Post::factory()->create(['profile_id' => $profile->id]);
+        $tag = $profile->tags()->create([
+            'name' => 'テストタグ',
+            'type' => Post::type(),
+            'contents' => [$content1, $content2, $content3],
+        ]);
+
+        // 実行
+        $content2->delete();
+
+        // 評価
+        $this->assertEquals(2, $tag->contents->count(), 'タグ付けされているコンテンツを削除すると、コンテンツリストからも自動的に除外されること');
+        foreach ($tag->contents as $content) {
+            $this->assertEquals($content->tags()->first()->id, $tag->id);
+        }
+    }
+
+    /**
+     * コンテンツリスト
+     * 
      * - コンテンツリストに直接コンテンツのコレクションを指定する場合、タグ所有プロフィールがコンテンツ所有プロフィールと一致している必要があることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
