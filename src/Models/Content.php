@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -17,7 +16,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, HasCategory, Required, StripTags, SetUser, AccessCounter;
+    use HasFactory, HasCategory, HasTag, Required, StripTags, SetUser, AccessCounter;
 
     /**
      * コンテンツ種別
@@ -224,51 +223,6 @@ abstract class Content extends Model
     }
 
     /**
-     * このコンテンツのタグリスト
-     */
-    public function tags()
-    {
-        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
-    }
-
-    /**
-     * タグ名を指定してコンテンツをタグ付けします。
-     * $valueが文字列の場合は、既存のタグリストに追加します。
-     * $valueが配列の場合は、既存のタグリストを置換します。
-     * $valueがnullまたは空文字の場合は、既に割り当てられているタグリストを全て解除します。
-     * 
-     * @param  mixed $value
-     * @param bool $ignoreNotExists 存在しないタグを無視する場合true（デフォルトはfalse）
-     * @return Collection タグ名リスト
-     */
-    public function taggedByName(mixed $value, bool $ignoreNotExists = false): Collection
-    {
-        if (is_null($value) || $value == '' || $value == array()) {
-            $this->tags()->detach();
-        } else if (is_string($value)) {
-            // タグ取得
-            $tag = $this->profile->tags()->ofType($this->type())->ofName($value)->first();
-            if ($tag == null) {
-                throw new ApplicationException('TagNotFound', 72002, ['name' => $value]);
-            }
-            $this->tags()->attach($tag->id, ['created_by' => Auth::id(), 'updated_by' => Auth::id()]);
-        } else {
-            $ids = array();
-            foreach ($value as $name) {
-                // タグ取得
-                $tag = $this->profile->tags()->ofType($this->type())->ofName($name)->first();
-                if ($tag == null) {
-                    throw new ApplicationException('TagNotFound', 72002, ['name' => $name]);
-                }
-                $ids[$tag->id] = ['created_by' => Auth::id(), 'updated_by' => Auth::id()];
-            }
-            $this->tags()->sync($ids);
-        }
-
-        return $this->tags()->get(['name']);
-    }
-
-    /**
      * コンテンツが閲覧可能か判定します。
      * コンテンツが閲覧可能かどうかは、コンテンツの公開レベルが閲覧者の最小公開レベル以上かどうかで決定されます。
      * 
@@ -382,28 +336,5 @@ abstract class Content extends Model
         } else if ($direction == 'asc' || $direction == 'oldest') {
             $query->oldest($this->order_column);
         }
-    }
-
-    /**
-     * カテゴリを条件に含むようにクエリのスコープを設定
-     *
-     * @param Category|string|null $category カテゴリ条件
-     */
-    public function scopeOfCategory($query, Category|string|null $category)
-    {
-        if (!is_null($category)) {
-            if ($category instanceof Category) {
-                $query->where('category_id', $category->id);
-            } else {
-                $table = (new $this)->getTable();
-                $query->leftJoin('categories', "$table.category_id", '=', 'categories.id')
-                    ->select("$table.*")
-                    ->where('categories.name', $category);
-            }
-        } else {
-            $query->whereNull('category_id');
-        }
-
-        return $query;
     }
 }

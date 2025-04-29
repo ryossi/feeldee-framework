@@ -8,6 +8,7 @@ use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
+use Feeldee\Framework\Models\Tag;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,26 @@ class ProfileTest extends TestCase
         $this->assertEquals(2, $profile->categories->count());
         foreach ($profile->categories as $category) {
             $this->assertEquals($category->profile->id, $profile->id, 'プロフィールに紐付けられたカテゴリのコレクションであること');
+        }
+    }
+
+    /**
+     * タグリリスト
+     * 
+     * - プロフィールに紐付けられたタグのコレクションであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#タグリスト
+     */
+    public function test_tags()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Tag::factory(3))->create();
+
+        // 評価
+        $this->assertEquals(3, $profile->tags->count());
+        foreach ($profile->tags as $tag) {
+            $this->assertEquals($tag->profile->id, $profile->id, 'プロフィールに紐付けられたタグのコレクションであること');
         }
     }
 

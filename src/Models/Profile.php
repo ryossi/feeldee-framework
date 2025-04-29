@@ -25,6 +25,14 @@ class Profile extends Model
     }
 
     /**
+     * タグリストを取得します。
+     */
+    public function tags()
+    {
+        return $this->hasMany(Tag::class);
+    }
+
+    /**
      * 投稿リスト
      */
     public function posts()
@@ -64,14 +72,6 @@ class Profile extends Model
     public function mediaBox(): HasOne
     {
         return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
-    }
-
-    /**
-     * タグリストを取得します。
-     */
-    public function tags()
-    {
-        return $this->hasMany(Tag::class);
     }
 
     /**

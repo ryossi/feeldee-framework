@@ -27,4 +27,18 @@ return [
     71005 => 'CategoryDeleteHasChild',                  // カテゴリ削除において子カテゴリが存在する
     71006 => 'CategoryContentProfileMissmatch',         // カテゴリ所有プロフィールとコンテンツ所有プロフィールが異なる
     71007 => 'CategoryContentTypeMissmatch',            // カテゴリタイプとコンテンツ種別が異なる
+    71008 => 'CategoryProfileRequired',                 // カテゴリ所有プロフィールが指定されていない
+    71009 => 'CategoryTypeRequired',                    // カテゴリタイプが指定されていない
+    71010 => 'CategoryNameRequired',                    // カテゴリ名が指定されていない
+    71011 => 'CategoryNameDuplicated',                  // カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している
+
+    // *************************
+    // *** 72xxx タグ関連     ***
+    // *************************
+    72001 => 'TagProfileRequired',                      // タグ所有プロフィールが指定されていない
+    72002 => 'TagTypeRequired',                         // タグタイプが指定されていない
+    72003 => 'TagNameRequired',                         // タグ名が指定されていない
+    72004 => 'TagNameDuplicated',                       // タグ所有プロフィールとタグタイプの中でタグ名が重複している
+    72005 => 'TagContentProfileMissmatch',              // タグ所有プロフィールとコンテンツ所有プロフィールが異なる
+    72006 => 'TagContentTypeMissmatch',                 // タグタイプとコンテンツ種別が異なる
 ];

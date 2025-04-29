@@ -5,7 +5,6 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\URL;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Observers\ContentRecordObserver;
-use Feeldee\Framework\Observers\ContentTagObserver;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -14,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 /**
  * 投稿をあらわすモデル
  */
-#[ObservedBy([ContentRecordObserver::class, ContentTagObserver::class])]
+#[ObservedBy([ContentRecordObserver::class])]
 class Post extends Content
 {
     /**
@@ -22,7 +21,7 @@ class Post extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'post_date', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'post_date', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性

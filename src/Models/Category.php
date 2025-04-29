@@ -20,7 +20,7 @@ use Intervention\Image\Facades\Image;
  */
 class Category extends Model
 {
-    use HasFactory, SetUser;
+    use HasFactory, Required, SetUser;
 
     /**
      * 複数代入可能な属性
@@ -30,13 +30,24 @@ class Category extends Model
     protected $fillable = ['type', 'name'];
 
     /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'profile_id' => 71008,
+        'type' => 71009,
+        'name' => 71010,
+    ];
+
+    /**
      * 配列に表示する属性
      *
      * @var array
      */
     protected $visible = ['id', 'profile', 'type', 'name', 'parent'];
 
-    protected static function bootedProfile(self $model)
+    protected static function bootedProfile(Self $model)
     {
         if ($model->parent_id) {
             // 親カテゴリが存在する場合
@@ -57,7 +68,7 @@ class Category extends Model
         }
     }
 
-    protected static function bootedType(self $model)
+    protected static function bootedType(Self $model)
     {
         if ($model->parent) {
             // 親カテゴリが存在する場合
@@ -74,7 +85,15 @@ class Category extends Model
         }
     }
 
-    protected static function bootedOrderNumber(self $model)
+    protected static function bootedName(Self $model)
+    {
+        if ($model->profile->categories()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+            // カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している場合
+            throw new ApplicationException(71011, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
+        }
+    }
+
+    protected static function bootedOrderNumber(Self $model)
     {
         if (!$model->profile) {
             // カテゴリ所有プロフィールが存在しない場合
@@ -103,20 +122,23 @@ class Category extends Model
             $builder->orderBy('order_number');
         });
 
-        static::creating(function (self $model) {
+        static::saving(function (Self $model) {
             // カテゴリ所有プロフィール
             static::bootedProfile($model);
             // カテゴリタイプ
             static::bootedType($model);
+        });
+
+        static::creating(function (Self $model) {
+            // カテゴリ名
+            static::bootedName($model);
             // カテゴリ表示順
             static::bootedOrderNumber($model);
         });
 
-        static::updating(function (self $model) {
-            // カテゴリ所有プロフィール
-            static::bootedProfile($model);
-            // カテゴリタイプ
-            static::bootedType($model);
+        static::updating(function (Self $model) {
+            // カテゴリ名
+            static::bootedName($model);
         });
     }
 

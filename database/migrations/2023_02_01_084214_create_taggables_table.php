@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('taggables', function (Blueprint $table) {
             $table->foreignId('tag_id')->comment('タグID')->constrained('tags')->cascadeOnDelete();
-            $table->foreignId('taggable_id')->comment('タグ付け対象ID');
+            $table->foreignId('taggable_id')->comment('タグ対象ID');
             $table->string('taggable_type')->comment('タグ付け対象タイプ');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');

@@ -9,7 +9,17 @@ trait Required
 {
     public static function bootRequired()
     {
-        static::saving(function (Model $model) {
+        static::creating(function (Model $model) {
+            if ($model->required && is_array($model->required)) {
+                foreach ($model->required as $key => $value) {
+                    if ($model->$key == null && $model->$key == '') {
+                        throw new ApplicationException($value);
+                    }
+                }
+            }
+        });
+
+        static::updating(function (Model $model) {
             if ($model->required && is_array($model->required)) {
                 foreach ($model->required as $key => $value) {
                     if ($model->$key == null && $model->$key == '') {
