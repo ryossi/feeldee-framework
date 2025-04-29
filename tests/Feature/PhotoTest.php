@@ -11,7 +11,6 @@ use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
 use Feeldee\Framework\Observers\PostPhotoShareObserver;
-use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
@@ -591,7 +590,273 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 投稿リスト
+     * コンテンツタグリスト
+     * 
+     * - タグ付けできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     */
+    public function test_tags()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Photo::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Photo::type(),
+        ]);
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'tags' => [$tag1, $tag2],
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $photo->tags->count(), 'タグ付けできること');
+        foreach ($photo->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $photo->id,
+                'taggable_type' => Photo::type(),
+            ]);
+        }
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグIDを指定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     */
+    public function test_tags_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Photo::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Photo::type(),
+        ]);
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'tags' => [$tag1->id, $tag2->id],
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $photo->tags->count(), 'タグIDを指定できること');
+        foreach ($photo->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $photo->id,
+                'taggable_type' => Photo::type(),
+            ]);
+        }
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     */
+    public function test_tags_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Photo::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Photo::type(),
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($otherProfile, $tag1, $tag2) {
+            $otherProfile->photos()->create([
+                'title' => 'テスト写真',
+                'src' => '/mbox/photo.jpg',
+                'regist_datetime' => now(),
+                'tags' => [$tag1->id, $tag2->id],
+            ]);
+        }, ApplicationException::class, 'TagContentProfileMissmatch');
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグタイプがコンテンツ種別と一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     */
+    public function test_tags_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Photo::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Item::type(),
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $tag1, $tag2) {
+            $profile->photos()->create([
+                'title' => 'テスト写真',
+                'src' => '/mbox/photo.jpg',
+                'regist_datetime' => now(),
+                'tags' => [$tag1->id, $tag2->id],
+            ]);
+        }, ApplicationException::class, 'TagContentTypeMissmatch');
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     */
+    public function test_tags_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Photo::type(),
+        ]);
+        $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Photo::type(),
+        ]);
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'tags' => ['タグ1', 'タグ2'],
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $photo->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
+        foreach ($photo->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $photo->id,
+                'taggable_type' => Photo::type(),
+            ]);
+        }
+    }
+
+    /**
+     * コンテンツタグリス
+     * 
+     * - 一致するタグが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     */
+    public function test_tags_name_nomatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Photo::type(),
+        ]);
+        $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Photo::type(),
+        ]);
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'tags' => ['タグ3', 'タグ2'],
+        ]);
+
+        // 評価
+        $this->assertEquals(1, $photo->tags->count(), '一致するタグが存在しない場合は無視されること');
+        foreach ($photo->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $photo->id,
+                'taggable_type' => Photo::type(),
+            ]);
+        }
+    }
+
+    /**
+     * コンテンツタグリスト
+     * 
+     * - 対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     */
+    public function test_tags_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $tag1 = $profile->tags()->create([
+            'name' => 'タグ1',
+            'type' => Photo::type(),
+        ]);
+        $tag2 = $profile->tags()->create([
+            'name' => 'タグ2',
+            'type' => Photo::type(),
+        ]);
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'tags' => [$tag1, $tag2],
+        ]);
+
+        // 実行
+        $tag1->delete();
+
+        // 評価
+        $this->assertEquals(1, $photo->tags->count(), '対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されること');
+        foreach ($photo->tags as $tag) {
+            $this->assertDatabaseHas('taggables', [
+                'tag_id' => $tag->id,
+                'taggable_id' => $photo->id,
+                'taggable_type' => Photo::type(),
+            ]);
+        }
+    }
+
+    /**
+     * 写真リスト
      * 
      * - 記事内容に写真が使用されている投稿のコレクションであることを確認します。
      * - 写真を削除しても、関連する投稿の記事内容には影響はないことを確認します。
