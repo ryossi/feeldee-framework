@@ -20,18 +20,18 @@ class Tag extends Model
     use HasFactory, Required, SetUser;
 
     /**
+     * 複数代入可能な属性
+     *
+     * @var array
+     */
+    protected $fillable = ['profile', 'type', 'name', 'contents'];
+
+    /**
      * 配列に表示する属性
      *
      * @var array
      */
     protected $visible = ['id', 'name', 'count_of_contents'];
-
-    /**
-     * 複数代入可能な属性
-     *
-     * @var array
-     */
-    protected $fillable = ['profile', 'type', 'name'];
 
     /**
      * 必須にする属性
@@ -72,6 +72,8 @@ class Tag extends Model
         }
     }
 
+    private $_contents = null;
+
     /**
      * モデルの「起動」メソッド
      */
@@ -92,6 +94,40 @@ class Tag extends Model
         static::updating(function (Self $model) {
             // タグ名
             static::bootedName($model);
+        });
+
+        static::saving(function (Self $model) {
+            if ($model->type) {
+                // コンテンツリストに直接コレクションが設定されている場合には、
+                // ローカルコンテンツリストに一時的に保存
+                $model->_contents = $model->contents;
+                unset($model['contents']);
+            }
+        });
+
+        static::saved(function (Self $model) {
+            if ($model->_contents->isNotEmpty()) {
+                // ローカルコンテンツリストを
+                $id = Auth::id();
+                $ids = array();
+                foreach ($model->_contents as $content) {
+                    if ($model->profile_id !== $content->profile_id) {
+                        // タグ所有プロフィールとコンテンツ所有プロフィールが一致しない場合
+                        throw new ApplicationException(72005);
+                    }
+                    if ($model->type !== $content::type()) {
+                        // タグタイプとコンテンツ種別が一致しない場合
+                        throw new ApplicationException(72006);
+                    }
+                    $ids[$content->id] = [
+                        'taggable_type' => $model->type,
+                        'created_by' => $id,
+                        'updated_by' => $id
+                    ];
+                }
+                $model->contents()->sync($ids);
+            }
+            $model->_contents = null;
         });
     }
 

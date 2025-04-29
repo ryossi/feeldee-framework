@@ -39,4 +39,6 @@ return [
     72002 => 'TagTypeRequired',                         // タグタイプが指定されていない
     72003 => 'TagNameRequired',                         // タグ名が指定されていない
     72004 => 'TagNameDuplicated',                       // タグ所有プロフィールとタグタイプの中でタグ名が重複している
+    72005 => 'TagContentProfileMissmatch',              // タグ所有プロフィールとコンテンツ所有プロフィールが異なる
+    72006 => 'TagContentTypeMissmatch',                 // タグタイプとコンテンツ種別が異なる
 ];

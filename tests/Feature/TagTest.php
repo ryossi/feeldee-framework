@@ -507,24 +507,67 @@ class TagTest extends TestCase
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $tag = Tag::factory()->create([
-            'profile_id' => $profile->id,
-            'type' => Post::type(),
-        ]);
-
-        $tag->contents()->attach([
-            Post::factory()->create(['profile_id' => $profile->id])->id => ['taggable_type' => Post::type(), 'created_by' => Auth::id(), 'updated_by' => Auth::id()],
-            Post::factory()->create(['profile_id' => $profile->id])->id => ['taggable_type' => Post::type(), 'created_by' => Auth::id(), 'updated_by' => Auth::id()],
-            Post::factory()->create(['profile_id' => $profile->id])->id => ['taggable_type' => Post::type(), 'created_by' => Auth::id(), 'updated_by' => Auth::id()]
-        ]);
 
         // 実行
-        $contents = $tag->contents;
+        $tag = $profile->tags()->create([
+            'name' => 'テストタグ',
+            'type' => Post::type(),
+            'contents' => Post::factory(3)->create(['profile_id' => $profile->id]),
+        ]);
 
         // 評価
-        $this->assertEquals(3, $contents->count());
-        foreach ($contents as $content) {
+        $this->assertEquals(3, $tag->contents->count());
+        foreach ($tag->contents as $content) {
             $this->assertEquals($content->tags()->first()->id, $tag->id, 'タグ付けされているコンテンツのリストであること');
         }
+    }
+
+    /**
+     * コンテンツリスト
+     * 
+     * - コンテンツリストに直接コンテンツのコレクションを指定する場合、タグ所有プロフィールがコンテンツ所有プロフィールと一致している必要があることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     */
+    public function test_contents_with_different_profile()
+    {
+        //  準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+
+        // 評価
+        $this->assertThrows(function () use ($profile, $otherProfile) {
+            // 実行
+            $profile->tags()->create([
+                'name' => 'テストタグ',
+                'type' => Post::type(),
+                'contents' => Post::factory(3)->create(['profile_id' => $otherProfile->id]),
+            ]);
+        }, ApplicationException::class, 'TagContentProfileMissmatch');
+    }
+
+    /**
+     * コンテンツリスト
+     * 
+     * - コンテンツリストに直接コンテンツのコレクションを指定する場合、タグタイプがコンテンツ種別と一致している必要があることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     */
+    public function test_contents_with_different_type()
+    {
+        //  準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 評価
+        $this->assertThrows(function () use ($profile) {
+            // 実行
+            $profile->tags()->create([
+                'name' => 'テストタグ',
+                'type' => Post::type(),
+                'contents' => Item::factory(1)->create(['profile_id' => $profile->id]),
+            ]);
+        }, ApplicationException::class, 'TagContentTypeMissmatch');
     }
 }
