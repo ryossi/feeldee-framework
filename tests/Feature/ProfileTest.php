@@ -23,6 +23,53 @@ class ProfileTest extends TestCase
     use RefreshDatabase;
 
     /**
+     * ユーザID
+     * 
+     * - プロフィールの所有者を特定するための数値型の外部情報であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザID
+     */
+    public function test_user_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->create(['user_id' => 100, 'nickname' => 'プロフィール100']);
+        $expected = Profile::factory()->create(['user_id' => 200, 'nickname' => 'プロフィール200']);
+        Profile::factory()->create(['user_id' => 300, 'nickname' => 'プロフィール300']);
+
+        // 実行
+        $profile = Profile::ofUserId($expected->user_id)->first();
+
+        // 評価
+        $this->assertEquals($expected->nickname, $profile->nickname, 'プロフィールの所有者を特定するための数値型の外部情報であること');
+    }
+
+    /**
+     * ユーザID
+     * 
+     * - プロフィールの所有者を特定するための数値型の外部情報であることを確認します。
+     * - Laravel標準の認証システムのAuth::id()の値を設定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザID
+     */
+    public function test_user_id_laravel_auth()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(153893094);
+        $user_id = Auth::id();
+
+        // 実行
+        $profile = Profile::create([
+            'user_id' => Auth::id(),
+            'nickname' => 'テストプロフィール',
+            'title' => 'ユーザIDテスト'
+        ]);
+
+        // 評価
+        $this->assertEquals($user_id, $profile->user_id, 'Laravel標準の認証システムのAuth::id()の値を設定できること');
+    }
+
+    /**
      * カテゴリリスト
      * 
      * - プロフィールに紐付けられたカテゴリのコレクションであることを確認します。

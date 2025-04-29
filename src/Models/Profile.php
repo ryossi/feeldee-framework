@@ -14,7 +14,7 @@ class Profile extends Model
 {
     use HasFactory, SetUser, AccessCounter;
 
-    protected $fillable = ['nickname', 'title', 'subtitle', 'introduction', 'home', 'user_id', 'show_members'];
+    protected $fillable = ['nickname', 'image', 'title', 'subtitle', 'introduction', 'user_id'];
 
     /**
      * カテゴリリスト
@@ -25,7 +25,7 @@ class Profile extends Model
     }
 
     /**
-     * タグリストを取得します。
+     * タグリスト
      */
     public function tags()
     {
@@ -62,6 +62,22 @@ class Profile extends Model
     public function items()
     {
         return $this->hasMany(Item::class);
+    }
+
+    /**
+     * ユーザIDを条件に含むようにクエリスコープを設定
+     */
+    public function scopeOfUserId($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * ニックネームを条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfNickname($query, ?string $nickname)
+    {
+        return $query->where('nickname', $nickname);
     }
 
     // ========================== ここまで整理済み ==========================
@@ -199,14 +215,6 @@ class Profile extends Model
     public function viewHistories()
     {
         return $this->hasMany(ContentViewHistory::class);
-    }
-
-    /**
-     * ニックネームを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfNickname($query, ?string $nickname)
-    {
-        return $query->where('nickname', $nickname);
     }
 
     /**
