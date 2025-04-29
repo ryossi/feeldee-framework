@@ -529,7 +529,7 @@ class TagTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
      */
-    public function test_contents_with_different_profile()
+    public function test_contents_profile_missmatch()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -554,7 +554,7 @@ class TagTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
      */
-    public function test_contents_with_different_type()
+    public function test_contents_type_missmatch()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);

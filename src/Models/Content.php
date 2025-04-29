@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, HasCategory, Required, StripTags, SetUser, AccessCounter;
+    use HasFactory, HasCategory, HasTag, Required, StripTags, SetUser, AccessCounter;
 
     /**
      * コンテンツ種別
@@ -44,14 +44,6 @@ abstract class Content extends Model
     protected function getIsPublicAttribute(): bool
     {
         return $this->attributes['is_public'] ?? false;
-    }
-
-    /**
-     * コンテンツタグリスト
-     */
-    public function tags()
-    {
-        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
     }
 
     /**
