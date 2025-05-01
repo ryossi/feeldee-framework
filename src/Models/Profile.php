@@ -30,6 +30,7 @@ class Profile extends Model
     protected $required = [
         'user_id' => 10002,
         'nickname' => 10003,
+        'title' => 10004,
     ];
 
     protected static function bootedNickname(Self $model)

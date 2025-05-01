@@ -242,6 +242,73 @@ class ProfileTest extends TestCase
     }
 
     /**
+     * タイトル
+     * 
+     * - 日記やブログなどのタイトルであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#タイトル
+     */
+    public function test_title()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $title = 'プロフィールタイトル';
+
+        // 実行
+        $profile = Profile::create([
+            'user_id' => 1,
+            'nickname' => 'テストプロフィール',
+            'title' => $title
+        ]);
+
+        // 評価
+        $this->assertEquals($title, $profile->title, '日記やブログなどのタイトルであること');
+    }
+
+    /**
+     * タイトル
+     * 
+     * - タイトルは、必ず指定する必要があることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#タイトル
+     */
+    public function test_title_required()
+    {
+        // 評価
+        $this->assertThrows(function () {
+            Profile::create([
+                'user_id' => 1,
+                'nickname' => 'テストプロフィール'
+            ]);
+        }, ApplicationException::class, 'ProfileTitleRequired');
+    }
+
+    /***
+     * サブタイトル
+     * 
+     * - 日記やブログなどのサブタイトルであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#サブタイトル
+     */
+    public function test_subtitle()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $subtitle = 'プロフィールサブタイトル';
+
+        // 実行
+        $profile = Profile::create([
+            'user_id' => 1,
+            'nickname' => 'テストプロフィール',
+            'title' => 'プロフィールタイトル',
+            'subtitle' => $subtitle
+        ]);
+
+        // 評価
+        $this->assertEquals($subtitle, $profile->subtitle, '日記やブログなどのサブタイトルであること');
+    }
+
+    /**
      * カテゴリリスト
      * 
      * - プロフィールに紐付けられたカテゴリのコレクションであることを確認します。
