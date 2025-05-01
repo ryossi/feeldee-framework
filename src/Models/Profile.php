@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -12,9 +13,48 @@ use Intervention\Image\Facades\Image;
  */
 class Profile extends Model
 {
-    use HasFactory, SetUser, AccessCounter;
+    use HasFactory, SetUser, Required, AccessCounter;
 
-    protected $fillable = ['nickname', 'image', 'title', 'subtitle', 'introduction', 'user_id'];
+    /**
+     * 複数代入可能な属性
+     *
+     * @var array
+     */
+    protected $fillable = ['user_id', 'nickname', 'image', 'title', 'subtitle', 'introduction'];
+
+    /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'user_id' => 10002,
+        'nickname' => 10003,
+    ];
+
+    protected static function bootedNickname(Self $model)
+    {
+        if (Profile::ofNickname($model->nickname)->first()?->id !== $model->id) {
+            // ニックネームが重複している場合
+            throw new ApplicationException(10001, ['nickname' => $model->nickname]);
+        }
+    }
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Self $model) {
+            // ニックネーム
+            static::bootedNickname($model);
+        });
+
+        static::updating(function (Self $model) {
+            // ニックネーム
+            static::bootedNickname($model);
+        });
+    }
 
     /**
      * カテゴリリスト
