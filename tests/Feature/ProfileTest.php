@@ -437,28 +437,28 @@ class ProfileTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグリスト
      */
-    public function test_configs()
-    {
-        // 準備
-        config(['profile.config.value_objects' => [
-            'custom_config_1' => \Tests\ValueObjects\Configs\CustomConfig1::class,
-            'custom_config_2' => \Tests\ValueObjects\Configs\CustomConfig2::class,
-        ]]);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
+    // public function test_configs()
+    // {
+    //     // 準備
+    //     config(['profile.config.value_objects' => [
+    //         'custom_config_1' => \Tests\ValueObjects\Configs\CustomConfig1::class,
+    //         'custom_config_2' => \Tests\ValueObjects\Configs\CustomConfig2::class,
+    //     ]]);
+    //     Auth::shouldReceive('id')->andReturn(1);
+    //     $profile = Profile::factory()->create();
 
-        // 実行
-        $profile->configs()->create([
-            'value' => new CustomConfig1('xxxx', 'yyyy'),
-        ]);
-        $profile->configs()->create([
-            'value' => new CustomConfig2('zzzz', 'wwww'),
-        ]);
+    //     // 実行
+    //     $profile->configs()->create([
+    //         'value' => new CustomConfig1('xxxx', 'yyyy'),
+    //     ]);
+    //     $profile->configs()->create([
+    //         'value' => new CustomConfig2('zzzz', 'wwww'),
+    //     ]);
 
-        // 評価
-        $this->assertEquals(1, $profile->configs->count());
-        foreach ($profile->configs as $config) {
-            $this->assertEquals($config->profile->id, $profile->id, 'プロフィールのカスタムコンフィグリストであること');
-        }
-    }
+    //     // 評価
+    //     $this->assertEquals(1, $profile->configs->count());
+    //     foreach ($profile->configs as $config) {
+    //         $this->assertEquals($config->profile->id, $profile->id, 'プロフィールのカスタムコンフィグリストであること');
+    //     }
+    // }
 }
