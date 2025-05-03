@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -12,9 +13,49 @@ use Intervention\Image\Facades\Image;
  */
 class Profile extends Model
 {
-    use HasFactory, SetUser, AccessCounter;
+    use HasFactory, SetUser, Required, AccessCounter;
 
-    protected $fillable = ['nickname', 'title', 'subtitle', 'introduction', 'home', 'user_id', 'show_members'];
+    /**
+     * 複数代入可能な属性
+     *
+     * @var array
+     */
+    protected $fillable = ['user_id', 'nickname', 'image', 'title', 'subtitle', 'introduction'];
+
+    /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'user_id' => 10002,
+        'nickname' => 10003,
+        'title' => 10004,
+    ];
+
+    protected static function bootedNickname(Self $model)
+    {
+        if (Profile::ofNickname($model->nickname)->first()?->id !== $model->id) {
+            // ニックネームが重複している場合
+            throw new ApplicationException(10001, ['nickname' => $model->nickname]);
+        }
+    }
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Self $model) {
+            // ニックネーム
+            static::bootedNickname($model);
+        });
+
+        static::updating(function (Self $model) {
+            // ニックネーム
+            static::bootedNickname($model);
+        });
+    }
 
     /**
      * カテゴリリスト
@@ -25,7 +66,7 @@ class Profile extends Model
     }
 
     /**
-     * タグリストを取得します。
+     * タグリスト
      */
     public function tags()
     {
@@ -57,11 +98,57 @@ class Profile extends Model
     }
 
     /**
-     * アイテムリスト。
+     * アイテムリスト
      */
     public function items()
     {
         return $this->hasMany(Item::class);
+    }
+
+    /**
+     * コンフィグリスト
+     */
+    public function configs()
+    {
+        return $this->hasMany(Config::class);
+    }
+
+    /**
+     * ユーザIDを条件に含むようにクエリスコープを設定
+     */
+    public function scopeOfUserId($query, int $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * ニックネームを条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfNickname($query, ?string $nickname)
+    {
+        return $query->where('nickname', $nickname);
+    }
+
+    public function __get($key)
+    {
+        if ($key === 'config') {
+            return new class($this->configs())
+            {
+                private $configs;
+
+                public function __construct($configs)
+                {
+                    $this->configs = $configs;
+                }
+
+                public function __get($type)
+                {
+                    $config = $this->configs->ofType($type)->first();
+                    return $config === null ?  Config::newValue($type) : $config->value;
+                }
+            };
+        }
+        return parent::__get($key);
     }
 
     // ========================== ここまで整理済み ==========================
@@ -99,48 +186,6 @@ class Profile extends Model
     public function storeImage(mixed $data): void
     {
         $this->image = 'data:image/jpeg;base64,' . base64_encode(Image::make($data)->resize(120, 120)->encode('jpg', 80));
-    }
-
-    protected function configs()
-    {
-        return $this->hasMany(Config::class);
-    }
-
-    /**
-     * プロフィールに関連しているコンフィグ取得
-     */
-    public function config(string $type)
-    {
-        $config = $this->configs()->where('type', $type)->get()->first();
-        if ($config === null) {
-            $config = $this->configs()->create([
-                'type' => $type,
-                'value' => Config::newValue($type),
-            ]);
-        }
-        return $config;
-    }
-
-    public function __get($key)
-    {
-        if ($key === 'config') {
-            return new class($this->configs())
-            {
-                private $configs;
-
-                public function __construct($configs)
-                {
-                    $this->configs = $configs;
-                }
-
-                public function __get($type)
-                {
-                    $config = $this->configs->where('type', $type)->get()->first();
-                    return $config === null ?  Config::newValue($type) :  $config->value;
-                }
-            };
-        }
-        return parent::__get($key);
     }
 
     /**
@@ -199,14 +244,6 @@ class Profile extends Model
     public function viewHistories()
     {
         return $this->hasMany(ContentViewHistory::class);
-    }
-
-    /**
-     * ニックネームを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfNickname($query, ?string $nickname)
-    {
-        return $query->where('nickname', $nickname);
     }
 
     /**
