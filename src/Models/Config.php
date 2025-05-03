@@ -15,7 +15,7 @@ class Config extends Model
 {
     use HasFactory, SetUser;
 
-    protected $fillable = ['type', 'value'];
+    protected $fillable = ['value'];
 
     /**
      * キャストする必要のある属性
@@ -27,7 +27,7 @@ class Config extends Model
     ];
 
     /**
-     * コンフィグを所有しているプロフィールを取得
+     * コンフィグ所有プロフィール
      */
     public function profile()
     {
@@ -39,6 +39,7 @@ class Config extends Model
      * 
      * @param string $type タイプ
      * @return ValueObject 値オブジェクト
+     * @throws ApplicationException コンフィグタイプが未定義の場合、10005エラーをスローします。
      */
     public static function newValue(string $type): ValueObject
     {
@@ -47,6 +48,14 @@ class Config extends Model
             $value_object_class = $value_object_classes[$type];
             return new $value_object_class;
         }
-        throw new ApplicationException('ConfigValueNoDefine', 12001, ['type' => $type]);
+        throw new ApplicationException(10005, ['type' => $type]);
+    }
+
+    /**
+     * コンフィグタイプを条件に含むようにクエリスコープを設定
+     */
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('type', $type);
     }
 }

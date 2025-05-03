@@ -98,11 +98,19 @@ class Profile extends Model
     }
 
     /**
-     * アイテムリスト。
+     * アイテムリスト
      */
     public function items()
     {
         return $this->hasMany(Item::class);
+    }
+
+    /**
+     * コンフィグリスト
+     */
+    public function configs()
+    {
+        return $this->hasMany(Config::class);
     }
 
     /**
@@ -119,6 +127,28 @@ class Profile extends Model
     public function scopeOfNickname($query, ?string $nickname)
     {
         return $query->where('nickname', $nickname);
+    }
+
+    public function __get($key)
+    {
+        if ($key === 'config') {
+            return new class($this->configs())
+            {
+                private $configs;
+
+                public function __construct($configs)
+                {
+                    $this->configs = $configs;
+                }
+
+                public function __get($type)
+                {
+                    $config = $this->configs->ofType($type)->first();
+                    return $config === null ?  Config::newValue($type) : $config->value;
+                }
+            };
+        }
+        return parent::__get($key);
     }
 
     // ========================== ここまで整理済み ==========================
@@ -156,48 +186,6 @@ class Profile extends Model
     public function storeImage(mixed $data): void
     {
         $this->image = 'data:image/jpeg;base64,' . base64_encode(Image::make($data)->resize(120, 120)->encode('jpg', 80));
-    }
-
-    protected function configs()
-    {
-        return $this->hasMany(Config::class);
-    }
-
-    /**
-     * プロフィールに関連しているコンフィグ取得
-     */
-    public function config(string $type)
-    {
-        $config = $this->configs()->where('type', $type)->get()->first();
-        if ($config === null) {
-            $config = $this->configs()->create([
-                'type' => $type,
-                'value' => Config::newValue($type),
-            ]);
-        }
-        return $config;
-    }
-
-    public function __get($key)
-    {
-        if ($key === 'config') {
-            return new class($this->configs())
-            {
-                private $configs;
-
-                public function __construct($configs)
-                {
-                    $this->configs = $configs;
-                }
-
-                public function __get($type)
-                {
-                    $config = $this->configs->where('type', $type)->get()->first();
-                    return $config === null ?  Config::newValue($type) :  $config->value;
-                }
-            };
-        }
-        return parent::__get($key);
     }
 
     /**
