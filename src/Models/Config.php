@@ -15,7 +15,7 @@ class Config extends Model
 {
     use HasFactory, SetUser;
 
-    protected $fillable = ['value'];
+    protected $fillable = ['type', 'value'];
 
     /**
      * キャストする必要のある属性
