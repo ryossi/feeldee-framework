@@ -8,6 +8,7 @@ return [
     10002 => 'ProfileUserIdRequired',                     // ユーザIDが指定されていない
     10003 => 'ProfileNicknameRequired',                   // ニックネームが指定されていない
     10004 => 'ProfileTitleRequired',                      // タイトルが指定されていない
+    10005 => 'ProfileConfigTypeUndefined',                // コンフィグタイプが定義されていない
 
     // ****************************
     // *** 2xxxx 投稿関連        ***

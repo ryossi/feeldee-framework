@@ -18,7 +18,7 @@ abstract class ValueObject implements JsonSerializable, Jsonable
 
     public $model = null;
 
-    public function __construct(public readonly string $type) {}
+    public function __construct() {}
 
     public function fromModelAndJson(mixed $model, mixed $value)
     {
@@ -34,7 +34,7 @@ abstract class ValueObject implements JsonSerializable, Jsonable
             $stdObj = json_decode($value);
         }
         $vars = get_object_vars($this);
-        array_push($this->excludes, 'fillable', 'excludes', 'casts', 'json', 'model', 'type');
+        array_push($this->excludes, 'fillable', 'excludes', 'casts', 'json', 'model');
         foreach ($vars as $key => $value) {
             if (!in_array($key, $this->excludes)) {
                 if (array_key_exists($key, $this->casts)) {

@@ -13,8 +13,6 @@ use Feeldee\Framework\Models\Tag;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Tests\ValueObjects\Configs\CustomConfig1;
-use Tests\ValueObjects\Configs\CustomConfig2;
 
 /**
  * プロフィールの用語を担保するための機能テストです。
@@ -437,28 +435,75 @@ class ProfileTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグリスト
      */
-    // public function test_configs()
-    // {
-    //     // 準備
-    //     config(['profile.config.value_objects' => [
-    //         'custom_config_1' => \Tests\ValueObjects\Configs\CustomConfig1::class,
-    //         'custom_config_2' => \Tests\ValueObjects\Configs\CustomConfig2::class,
-    //     ]]);
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory()->create();
+    public function test_configs()
+    {
+        // 準備
+        config(['profile.config.value_objects' => [
+            'custom_config_1' => \Tests\ValueObjects\Configs\CustomConfig::class,
+            'custom_config_2' => \Tests\ValueObjects\Configs\CustomConfig::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
 
-    //     // 実行
-    //     $profile->configs()->create([
-    //         'value' => new CustomConfig1('xxxx', 'yyyy'),
-    //     ]);
-    //     $profile->configs()->create([
-    //         'value' => new CustomConfig2('zzzz', 'wwww'),
-    //     ]);
+        // 実行
+        $profile->configs()->create([
+            'type' => 'custom_config_1',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('xxxx', 'yyyy'),
+        ]);
+        $profile->configs()->create([
+            'type' => 'custom_config_2',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('zzzz', 'wwww'),
+        ]);
 
-    //     // 評価
-    //     $this->assertEquals(1, $profile->configs->count());
-    //     foreach ($profile->configs as $config) {
-    //         $this->assertEquals($config->profile->id, $profile->id, 'プロフィールのカスタムコンフィグリストであること');
-    //     }
-    // }
+        // 評価
+        $this->assertEquals(2, $profile->configs->count());
+        foreach ($profile->configs as $config) {
+            $this->assertEquals($config->profile->id, $profile->id, 'プロフィールのカスタムコンフィグリストであること');
+        }
+    }
+
+    /**
+     * コンフィグリスト
+     * 
+     * - コンフィグタイプを直接指定して取得することができることを確認します。
+     * - コンフィグタイプがデータベースに登録されていない場合でも、カスタムコンフィグクラスのクラスインスタンスを取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグリスト
+     */
+    public function test_configs_type()
+    {
+        // 準備
+        config(['feeldee.profile.config.value_objects' => [
+            'custom_config_1' => \Tests\ValueObjects\Configs\CustomConfig::class,
+            'custom_config_2' => \Tests\ValueObjects\Configs\CustomConfig::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $value = $profile->config->custom_config_1;
+
+        // 評価
+        $this->assertNotNull($value, 'コンフィグタイプがデータベースに登録されていない場合でも、カスタムコンフィグクラスのクラスインスタンスを取得できること');
+        $this->assertInstanceOf(\Tests\ValueObjects\Configs\CustomConfig::class, $value, 'コンフィグタイプを直接指定して取得することができること');
+    }
+
+    /**
+     * コンフィグリスト
+     * 
+     * - コンフィグタイプが未定義の場合、10005エラーをスローすることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグリスト
+     */
+    public function test_configs_type_undefined()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 評価
+        $this->assertThrows(function () use ($profile) {
+            $profile->config->undefined_config;
+        }, ApplicationException::class, 'ProfileConfigTypeUndefined');
+    }
 }
