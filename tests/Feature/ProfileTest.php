@@ -263,6 +263,10 @@ class ProfileTest extends TestCase
 
         // 評価
         $this->assertEquals($title, $profile->title, '日記やブログなどのタイトルであること');
+        $this->assertDatabaseHas('profiles', [
+            'id' => $profile->id,
+            'title' => $title,
+        ]);
     }
 
     /**
@@ -306,6 +310,39 @@ class ProfileTest extends TestCase
 
         // 評価
         $this->assertEquals($subtitle, $profile->subtitle, '日記やブログなどのサブタイトルであること');
+        $this->assertDatabaseHas('profiles', [
+            'id' => $profile->id,
+            'subtitle' => $subtitle,
+        ]);
+    }
+
+    /**
+     * プロフィール説明
+     * 
+     * - プロフィールの紹介文やコンテンツの説明を記載できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#プロフィール説明
+     */
+    public function test_description()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $description = 'プロフィール説明';
+
+        // 実行
+        $profile = Profile::create([
+            'user_id' => 1,
+            'nickname' => 'テストプロフィール',
+            'title' => 'プロフィールタイトル',
+            'description' => $description
+        ]);
+
+        // 評価
+        $this->assertEquals($description, $profile->description, 'プロフィールの紹介文やコンテンツの説明を記載できること');
+        $this->assertDatabaseHas('profiles', [
+            'id' => $profile->id,
+            'description' => $description,
+        ]);
     }
 
     /**

@@ -20,7 +20,7 @@ class Profile extends Model
      *
      * @var array
      */
-    protected $fillable = ['user_id', 'nickname', 'image', 'title', 'subtitle', 'introduction'];
+    protected $fillable = ['user_id', 'nickname', 'image', 'title', 'subtitle', 'description'];
 
     /**
      * 必須にする属性
