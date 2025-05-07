@@ -978,14 +978,14 @@ class PostTest extends TestCase
     }
 
     /**
-     * 写真リスト
+     * 投稿写真リスト
      * 
      * - 投稿の記事内容に含まれる写真のコレクションであることを確認します。
      * - 写真ソースは、記事内容の<img />タグのsrc属性の値であることを確認します。
      * - 写真登録日時は、投稿日（時刻は00:00:00）であることを確認します。
      * - 全て個別の写真として登録および更新時に登録されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#写真リスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
      */
     public function test_photos_sync_mode()
     {
@@ -1033,11 +1033,11 @@ class PostTest extends TestCase
     }
 
     /**
-     * 写真リスト
+     * 投稿写真リスト
      * 
-     * - 投稿の削除時には、写真リストに含まれる写真も一緒に削除されることを確認します。
+     * - 投稿の削除時には、投稿写真リストに含まれる写真も一緒に削除されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#写真リスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
      */
     public function test_photos_sync_mode_delete()
     {
@@ -1075,15 +1075,15 @@ class PostTest extends TestCase
     }
 
     /**
-     * 写真リスト
+     * 投稿写真リスト
      * 
      * - 投稿の記事内容に含まれる写真のコレクションであることを確認します。
      * - 写真ソースは、記事内容の<img />タグのsrc属性の値であることを確認します。
      * - 写真登録日時は、投稿日（時刻は00:00:00）であることを確認します。
-     * - 一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに写真リストに追加のみ行われることを確認します。
+     * - 一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに投稿写真リストに追加のみ行われることを確認します。
      * - 一致する写真ソースの写真が存在しない場合のみ、登録および更新時に写真を登録されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#写真リスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
      */
     public function test_photos_share_mode()
     {
@@ -1136,12 +1136,12 @@ class PostTest extends TestCase
     }
 
     /**
-     * 写真リスト
+     * 投稿写真リスト
      * 
-     * - 投稿を削除した場合は、写真リストからは削除されることを確認します。
+     * - 投稿を削除した場合は、投稿写真リストからは削除されることを確認します。
      * - 登録した写真そのものは、削除した投稿とは紐付かない写真として残ることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#写真リスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
      */
     public function test_photos_share_mode_delete()
     {
