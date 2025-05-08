@@ -197,4 +197,136 @@ class RecordTest extends TestCase
             'type' => Item::type(),
         ]);
     }
+
+    /**
+     * レコーダ名
+     * 
+     * - レコーダの名前であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名
+     */
+    public function test_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $recorder = $profile->recorders()->create([
+            'name' => 'テストレコード',
+            'type' => Photo::type(),
+            'data_type' => 'int',
+        ]);
+
+        // 評価
+        $this->assertEquals('テストレコード', $recorder->name, 'レコーダの名前であること');
+        $this->assertDatabaseHas('recorders', [
+            'name' => 'テストレコード',
+        ]);
+    }
+
+    /**
+     * レコーダ名
+     * 
+     * - レコーダ名は必須項目であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名
+     */
+    public function test_name_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->recorders()->create([
+                'type' => Photo::type(),
+                'data_type' => 'int',
+            ]);
+        }, ApplicationException::class, 'RecordRecorderNameRequired');
+    }
+
+    /**
+     * レコーダ名
+     * 
+     * - レコーダ所有プロフィールとレコーダタイプの中でユニークであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名
+     */
+    public function test_name_unique()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Post::type()]))->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->recorders()->create([
+                'name' => 'テストレコード',
+                'type' => Post::type(),
+                'data_type' => 'int',
+            ]);
+        }, ApplicationException::class, 'RecordRecorderNameDuplicated');
+    }
+
+    /**
+     * レコーダ名
+     * 
+     * - レコーダ所有プロフィールとレコーダタイプの中でユニークであることを確認します。
+     * - レコーダタイプが異なる場合は、登録できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名
+     */
+    public function test_name_unique_with_different_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Post::type()]))->create();
+
+        // 実行
+        $recorder = $profile->recorders()->create([
+            'name' => 'テストレコード',
+            'type' => Item::type(),
+            'data_type' => 'int',
+        ]);
+
+        // 評価
+        $this->assertEquals('テストレコード', $recorder->name, 'レコーダタイプが異なる場合は、登録できること');
+        $this->assertDatabaseHas('recorders', [
+            'name' => 'テストレコード',
+            'type' => Item::type(),
+        ]);
+    }
+
+    /**
+     * レコーダ名
+     * 
+     * - レコーダ所有プロフィールとレコーダタイプの中でユニークであることを確認します。
+     * - レコーダ所有プロフィールが異なる場合は、登録できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名
+     */
+    public function test_name_unique_with_different_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Post::type()]))->create();
+        $otherProfile = Profile::factory()->create();
+
+        // 実行
+        $recorder = $otherProfile->recorders()->create([
+            'name' => 'テストレコード',
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+
+        // 評価
+        $this->assertEquals('テストレコード', $recorder->name, 'レコーダ所有プロフィールが異なる場合は、登録できること');
+        $this->assertDatabaseHas('recorders', [
+            'name' => 'テストレコード',
+            'type' => Post::type(),
+            'profile_id' => $otherProfile->id,
+        ]);
+    }
 }

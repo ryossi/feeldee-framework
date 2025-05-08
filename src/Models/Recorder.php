@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -36,7 +37,23 @@ class Recorder extends Model
     protected $required = [
         'profile_id' => 73001,
         'type' => 73002,
+        'name' => 73003,
     ];
+
+    /**
+     * レコーダ名重複チェック
+     * 
+     * @param Self $model モデル
+     * @return void
+     * @throws ApplicationException レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している場合、73005エラーをスローします。
+     */
+    protected static function validatedNameDuplicate(Self $model)
+    {
+        if ($model->profile->recorders()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+            // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している場合
+            throw new ApplicationException(73005, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
+        }
+    }
 
     /**
      * モデルの「起動」メソッド
@@ -45,6 +62,16 @@ class Recorder extends Model
     {
         static::addGlobalScope('order_number', function (Builder $builder) {
             $builder->orderBy('order_number');
+        });
+
+        static::creating(function (Self $model) {
+            // レコーダ名重複チェック
+            static::validatedNameDuplicate($model);
+        });
+
+        static::updating(function (Self $model) {
+            // レコーダ名重複チェック
+            static::validatedNameDuplicate($model);
         });
     }
 

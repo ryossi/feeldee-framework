@@ -44,8 +44,14 @@ class Tag extends Model
         'name' => 72003,
     ];
 
-
-    protected static function bootedName(Self $model)
+    /**
+     * タグ名重複チェック
+     * 
+     * @param Self $model モデル
+     * @return void
+     * @throws ApplicationException タグ所有プロフィールとタグタイプの中でタグ名が重複している場合、72004エラーをスローします。
+     */
+    protected static function validatedNameDuplicate(Self $model)
     {
         if ($model->profile->tags()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
             // タグ所有プロフィールとタグタイプの中でタグ名が重複している場合
@@ -85,15 +91,15 @@ class Tag extends Model
         });
 
         static::creating(function (Self $model) {
-            // タグ名
-            static::bootedName($model);
+            // タグ名重複チェック
+            static::validatedNameDuplicate($model);
             // カテゴリ表示順
             static::bootedOrderNumber($model);
         });
 
         static::updating(function (Self $model) {
-            // タグ名
-            static::bootedName($model);
+            // タグ名重複チェック
+            static::validatedNameDuplicate($model);
         });
 
         static::saving(function (Self $model) {
