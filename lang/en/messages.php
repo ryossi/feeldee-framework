@@ -55,4 +55,5 @@ return [
     // *** 73xxx レコード関連     ***
     // ****************************
     73001 => 'RecordRecorderProfileRequired',           // レコーダ所有プロフィールが指定されていない
+    73002 => 'RecordRecorderTypeRequired',              // レコーダタイプが指定されていない
 ];

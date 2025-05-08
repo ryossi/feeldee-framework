@@ -35,6 +35,7 @@ class Recorder extends Model
      */
     protected $required = [
         'profile_id' => 73001,
+        'type' => 73002,
     ];
 
     /**

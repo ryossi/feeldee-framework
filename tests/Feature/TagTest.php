@@ -101,14 +101,14 @@ class TagTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $tag = $profile->categories()->create([
+        $tag = $profile->tags()->create([
             'name' => 'テストタグ',
             'type' => Post::type(),
         ]);
 
         // 評価
         $this->assertEquals(Post::type(), $tag->type, '投稿のタグタイプであること');
-        $this->assertDatabaseHas('categories', [
+        $this->assertDatabaseHas('tags', [
             'type' => Post::type(),
         ]);
     }
@@ -127,14 +127,14 @@ class TagTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $tag = $profile->categories()->create([
+        $tag = $profile->tags()->create([
             'name' => 'テストタグ',
             'type' => Photo::type(),
         ]);
 
         // 評価
         $this->assertEquals(Photo::type(), $tag->type, '写真のタグタイプであること');
-        $this->assertDatabaseHas('categories', [
+        $this->assertDatabaseHas('tags', [
             'type' => Photo::type(),
         ]);
     }
@@ -153,14 +153,14 @@ class TagTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $tag = $profile->categories()->create([
+        $tag = $profile->tags()->create([
             'name' => 'テストタグ',
             'type' => Location::type(),
         ]);
 
         // 評価
         $this->assertEquals(Location::type(), $tag->type, '場所のタグタイプであること');
-        $this->assertDatabaseHas('categories', [
+        $this->assertDatabaseHas('tags', [
             'type' => Location::type(),
         ]);
     }
@@ -179,14 +179,14 @@ class TagTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $tag = $profile->categories()->create([
+        $tag = $profile->tags()->create([
             'name' => 'テストタグ',
             'type' => Item::type(),
         ]);
 
         // 評価
         $this->assertEquals(Item::type(), $tag->type, 'アイテムのタグタイプであること');
-        $this->assertDatabaseHas('categories', [
+        $this->assertDatabaseHas('tags', [
             'type' => Item::type(),
         ]);
     }
