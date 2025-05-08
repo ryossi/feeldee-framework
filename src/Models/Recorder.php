@@ -2,17 +2,17 @@
 
 namespace Feeldee\Framework\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * レコーダをあらわすモデル
  */
 class Recorder extends Model
 {
-    use HasFactory, SetUser;
+    use HasFactory, Required, SetUser;
 
     /**
      * 配列に表示する属性
@@ -29,6 +29,15 @@ class Recorder extends Model
     protected $fillable = ['profile', 'type', 'name', 'data_type', 'unit', 'description', 'order_number'];
 
     /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'profile_id' => 73001,
+    ];
+
+    /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
@@ -39,19 +48,32 @@ class Recorder extends Model
     }
 
     /**
-     * レコーダを所有するプロフィール
+     * レコーダ所有プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
+
+    /**
+     * レコーダタイプを条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * レコーダ名を条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfName($query, ?string $name)
+    {
+        return $query->where('name', $name);
+    }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 現在のレコーダリストを新しいレコーダリストに従って全て入れ替えます。
@@ -141,21 +163,5 @@ class Recorder extends Model
             }
         }
         return $record;
-    }
-
-    /**
-     * タイプを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    /**
-     * 名前を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfName($query, ?string $name)
-    {
-        return $query->where('name', $name);
     }
 }

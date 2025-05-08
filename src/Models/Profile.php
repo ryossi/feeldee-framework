@@ -74,6 +74,14 @@ class Profile extends Model
     }
 
     /**
+     * レコーダリスト
+     */
+    public function recorders()
+    {
+        return $this->hasMany(Recorder::class);
+    }
+
+    /**
      * 投稿リスト
      */
     public function posts()
@@ -159,14 +167,6 @@ class Profile extends Model
     public function mediaBox(): HasOne
     {
         return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
-    }
-
-    /**
-     * レコーダリストを取得します。
-     */
-    public function recorders()
-    {
-        return $this->hasMany(Recorder::class);
     }
 
     /**
