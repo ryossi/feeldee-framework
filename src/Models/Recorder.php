@@ -38,6 +38,7 @@ class Recorder extends Model
         'profile_id' => 73001,
         'type' => 73002,
         'name' => 73003,
+        'data_type' => 73006,
     ];
 
     /**

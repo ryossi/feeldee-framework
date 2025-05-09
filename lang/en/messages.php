@@ -59,4 +59,5 @@ return [
     73003 => 'RecordRecorderNameRequired',              // レコーダ名が指定されていない
     73004 => 'RecordDataTypeRequired',                  // レコードデータ型が指定されていない
     73005 => 'RecordRecorderNameDuplicated',            // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している
+    73006 => 'RecordDataTypeRequired',                  // レコードデータ型が指定されていない
 ];

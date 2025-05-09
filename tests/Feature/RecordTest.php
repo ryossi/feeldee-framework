@@ -305,7 +305,7 @@ class RecordTest extends TestCase
      * - レコーダ所有プロフィールとレコーダタイプの中でユニークであることを確認します。
      * - レコーダ所有プロフィールが異なる場合は、登録できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名
      */
     public function test_name_unique_with_different_profile()
     {
@@ -328,5 +328,54 @@ class RecordTest extends TestCase
             'type' => Post::type(),
             'profile_id' => $otherProfile->id,
         ]);
+    }
+
+    /**
+     * レコードデータ型
+     * 
+     * - レコーダが記録するレコード値のデータ型であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki//レコード#レコードデータ型
+     */
+    public function test_data_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $recorder = $profile->recorders()->create([
+            'name' => 'テストレコード',
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+
+        // 評価
+        $this->assertEquals('int', $recorder->data_type, 'レコーダが記録するレコード値のデータ型であること');
+        $this->assertDatabaseHas('recorders', [
+            'data_type' => 'int',
+        ]);
+    }
+
+    /**
+     * レコードデータ型
+     * 
+     * - レコードデータ型は必須項目であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki//レコード#レコードデータ型
+     */
+    public function test_data_type_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->recorders()->create([
+                'name' => 'テストレコード',
+                'type' => Post::type(),
+            ]);
+        }, ApplicationException::class, 'RecordDataTypeRequired');
     }
 }
