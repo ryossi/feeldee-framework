@@ -2,9 +2,11 @@
 
 namespace Feeldee\Framework\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use App;
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 /**
@@ -15,11 +17,18 @@ class Record extends Model
     use HasFactory, SetUser;
 
     /**
+     * 複数代入可能な属性
+     *
+     * @var array
+     */
+    protected $fillable = ['content', 'content_id', 'value'];
+
+    /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['recorder', 'value'];
+    protected $visible = ['recorder', 'content', 'value'];
 
     /**
      * 配列に追加する属性
@@ -29,39 +38,51 @@ class Record extends Model
     protected $appends = ['recorder', 'content'];
 
     /**
-     * 複数代入可能な属性
-     *
-     * @var array
+     * モデルの「起動」メソッド
      */
-    protected $fillable = ['recorder', 'content', 'value'];
-
-    /**
-     * レコードを登録しているレコーダを取得
-     *
-     * @return Recorder
-     */
-    protected function recorder(): Attribute
+    protected static function booted(): void
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Recorder::class, 'recorder_id')->get()->first(),
-            set: fn($value) => [
-                'recorder_id' => $value == null ? null : $value->id
-            ]
-        );
+        static::addGlobalScope('order_number', function ($builder) {
+            $builder->join('recorders', 'records.recorder_id', 'recorders.id')
+                ->select('records.*')
+                ->orderBy('order_number');
+        });
+
+        static::saving(function (Self $model) {
+            // レコーダ所有プロフィールがコンテンツ所有プロフィールと一致しているかチェック
+            if ($model->content->profile->id !== $model->recorder->profile->id) {
+                throw new ApplicationException(73007);
+            }
+            // レコーダタイプとコンテンツ種別が一致しているかチェック
+            if ($model->content::type() !== $model->recorder->type) {
+                throw new ApplicationException(73008);
+            }
+            // レコード対象コンテンツにコンテンツオブジェクが直接指定されている場合
+            if (array_key_exists('content', $model->attributes)) {
+                // コンテンツIDに変換
+                $model->content_id = $model->content->id;
+                unset($model['content']);
+            }
+        });
     }
 
     /**
-     * レコードのコンテンツ取得
+     * レコーダ
      *
-     * @return Content
+     * @return BelongsTo
      */
-    protected function content(): Attribute
+    public function recorder(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Relation::getMorphedModel($this->recorder->type), 'content_id')->get()->first(),
-            set: fn($value) => [
-                'content_id' => $value == null ? null : $value->id
-            ]
-        );
+        return $this->belongsTo(Recorder::class, 'recorder_id');
+    }
+
+    /**
+     * コンテンツ
+     *
+     * @return BelongsTo
+     */
+    public function content(): BelongsTo
+    {
+        return $this->belongsTo(Relation::getMorphedModel($this->recorder->type), 'content_id');
     }
 }

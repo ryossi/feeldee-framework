@@ -116,6 +116,14 @@ class Recorder extends Model
     }
 
     /**
+     * レコードリスト
+     */
+    public function records()
+    {
+        return $this->hasMany(Record::class);
+    }
+
+    /**
      * 表示順で一つ前のレコーダを取得します。
      *
      * @return mixed 一つ前のレコーダ。存在しない場合null
@@ -246,14 +254,6 @@ class Recorder extends Model
         foreach ($deleteRecorders as $deleteRecorder) {
             $deleteRecorder->delete();
         }
-    }
-
-    /**
-     * レコーダで記録されたレコードリストを取得
-     */
-    public function records()
-    {
-        return $this->hasMany(Record::class);
     }
 
     /**

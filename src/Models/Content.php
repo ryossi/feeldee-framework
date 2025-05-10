@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, HasCategory, HasTag, Required, StripTags, SetUser, AccessCounter;
+    use HasFactory, HasCategory, HasTag, HasRecord, Required, StripTags, SetUser, AccessCounter;
 
     /**
      * コンテンツ種別
@@ -173,17 +173,6 @@ abstract class Content extends Model
                 return $this->recorder->record($this->content, $value);
             }
         };
-    }
-
-    /**
-     * このコンテンツのレコードリスト
-     */
-    public function records()
-    {
-        return $this->hasMany(Record::class, 'content_id')
-            ->join('recorders', 'records.recorder_id', 'recorders.id')
-            ->select('records.*')
-            ->orderBy('order_number');
     }
 
     /**
