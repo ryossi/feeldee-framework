@@ -18,11 +18,11 @@ return new class extends Migration
             $table->foreignId('profile_id')->comment('レコーダ所有プロフィールID')->constrained('profiles')->cascadeOnDelete();
             $table->string('type', 255)->comment('レコーダタイプ');
             $table->string('name', 100)->comment('レコーダ名');
+            $table->mediumText('image')->nullable()->comment('レコーダイメージ');
             $table->string('data_type', 10)->comment('レコードデータ型');
             $table->string('unit', 30)->nullable()->comment('レコード単位ラベル');
             $table->string('description')->nullable()->comment('レコーダ説明');
             $table->integer('order_number')->default('0')->comment('レコーダ表示順');
-            $table->mediumText('image')->nullable()->comment('レコーダイメージ');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();

@@ -20,14 +20,14 @@ class Recorder extends Model
      *
      * @var array
      */
-    protected $fillable = ['profile', 'type', 'name', 'data_type', 'unit', 'description'];
+    protected $fillable = ['profile', 'type', 'name', 'image', 'data_type', 'unit', 'description'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['name', 'data_type', 'unit', 'description'];
+    protected $visible = ['name', 'image', 'data_type', 'unit', 'description'];
 
     /**
      * 必須にする属性

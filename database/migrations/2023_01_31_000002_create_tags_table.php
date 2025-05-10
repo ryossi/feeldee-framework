@@ -18,8 +18,8 @@ return new class extends Migration
             $table->foreignId('profile_id')->comment('プロフィールID')->constrained('profiles')->cascadeOnDelete();
             $table->string('type', 255)->comment('タグタイプ');
             $table->string('name', 255)->comment('タグ名');
-            $table->integer('order_number')->default('0')->comment('表示順');
             $table->mediumText('image')->nullable()->comment('タグイメージ');
+            $table->integer('order_number')->default('0')->comment('表示順');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();

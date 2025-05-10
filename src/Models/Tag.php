@@ -24,14 +24,14 @@ class Tag extends Model
      *
      * @var array
      */
-    protected $fillable = ['profile', 'type', 'name', 'contents'];
+    protected $fillable = ['profile', 'type', 'name', 'image', 'contents'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'name', 'count_of_contents'];
+    protected $visible = ['id', 'name', 'image', 'count_of_contents'];
 
     /**
      * 必須にする属性

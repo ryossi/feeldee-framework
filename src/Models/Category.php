@@ -27,7 +27,14 @@ class Category extends Model
      *
      * @var array
      */
-    protected $fillable = ['type', 'name'];
+    protected $fillable = ['type', 'name',  'image'];
+
+    /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
+    protected $visible = ['id', 'profile', 'type', 'name', 'image', 'parent'];
 
     /**
      * 必須にする属性
@@ -39,13 +46,6 @@ class Category extends Model
         'type' => 71009,
         'name' => 71010,
     ];
-
-    /**
-     * 配列に表示する属性
-     *
-     * @var array
-     */
-    protected $visible = ['id', 'profile', 'type', 'name', 'parent'];
 
     protected static function bootedProfile(Self $model)
     {
