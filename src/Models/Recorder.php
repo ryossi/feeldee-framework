@@ -16,18 +16,18 @@ class Recorder extends Model
     use HasFactory, Required, SetUser;
 
     /**
-     * 配列に表示する属性
-     *
-     * @var array
-     */
-    protected $visible = ['name', 'data_type', 'unit', 'description'];
-
-    /**
      * 複数代入可能な属性
      *
      * @var array
      */
     protected $fillable = ['profile', 'type', 'name', 'data_type', 'unit', 'description', 'order_number'];
+
+    /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
+    protected $visible = ['name', 'data_type', 'unit', 'description'];
 
     /**
      * 必須にする属性

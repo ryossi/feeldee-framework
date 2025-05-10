@@ -378,4 +378,60 @@ class RecordTest extends TestCase
             ]);
         }, ApplicationException::class, 'RecordDataTypeRequired');
     }
+
+    /**
+     * レコード単位ラベル
+     * 
+     * - 画面表示や印刷時にレコード値の単位ラベルとして使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki//レコード#レコード単位ラベル
+     */
+    public function test_unit()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $recorder = $profile->recorders()->create([
+            'name' => 'テストレコード',
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'unit' => 'km',
+        ]);
+
+        // 評価
+        $this->assertEquals('km', $recorder->unit, '画面表示や印刷時にレコード値の単位ラベルとして使用できること');
+        $this->assertDatabaseHas('recorders', [
+            'unit' => 'km',
+        ]);
+    }
+
+    /**
+     * レコーダ説明
+     * 
+     * - レコーダの説明であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki//レコード#レコーダ説明
+     */
+    public function test_description()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $recorder = $profile->recorders()->create([
+            'name' => 'テストレコード',
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'description' => 'テストレコードの説明',
+        ]);
+
+        // 評価
+        $this->assertEquals('テストレコードの説明', $recorder->description, 'レコーダの説明であること');
+        $this->assertDatabaseHas('recorders', [
+            'description' => 'テストレコードの説明',
+        ]);
+    }
 }
