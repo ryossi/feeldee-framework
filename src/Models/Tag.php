@@ -51,7 +51,7 @@ class Tag extends Model
      * @return void
      * @throws ApplicationException タグ所有プロフィールとタグタイプの中でタグ名が重複している場合、72004エラーをスローします。
      */
-    protected static function validatedNameDuplicate(Self $model)
+    protected static function validateNameDuplicate(Self $model)
     {
         if ($model->profile->tags()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
             // タグ所有プロフィールとタグタイプの中でタグ名が重複している場合
@@ -59,7 +59,15 @@ class Tag extends Model
         }
     }
 
-    protected static function bootedOrderNumber(Self $model)
+    /**
+     * タグ表示順決定
+     * 
+     * 同じタグ所有プロフィール、タグタイプで新しく追加されたタグが最後に並ぶようタグ表示順を自動採番します。
+     * 
+     * @param Self $model モデル
+     * @return void
+     */
+    protected static function decideOrderNumber(Self $model)
     {
         // 同一タイプの全てのタグリスト取得
         $tag_list = $model->profile->tags()->ofType($model->type)->get();
@@ -73,7 +81,7 @@ class Tag extends Model
         }
 
         if (!$model->profile) {
-            // カテゴリ所有プロフィールが存在しない場合
+            // タグ所有プロフィールが存在しない場合
             return;
         }
     }
@@ -92,14 +100,14 @@ class Tag extends Model
 
         static::creating(function (Self $model) {
             // タグ名重複チェック
-            static::validatedNameDuplicate($model);
-            // カテゴリ表示順
-            static::bootedOrderNumber($model);
+            static::validateNameDuplicate($model);
+            // タグ表示順決定
+            static::decideOrderNumber($model);
         });
 
         static::updating(function (Self $model) {
             // タグ名重複チェック
-            static::validatedNameDuplicate($model);
+            static::validateNameDuplicate($model);
         });
 
         static::saving(function (Self $model) {

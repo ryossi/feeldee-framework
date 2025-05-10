@@ -20,7 +20,7 @@ class Recorder extends Model
      *
      * @var array
      */
-    protected $fillable = ['profile', 'type', 'name', 'data_type', 'unit', 'description', 'order_number'];
+    protected $fillable = ['profile', 'type', 'name', 'data_type', 'unit', 'description'];
 
     /**
      * 配列に表示する属性
@@ -48,11 +48,38 @@ class Recorder extends Model
      * @return void
      * @throws ApplicationException レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している場合、73005エラーをスローします。
      */
-    protected static function validatedNameDuplicate(Self $model)
+    protected static function validateNameDuplicate(Self $model)
     {
         if ($model->profile->recorders()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
             // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している場合
             throw new ApplicationException(73005, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
+        }
+    }
+
+    /**
+     * レコーダ表示順決定
+     * 
+     * 同じレコーダ所有プロフィール、レコーダタイプでレコーダの表示順で最後に並ぶようレコーダ表示順を自動採番します。
+     * 
+     * @param Self $model モデル
+     * @return void
+     */
+    protected static function decideOrderNumber(Self $model)
+    {
+        // 同一タイプの全てのレコーダリスト取得
+        $tag_list = $model->profile->recorders()->ofType($model->type)->get();
+
+        // 表示順生成
+        if ($tag_list->isEmpty()) {
+            $model->order_number = 1;
+        } else {
+            $last = $tag_list->last();
+            $model->order_number = $last->order_number + 1;
+        }
+
+        if (!$model->profile) {
+            // レコー所有プロフィールが存在しない場合
+            return;
         }
     }
 
@@ -67,12 +94,14 @@ class Recorder extends Model
 
         static::creating(function (Self $model) {
             // レコーダ名重複チェック
-            static::validatedNameDuplicate($model);
+            static::validateNameDuplicate($model);
+            // レコーダ表示順決定
+            static::decideOrderNumber($model);
         });
 
         static::updating(function (Self $model) {
             // レコーダ名重複チェック
-            static::validatedNameDuplicate($model);
+            static::validateNameDuplicate($model);
         });
     }
 
@@ -84,6 +113,70 @@ class Recorder extends Model
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
+    }
+
+    /**
+     * 表示順で一つ前のレコーダを取得します。
+     *
+     * @return mixed 一つ前のレコーダ。存在しない場合null
+     */
+    public function previous(): mixed
+    {
+        return $this->where('profile_id', '=', $this->profile->id)
+            ->where('order_number', '<', $this->order_number)->orderBy('order_number', 'desc')->first();
+    }
+
+    /**
+     * 表示順で一つ後のレコーダを取得します。
+     * 
+     * @return mixed 一つ後のレコーダ。存在しない場合null
+     */
+    public function next(): mixed
+    {
+        return $this->where('profile_id', '=', $this->profile->id)
+            ->where('order_number', '>', $this->order_number)->orderBy('id', 'asc')->first();
+    }
+
+    /**
+     * レコーダの表示順を一つ上げます。
+     * 表示順が既に先頭の場合は、何もしません（空振り）。
+     *
+     * @return void
+     */
+    public function orderUp(): void
+    {
+        $target = $this->previous();
+        if ($target) {
+            // 一つ前のタグが存在する場合
+            // 表示順を入れ替え
+            $prev = $target->order_number;
+            $target->order_number = $this->order_number;
+            $this->order_number = $prev;
+
+            $target->save();
+            $this->save();
+        }
+    }
+
+    /**
+     * レコーダの表示順を一つ下げます。
+     * 表示順が既に最後の場合は、何もしません（空振り）。
+     *
+     * @return void
+     */
+    public function orderDown(): void
+    {
+        $target = $this->next();
+        if ($target) {
+            // 一つ後のレコーダが存在する場合
+            // 表示順を入れ替え
+            $prev = $target->order_number;
+            $target->order_number = $this->order_number;
+            $this->order_number = $prev;
+
+            $target->save();
+            $this->save();
+        }
     }
 
     /**

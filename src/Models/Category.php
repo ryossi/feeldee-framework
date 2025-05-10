@@ -92,7 +92,7 @@ class Category extends Model
      * @return void
      * @throws ApplicationException カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している場合、71011エラーをスローします。
      */
-    protected static function validatedNameDuplicate(Self $model)
+    protected static function validateNameDuplicate(Self $model)
     {
         if ($model->profile->categories()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
             // カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している場合
@@ -100,7 +100,15 @@ class Category extends Model
         }
     }
 
-    protected static function bootedOrderNumber(Self $model)
+    /**
+     * カテゴリ表示順決定
+     * 
+     * 同じカテゴリ所有プロフィール、カテゴリタイプ、カテゴリ階層内で新しく追加されたカテゴリが最後に並ぶようカテゴリ表示順を自動採番します。
+     * 
+     * @param Self $model モデル
+     * @return void
+     */
+    protected static function decideOrderNumber(Self $model)
     {
         if (!$model->profile) {
             // カテゴリ所有プロフィールが存在しない場合
@@ -138,14 +146,14 @@ class Category extends Model
 
         static::creating(function (Self $model) {
             // カテゴリ名重複チェック
-            static::validatedNameDuplicate($model);
-            // カテゴリ表示順
-            static::bootedOrderNumber($model);
+            static::validateNameDuplicate($model);
+            // カテゴリ表示順決定
+            static::decideOrderNumber($model);
         });
 
         static::updating(function (Self $model) {
             // カテゴリ名重複チェック
-            static::validatedNameDuplicate($model);
+            static::validateNameDuplicate($model);
         });
     }
 

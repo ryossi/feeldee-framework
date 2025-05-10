@@ -434,4 +434,192 @@ class RecordTest extends TestCase
             'description' => 'テストレコードの説明',
         ]);
     }
+
+    /**
+     * レコーダ表示順
+     * 
+     * - 同じレコーダ所有プロフィール、レコーダタイプでレコーダの表示順を決定するための番号であることを確認します。
+     * - 作成時に自動採番されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ表示順
+     */
+    public function test_order_number()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $recorder1 = $profile->recorders()->create([
+            'name' => 'テストレコード1',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $recorder2 = $profile->recorders()->create([
+            'name' => 'テストレコード2',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $recorder3 = $profile->recorders()->create([
+            'name' => 'テストレコード3',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+
+        // 評価
+        $this->assertEquals(1, $recorder1->order_number, '同じレコーダ所有プロフィール、レコーダタイプの中での表示順を持つこと');
+        $this->assertEquals(2, $recorder2->order_number, '同じレコーダ所有プロフィール、レコーダタイプの中での表示順を持つこと');
+        $this->assertEquals(3, $recorder3->order_number, '同じレコーダ所有プロフィール、レコーダタイプの中での表示順を持つこと');
+        // タグ表示順は、作成時に自動採番されること
+        foreach ($profile->recorders as $recorder) {
+            $this->assertDatabaseHas('recorders', [
+                'id' => $recorder->id,
+                'order_number' => $recorder->order_number,
+            ]);
+        }
+    }
+
+    /**
+     * レコーダ表示順
+     * 
+     * - 表示順で前のレコーダに容易にアクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ表示順
+     */
+    public function test_order_number_previous()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $recorder1 = $profile->recorders()->create([
+            'name' => 'テストレコード1',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $recorder2 = $profile->recorders()->create([
+            'name' => 'テストレコード2',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+
+        // 実行
+        $previous = $recorder2->previous();
+
+        // 評価
+        $this->assertEquals($recorder1->id, $previous->id, '表示順で前のレコーダに容易にアクセスすることができること');
+    }
+
+    /**
+     * レコーダ表示順
+     * 
+     * - 表示順で後のレコーダに容易にアクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ表示順
+     */
+    public function test_order_number_next()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $recorder1 = $profile->recorders()->create([
+            'name' => 'テストレコード1',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $recorder2 = $profile->recorders()->create([
+            'name' => 'テストレコード2',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+
+        // 実行
+        $next = $recorder1->next();
+
+        // 評価
+        $this->assertEquals($recorder2->id, $next->id, '表示順で後のレコーダに容易にアクセスすることができること');
+    }
+
+    /**
+     * レコーダ表示順
+     * 
+     * - 直接編集しなくても同じレコーダ所有プロフィール、レコーダタイプの中で表示順を上へ移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ表示順
+     */
+    public function test_order_number_up()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder1 = $profile->recorders()->create([
+            'name' => 'テストレコード1',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $recorder2 = $profile->recorders()->create([
+            'name' => 'テストレコード2',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+
+        // 実行
+        $recorder2->orderUp();
+
+        // 評価
+        $this->assertEquals(1, $recorder2->order_number, '同じレコーダ所有プロフィール、レコーダタイプの中で表示順を上へ移動することができること');
+        $this->assertDatabaseHas('recorders', [
+            'id' => $recorder2->id,
+            'order_number' => 1,
+        ]);
+        $recorder1->refresh();
+        $this->assertEquals(2, $recorder1->order_number, '同じレコーダ所有プロフィール、レコーダタイプの中で表示順を上へ移動することができること');
+        $this->assertDatabaseHas('recorders', [
+            'id' => $recorder1->id,
+            'order_number' => 2,
+        ]);
+    }
+
+    /**
+     * レコーダ表示順
+     * 
+     * - 直接編集しなくても同じレコーダ所有プロフィール、レコーダタイプの中で表示順を下へ移動することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ表示順
+     */
+    public function test_order_number_down()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder1 = $profile->recorders()->create([
+            'name' => 'テストレコード1',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $recorder2 = $profile->recorders()->create([
+            'name' => 'テストレコード2',
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+
+        // 実行
+        $recorder1->orderDown();
+
+        // 評価
+        $this->assertEquals(2, $recorder1->order_number, '同じレコーダ所有プロフィール、レコーダタイプの中で表示順を下へ移動することができること');
+        $this->assertDatabaseHas('recorders', [
+            'id' => $recorder1->id,
+            'order_number' => 2,
+        ]);
+        $recorder2->refresh();
+        $this->assertEquals(1, $recorder2->order_number, '同じレコーダ所有プロフィール、レコーダタイプの中で表示順を下へ移動することができること');
+        $this->assertDatabaseHas('recorders', [
+            'id' => $recorder2->id,
+            'order_number' => 1,
+        ]);
+    }
 }
