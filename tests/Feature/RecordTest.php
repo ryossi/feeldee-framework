@@ -810,4 +810,80 @@ class RecordTest extends TestCase
         // 評価
         $this->assertEmpty($post->records, 'レコードに紐付くコンテンツを削除すると、レコードリストからも自動的に除外されること');
     }
+
+    /**
+     * レコード対象コンテンツ
+     * 
+     * - レコーダによって記録されたレコードに紐付くコンテンツであることを確認します。
+     * - コンテンツオブジェクトを指定することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード対象コンテンツ
+     */
+    public function test_record_content()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 実行
+        $record = $recorder->records()->create([
+            'content' => $post,
+            'value' => 1,
+        ]);
+
+        // 評価
+        $this->assertEquals($post->id, $record->content->id, 'コンテンツオブジェクトを指定することができること');
+        // レコーダによって記録されたレコードに紐付くコンテンツであること
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id
+        ]);
+    }
+
+    /**
+     * レコード対象コンテンツ
+     * 
+     * - レコーダによって記録されたレコードに紐付くコンテンツであることを確認します。
+     * - コンテンツIDを指定することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード対象コンテンツ
+     */
+    public function test_record_content_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 実行
+        $record = $recorder->records()->create([
+            'content_id' => $post->id,
+            'value' => 1,
+        ]);
+
+        // 評価
+        $this->assertEquals($post->id, $record->content_id, 'コンテンツIDを指定することができること');
+        // レコーダによって記録されたレコードに紐付くコンテンツであること
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id
+        ]);
+    }
 }
