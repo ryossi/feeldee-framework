@@ -812,6 +812,111 @@ class RecordTest extends TestCase
     }
 
     /**
+     * レコーダ
+     * 
+     * - レコードの記録は、レコーダのrecordメソッドを使うことで作成できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコーダ
+     */
+    public function test_record_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 実行
+        $record = $recorder->record($post, 1);
+
+        // 評価
+        $this->assertEquals($post->id, $record->content_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで作成できること');
+        $this->assertDatabaseHas('records', [
+            'id' => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => 1,
+        ]);
+    }
+
+    /**
+     * レコーダ
+     * 
+     * - レコードの記録は、レコーダのrecordメソッドを使うことで編集できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコーダ
+     */
+    public function test_record_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $record = $recorder->records()->create([
+            'content' => $post,
+            'value' => 1,
+        ]);
+
+        // 実行
+        $record = $recorder->record($post, 2);
+
+        // 評価
+        $this->assertEquals($post->id, $record->content_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで編集できること');
+        $this->assertDatabaseHas('records', [
+            'id' => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => 2,
+        ]);
+    }
+
+    /**
+     * レコーダ
+     * 
+     * - レコードの記録は、レコーダのrecordメソッドを使うことで削除できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコーダ
+     */
+    public function test_record_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $record = $recorder->records()->create([
+            'content' => $post,
+            'value' => 1,
+        ]);
+
+        // 実行
+        $record = $recorder->record($post, null);
+
+        // 評価
+        $this->assertNull($record, 'レコードの記録は、レコーダのrecordメソッドを使うことで削除できること');
+        $this->assertDatabaseEmpty('records');
+    }
+
+    /**
      * レコード対象コンテンツ
      * 
      * - レコーダによって記録されたレコードに紐付くコンテンツであることを確認します。

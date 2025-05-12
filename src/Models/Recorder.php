@@ -188,6 +188,42 @@ class Recorder extends Model
     }
 
     /**
+     * このレコーダを使ってコンテンツにレコード値を記録します。
+     * 
+     * このメソッドは、レコードが存在しない場合は新規作成し、レコードが存在する場合はレコード値のみを更新します。
+     * 
+     * また、レコード値がnullまたは空文字列の場合は、レコードを削除します。
+     * 
+     * @param Content $content コンテンツ
+     * @param mixed $value　レコード値
+     * @return Record|null レコードまたは削除の場合null
+     */
+    public function record(Content $content, mixed $value): Record|null
+    {
+        $record = $this->records()->where('content_id', $content->id)->first();
+        if ($record === null) {
+            if ($value !== null && $value !== "") {
+                // 値が空でない場合のみレコード追加
+                $record = $this->records()->create([
+                    'content' => $content,
+                    'value' => $value
+                ]);
+            }
+        } else {
+            if ($value === null || $value === "") {
+                // 値が空の場合レコード削除
+                $record->delete();
+                return null;
+            } else {
+                // 値更新
+                $record->value = $value;
+                $record->save();
+            }
+        }
+        return $record;
+    }
+
+    /**
      * レコーダタイプを条件に含むようにクエリのスコープを設定
      */
     public function scopeOfType($query, string $type)
@@ -254,36 +290,5 @@ class Recorder extends Model
         foreach ($deleteRecorders as $deleteRecorder) {
             $deleteRecorder->delete();
         }
-    }
-
-    /**
-     * このレコーダを使って値を記録します。
-     * 
-     * @param Content $content コンテンツ
-     * @param mixed $value　記録する値
-     * @return ?Record レコード
-     */
-    public function record(Content $content, mixed $value): ?Record
-    {
-        $record = $this->records()->where('content_id', $content->id)->first();
-        if ($record === null) {
-            if ($value !== null && $value !== "") {
-                // 値が空でない場合のみレコード追加
-                $record = $this->records()->create([
-                    'content' => $content,
-                    'value' => $value
-                ]);
-            }
-        } else {
-            if ($value === null || $value === "") {
-                // 値が空の場合レコード削除
-                $record->delete();
-            } else {
-                // 値更新
-                $record->value = $value;
-                $record->save();
-            }
-        }
-        return $record;
     }
 }
