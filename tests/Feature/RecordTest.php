@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Carbon\Carbon;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
@@ -990,5 +991,639 @@ class RecordTest extends TestCase
             'content_id' => $post->id,
             'recorder_id' => $recorder->id
         ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - stringのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_string()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = 'テストレコード';
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertTrue(is_string($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - stringのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_string_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'string',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 1);
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - intのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_int()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = 1;
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertTrue(is_int($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - intのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_int_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 'テストレコード');
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - integerのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_integer()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'integer',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = 1;
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertTrue(is_int($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - integerのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_integer_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'integer',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 'テストレコード');
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - floatのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_float()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'float',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = 1.5;
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertTrue(is_float($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - floatのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_float_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'float',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 'テストレコード');
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - doubleのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_double()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'double',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = 1.56868757577576765868686878;
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertTrue(is_double($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - doubleのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_double_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'double',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 'テストレコード');
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - boolのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_bool()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'bool',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = true;
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertTrue(is_bool($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => 1
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - boolのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_bool_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'bool',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 1);
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - booleanのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_boolean()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'boolean',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = false;
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertTrue(is_bool($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => 0
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - booleanのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_boolean_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'boolean',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 0);
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - dateのレコードデータ型がサポートされていることを確認します。
+     * - 時刻は省略されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_date()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'date',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = '2023-10-01';
+
+        // 実行
+        $record = $recorder->record($post, '2023-10-01 12:30:00');
+
+        // 評価 
+        $this->assertInstanceOf(Carbon::class, $record->value, '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertEquals($expected, $record->value->format('Y-m-d'), 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - dateのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_date_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'date',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 1);
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - datetimeのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_datetime()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'datetime',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = '2023-10-01 12:32:13';
+
+        // 実行
+        $record = $recorder->record($post, $expected);
+
+        // 評価
+        $this->assertInstanceOf(Carbon::class, $record->value, '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertEquals($expected, $record->value->format('Y-m-d H:i:s'), 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
+     * - datetimeのレコードデータ型がサポートされていることを確認します。
+     * - 時刻が省略された場合は、00:00:00が補完されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_datetime_without_time()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'datetime',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $expected = '2023-10-01 00:00:00';
+
+        // 実行
+        $record = $recorder->record($post, '2023-10-01');
+
+        // 評価
+        $this->assertInstanceOf(Carbon::class, $record->value, '取得時にレコードデータ型に従って型変換が実行されること');
+        $this->assertEquals($expected, $record->value->format('Y-m-d H:i:s'), 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertDatabaseHas('records', [
+            "id" => $record->id,
+            'content_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => $expected
+        ]);
+    }
+
+    /**
+     * レコード値
+     * 
+     * - 設定時にレコードデータ型に従って型チェックが実行され、準拠しない値の場合にはエラーとなることを確認します。
+     * - datetimeのレコードデータ型がサポートされていることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード値
+     */
+    public function test_record_value_datetime_invalid()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'datetime',
+        ]);
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->record($post, 'テストレコード');
+        }, ApplicationException::class, 'RecordValueDataTypeInvalid');
     }
 }

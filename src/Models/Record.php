@@ -3,7 +3,10 @@
 namespace Feeldee\Framework\Models;
 
 use App;
+use Carbon\Carbon;
+use Feeldee\Framework\Casts\RecordValue;
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,6 +66,34 @@ class Record extends Model
                 $model->content_id = $model->content->id;
                 unset($model['content']);
             }
+            // 設定時にレコードデータ型に従って型チェック
+            $type = $model->recorder->data_type;
+            $value = $model->attributes['value'];
+            $check = true;
+            if ($type == 'string') {
+                $check = is_string($value);
+            } elseif ($type == 'int' || $type == 'integer') {
+                $check = is_int($value);
+            } elseif ($type == 'float') {
+                $check = is_float($value);
+            } elseif ($type == 'double') {
+                $check = is_double($value);
+            } elseif ($type == 'bool' || $type == 'boolean') {
+                $check = is_bool($value);
+            } elseif ($type == 'date' || $type == 'datetime') {
+                $check = strtotime($value) !== false;
+            }
+            if (!$check) {
+                throw new ApplicationException(73004);
+            }
+            // レコードデータ型がdateの場合は、時刻は省略
+            if ($type == 'date') {
+                $model->attributes['value'] = Carbon::parse($value)->format('Y-m-d');
+            }
+            // レコードデータ型がdatetime、かつ時刻が省略された場合は、00:00:00を補完
+            if ($type == 'datetime' && !str_contains($value, ':')) {
+                $model->attributes['value'] = Carbon::parse($value)->format('Y-m-d H:i:s');
+            }
         });
     }
 
@@ -84,5 +115,33 @@ class Record extends Model
     public function content(): BelongsTo
     {
         return $this->belongsTo(Relation::getMorphedModel($this->recorder->type), 'content_id');
+    }
+
+    protected function value(): Attribute
+    {
+        $getter = function ($value, $attributes) {
+            $type = $this->recorder->data_type;
+            if ($type == 'string') {
+                return strval($value);
+            }
+            if ($type == 'int' || $type == 'integer') {
+                return intval($value);
+            }
+            if ($type == 'float') {
+                return floatval($value);
+            }
+            if ($type == 'double') {
+                return doubleval($value);
+            }
+            if ($type == 'bool' || $type == 'boolean') {
+                return boolval($value);
+            }
+            if ($type == 'date' || $type == 'datetime') {
+                return Carbon::parse($value);
+            }
+        };
+        return Attribute::make(
+            get: fn($value, $attributes) => $getter($value, $attributes),
+        );
     }
 }
