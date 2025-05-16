@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
+use Feeldee\Framework\Models\Recorder;
 use Feeldee\Framework\Models\Tag;
 use Feeldee\Framework\Observers\PostPhotoShareObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
@@ -1177,5 +1178,203 @@ class PostTest extends TestCase
         // 評価
         $this->assertEquals(1, $profile->photos()->ofSrc('http://photo.test/img/2.png')->first()->posts->count(), '投稿を削除した場合は、写真リストからは削除されること');
         $this->assertEquals(4, $profile->photos->count(), '登録した写真そのものは、削除した投稿とは紐付かない写真として残ること');
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダによって記録された記事のレコードリストであることを確認します。
+     * - レコーダの指定は、レコーダそのものを指定することができることを確認します。
+     * - レコーダの指定は、レコーダIDを指定することができることを確認します。
+     * - レコーダの指定は、レコーダ名を指定することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツレコードリスト
+     */
+    public function test_content_records()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder1 = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+        $recorder2 = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'bool',
+            'name' => 'テストレコーダ2',
+        ]);
+        $recorder3 = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'date',
+            'name' => 'テストレコーダ3',
+        ]);
+
+        // 実行
+        $post->record($recorder1, 1);
+        $post->record($recorder2->id, true);
+        $post->record('テストレコーダ3', '2025-04-22');
+
+        // 評価
+        $this->assertEquals(3, $post->records->count(), 'レコーダによって記録された記事のレコードリストであること');
+        foreach ($post->records as $i => $record) {
+            if ($i == 0) {
+                $this->assertEquals($recorder1->id, $record->recorder_id, 'レコーダそのものを指定することができること');
+            } elseif ($i == 1) {
+                $this->assertEquals($recorder2->id, $record->recorder_id, 'レコーダIDを指定することができること');
+            } elseif ($i == 2) {
+                $this->assertEquals($recorder3->id, $record->recorder_id, 'レコーダ名を指定することができること');
+            }
+        }
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => Profile::factory()->create()->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73007);
+        $post->record($recorder, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73008);
+        $post->record($recorder, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダIDを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_id_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => Profile::factory()->create()->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73007);
+        $post->record($recorder->id, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダIDを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_id_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73008);
+        $post->record($recorder->id, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - 対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $post->record($recorder, 1);
+        $recorder->delete();
+
+        // 評価
+        $this->assertEquals(0, $post->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
+        $this->assertDatabaseEmpty('records');
     }
 }

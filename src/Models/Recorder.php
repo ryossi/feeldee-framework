@@ -103,6 +103,11 @@ class Recorder extends Model
             // レコーダ名重複チェック
             static::validateNameDuplicate($model);
         });
+
+        static::deleting(function (Self $model) {
+            // レコード削除
+            $model->records()->delete();
+        });
     }
 
     /**
@@ -188,7 +193,7 @@ class Recorder extends Model
     }
 
     /**
-     * このレコーダを使ってコンテンツにレコード値を記録します。
+     * コンテンツを指定してレコードを記録します。
      * 
      * このメソッドは、レコードが存在しない場合は新規作成し、レコードが存在する場合はレコード値のみを更新します。
      * 

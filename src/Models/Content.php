@@ -2,7 +2,6 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -131,83 +130,6 @@ abstract class Content extends Model
     public function textTruncate(int $width, string $trim_marker, ?string $encoding)
     {
         return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
-    }
-
-    /**
-     * このコンテンツのレコーダリスト
-     */
-    public function recorders()
-    {
-        return $this->profile->recorders()->ofType($this->type());
-    }
-
-    /**
-     * レコーダ名を指定してコンテンツのレコーダプロキシを取得します。
-     * 
-     * @param string $name レコーダ名
-     * @return mixed レコーダプロキシ、存在しない場合はnull
-     */
-    public function recorder(string $name): mixed
-    {
-        // レコーダ存在チェク
-        $recorder = $this->recorders()->ofName($name)->first();
-        if ($recorder === null) {
-            return null;
-        }
-
-        // コンテンツレコーダプロキシ
-        return new class($recorder, $this)
-        {
-            private $recorder;
-
-            private $content;
-
-            function __construct($recorder, $content)
-            {
-                $this->recorder = $recorder;
-                $this->content = $content;
-            }
-
-            public function record(mixed $value): ?Record
-            {
-                return $this->recorder->record($this->content, $value);
-            }
-        };
-    }
-
-    /**
-     * JsonArrayからレコードリストを再編成します。
-     * JsonArrayの構造
-     * [
-     *     {
-     *         'recorder' => {
-     *             'name' => 'レコーダ名'
-     *         }
-     *         'value' => 'レコード値'
-     *     },
-     *     ...
-     * ]
-     * 
-     * @param mixed $values レコード値リストのJsonArray
-     */
-    public function createOrReplaceManyRecords(mixed $values): void
-    {
-        if (!is_array($values)) {
-            return;
-        }
-
-        // 新しいレコードの追加
-        foreach ($values as $value) {
-
-            // レコーダ存在チェク
-            $recorder = $this->recorder($value['recorder']['name']);
-            if ($recorder === null) {
-                throw new ApplicationException('RecorderNotFound', 70001, ['name' => $value['recorder']['name']]);
-            }
-
-            // レコード記録
-            $recorder->record($value['value']);
-        }
     }
 
     /**

@@ -4,7 +4,6 @@ namespace Feeldee\Framework\Models;
 
 use App;
 use Carbon\Carbon;
-use Feeldee\Framework\Casts\RecordValue;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

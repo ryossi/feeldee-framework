@@ -62,4 +62,6 @@ return [
     73006 => 'RecordDataTypeRequired',                  // レコードデータ型が指定されていない
     73007 => 'RecordContentProfileMissmatch',           // レコーダ所有プロフィールとコンテンツ所有プロフィールが異なる
     73008 => 'RecordContentTypeMissmatch',              // レコーダタイプとコンテンツ種別が異なる
+    73009 => 'RecordRecorderIdNotFound',                // レコーダIDに一致するレコーダが見つからない
+    73010 => 'RecordRecorderNameNotFound',              // レコーダ名に一致するレコーダが見つからない
 ];
