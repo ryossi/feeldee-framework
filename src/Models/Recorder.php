@@ -2,31 +2,86 @@
 
 namespace Feeldee\Framework\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * レコーダをあらわすモデル
  */
 class Recorder extends Model
 {
-    use HasFactory, SetUser;
-
-    /**
-     * 配列に表示する属性
-     *
-     * @var array
-     */
-    protected $visible = ['name', 'data_type', 'unit', 'description'];
+    use HasFactory, Required, SetUser;
 
     /**
      * 複数代入可能な属性
      *
      * @var array
      */
-    protected $fillable = ['profile', 'type', 'name', 'data_type', 'unit', 'description', 'order_number'];
+    protected $fillable = ['profile', 'type', 'name', 'image', 'data_type', 'unit', 'description'];
+
+    /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
+    protected $visible = ['name', 'image', 'data_type', 'unit', 'description'];
+
+    /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'profile_id' => 73001,
+        'type' => 73002,
+        'name' => 73003,
+        'data_type' => 73006,
+    ];
+
+    /**
+     * レコーダ名重複チェック
+     * 
+     * @param Self $model モデル
+     * @return void
+     * @throws ApplicationException レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している場合、73005エラーをスローします。
+     */
+    protected static function validateNameDuplicate(Self $model)
+    {
+        if ($model->profile->recorders()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+            // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している場合
+            throw new ApplicationException(73005, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
+        }
+    }
+
+    /**
+     * レコーダ表示順決定
+     * 
+     * 同じレコーダ所有プロフィール、レコーダタイプでレコーダの表示順で最後に並ぶようレコーダ表示順を自動採番します。
+     * 
+     * @param Self $model モデル
+     * @return void
+     */
+    protected static function decideOrderNumber(Self $model)
+    {
+        // 同一タイプの全てのレコーダリスト取得
+        $tag_list = $model->profile->recorders()->ofType($model->type)->get();
+
+        // 表示順生成
+        if ($tag_list->isEmpty()) {
+            $model->order_number = 1;
+        } else {
+            $last = $tag_list->last();
+            $model->order_number = $last->order_number + 1;
+        }
+
+        if (!$model->profile) {
+            // レコー所有プロフィールが存在しない場合
+            return;
+        }
+    }
 
     /**
      * モデルの「起動」メソッド
@@ -36,22 +91,160 @@ class Recorder extends Model
         static::addGlobalScope('order_number', function (Builder $builder) {
             $builder->orderBy('order_number');
         });
+
+        static::creating(function (Self $model) {
+            // レコーダ名重複チェック
+            static::validateNameDuplicate($model);
+            // レコーダ表示順決定
+            static::decideOrderNumber($model);
+        });
+
+        static::updating(function (Self $model) {
+            // レコーダ名重複チェック
+            static::validateNameDuplicate($model);
+        });
+
+        static::deleting(function (Self $model) {
+            // レコード削除
+            $model->records()->delete();
+        });
     }
 
     /**
-     * レコーダを所有するプロフィール
+     * レコーダ所有プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value == null ? null : $value->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
+
+    /**
+     * レコードリスト
+     */
+    public function records()
+    {
+        return $this->hasMany(Record::class);
+    }
+
+    /**
+     * 表示順で一つ前のレコーダを取得します。
+     *
+     * @return mixed 一つ前のレコーダ。存在しない場合null
+     */
+    public function previous(): mixed
+    {
+        return $this->where('profile_id', '=', $this->profile->id)
+            ->where('order_number', '<', $this->order_number)->orderBy('order_number', 'desc')->first();
+    }
+
+    /**
+     * 表示順で一つ後のレコーダを取得します。
+     * 
+     * @return mixed 一つ後のレコーダ。存在しない場合null
+     */
+    public function next(): mixed
+    {
+        return $this->where('profile_id', '=', $this->profile->id)
+            ->where('order_number', '>', $this->order_number)->orderBy('id', 'asc')->first();
+    }
+
+    /**
+     * レコーダの表示順を一つ上げます。
+     * 表示順が既に先頭の場合は、何もしません（空振り）。
+     *
+     * @return void
+     */
+    public function orderUp(): void
+    {
+        $target = $this->previous();
+        if ($target) {
+            // 一つ前のタグが存在する場合
+            // 表示順を入れ替え
+            $prev = $target->order_number;
+            $target->order_number = $this->order_number;
+            $this->order_number = $prev;
+
+            $target->save();
+            $this->save();
+        }
+    }
+
+    /**
+     * レコーダの表示順を一つ下げます。
+     * 表示順が既に最後の場合は、何もしません（空振り）。
+     *
+     * @return void
+     */
+    public function orderDown(): void
+    {
+        $target = $this->next();
+        if ($target) {
+            // 一つ後のレコーダが存在する場合
+            // 表示順を入れ替え
+            $prev = $target->order_number;
+            $target->order_number = $this->order_number;
+            $this->order_number = $prev;
+
+            $target->save();
+            $this->save();
+        }
+    }
+
+    /**
+     * コンテンツを指定してレコードを記録します。
+     * 
+     * このメソッドは、レコードが存在しない場合は新規作成し、レコードが存在する場合はレコード値のみを更新します。
+     * 
+     * また、レコード値がnullまたは空文字列の場合は、レコードを削除します。
+     * 
+     * @param Content $content コンテンツ
+     * @param mixed $value　レコード値
+     * @return Record|null レコードまたは削除の場合null
+     */
+    public function record(Content $content, mixed $value): Record|null
+    {
+        $record = $this->records()->where('content_id', $content->id)->first();
+        if ($record === null) {
+            if ($value !== null && $value !== "") {
+                // 値が空でない場合のみレコード追加
+                $record = $this->records()->create([
+                    'content' => $content,
+                    'value' => $value
+                ]);
+            }
+        } else {
+            if ($value === null || $value === "") {
+                // 値が空の場合レコード削除
+                $record->delete();
+                return null;
+            } else {
+                // 値更新
+                $record->value = $value;
+                $record->save();
+            }
+        }
+        return $record;
+    }
+
+    /**
+     * レコーダタイプを条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfType($query, string $type)
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * レコーダ名を条件に含むようにクエリのスコープを設定
+     */
+    public function scopeOfName($query, ?string $name)
+    {
+        return $query->where('name', $name);
+    }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 現在のレコーダリストを新しいレコーダリストに従って全て入れ替えます。
@@ -102,60 +295,5 @@ class Recorder extends Model
         foreach ($deleteRecorders as $deleteRecorder) {
             $deleteRecorder->delete();
         }
-    }
-
-    /**
-     * レコーダで記録されたレコードリストを取得
-     */
-    public function records()
-    {
-        return $this->hasMany(Record::class);
-    }
-
-    /**
-     * このレコーダを使って値を記録します。
-     * 
-     * @param Content $content コンテンツ
-     * @param mixed $value　記録する値
-     * @return ?Record レコード
-     */
-    public function record(Content $content, mixed $value): ?Record
-    {
-        $record = $this->records()->where('content_id', $content->id)->first();
-        if ($record === null) {
-            if ($value !== null && $value !== "") {
-                // 値が空でない場合のみレコード追加
-                $record = $this->records()->create([
-                    'content' => $content,
-                    'value' => $value
-                ]);
-            }
-        } else {
-            if ($value === null || $value === "") {
-                // 値が空の場合レコード削除
-                $record->delete();
-            } else {
-                // 値更新
-                $record->value = $value;
-                $record->save();
-            }
-        }
-        return $record;
-    }
-
-    /**
-     * タイプを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    /**
-     * 名前を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfName($query, ?string $name)
-    {
-        return $query->where('name', $name);
     }
 }

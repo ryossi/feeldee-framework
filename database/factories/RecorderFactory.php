@@ -6,18 +6,18 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Post;
-use Feeldee\Framework\Models\Tag;
+use Feeldee\Framework\Models\Recorder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 
-class TagFactory extends Factory
+class RecorderFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var class-string<\Illuminate\Database\Eloquent\Model>
      */
-    protected $model = Tag::class;
+    protected $model = Recorder::class;
 
     /**
      * Define the model's default state.
@@ -33,6 +33,11 @@ class TagFactory extends Factory
                 Photo::type(),
                 Item::type(),
                 Location::type(),
+            ]),
+            'data_type' => $this->faker->randomElement([
+                'int',
+                'float',
+                'string',
             ]),
         ];
     }

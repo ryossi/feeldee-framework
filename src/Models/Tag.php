@@ -24,14 +24,14 @@ class Tag extends Model
      *
      * @var array
      */
-    protected $fillable = ['profile', 'type', 'name', 'contents'];
+    protected $fillable = ['profile', 'type', 'name', 'image', 'contents'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'name', 'count_of_contents'];
+    protected $visible = ['id', 'name', 'image', 'count_of_contents'];
 
     /**
      * 必須にする属性
@@ -44,8 +44,14 @@ class Tag extends Model
         'name' => 72003,
     ];
 
-
-    protected static function bootedName(Self $model)
+    /**
+     * タグ名重複チェック
+     * 
+     * @param Self $model モデル
+     * @return void
+     * @throws ApplicationException タグ所有プロフィールとタグタイプの中でタグ名が重複している場合、72004エラーをスローします。
+     */
+    protected static function validateNameDuplicate(Self $model)
     {
         if ($model->profile->tags()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
             // タグ所有プロフィールとタグタイプの中でタグ名が重複している場合
@@ -53,7 +59,15 @@ class Tag extends Model
         }
     }
 
-    protected static function bootedOrderNumber(Self $model)
+    /**
+     * タグ表示順決定
+     * 
+     * 同じタグ所有プロフィール、タグタイプで新しく追加されたタグが最後に並ぶようタグ表示順を自動採番します。
+     * 
+     * @param Self $model モデル
+     * @return void
+     */
+    protected static function decideOrderNumber(Self $model)
     {
         // 同一タイプの全てのタグリスト取得
         $tag_list = $model->profile->tags()->ofType($model->type)->get();
@@ -67,7 +81,7 @@ class Tag extends Model
         }
 
         if (!$model->profile) {
-            // カテゴリ所有プロフィールが存在しない場合
+            // タグ所有プロフィールが存在しない場合
             return;
         }
     }
@@ -85,15 +99,15 @@ class Tag extends Model
         });
 
         static::creating(function (Self $model) {
-            // タグ名
-            static::bootedName($model);
-            // カテゴリ表示順
-            static::bootedOrderNumber($model);
+            // タグ名重複チェック
+            static::validateNameDuplicate($model);
+            // タグ表示順決定
+            static::decideOrderNumber($model);
         });
 
         static::updating(function (Self $model) {
-            // タグ名
-            static::bootedName($model);
+            // タグ名重複チェック
+            static::validateNameDuplicate($model);
         });
 
         static::saving(function (Self $model) {

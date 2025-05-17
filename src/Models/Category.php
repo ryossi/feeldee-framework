@@ -27,7 +27,14 @@ class Category extends Model
      *
      * @var array
      */
-    protected $fillable = ['type', 'name'];
+    protected $fillable = ['type', 'name',  'image'];
+
+    /**
+     * 配列に表示する属性
+     *
+     * @var array
+     */
+    protected $visible = ['id', 'profile', 'type', 'name', 'image', 'parent'];
 
     /**
      * 必須にする属性
@@ -39,13 +46,6 @@ class Category extends Model
         'type' => 71009,
         'name' => 71010,
     ];
-
-    /**
-     * 配列に表示する属性
-     *
-     * @var array
-     */
-    protected $visible = ['id', 'profile', 'type', 'name', 'parent'];
 
     protected static function bootedProfile(Self $model)
     {
@@ -85,7 +85,14 @@ class Category extends Model
         }
     }
 
-    protected static function bootedName(Self $model)
+    /**
+     * カテゴリ名重複チェック
+     * 
+     * @param Self $model モデル
+     * @return void
+     * @throws ApplicationException カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している場合、71011エラーをスローします。
+     */
+    protected static function validateNameDuplicate(Self $model)
     {
         if ($model->profile->categories()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
             // カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している場合
@@ -93,7 +100,15 @@ class Category extends Model
         }
     }
 
-    protected static function bootedOrderNumber(Self $model)
+    /**
+     * カテゴリ表示順決定
+     * 
+     * 同じカテゴリ所有プロフィール、カテゴリタイプ、カテゴリ階層内で新しく追加されたカテゴリが最後に並ぶようカテゴリ表示順を自動採番します。
+     * 
+     * @param Self $model モデル
+     * @return void
+     */
+    protected static function decideOrderNumber(Self $model)
     {
         if (!$model->profile) {
             // カテゴリ所有プロフィールが存在しない場合
@@ -130,15 +145,15 @@ class Category extends Model
         });
 
         static::creating(function (Self $model) {
-            // カテゴリ名
-            static::bootedName($model);
-            // カテゴリ表示順
-            static::bootedOrderNumber($model);
+            // カテゴリ名重複チェック
+            static::validateNameDuplicate($model);
+            // カテゴリ表示順決定
+            static::decideOrderNumber($model);
         });
 
         static::updating(function (Self $model) {
-            // カテゴリ名
-            static::bootedName($model);
+            // カテゴリ名重複チェック
+            static::validateNameDuplicate($model);
         });
     }
 

@@ -15,14 +15,14 @@ return new class extends Migration
     {
         Schema::create('recorders', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('profile_id')->comment('プロフィールID')->constrained('profiles')->cascadeOnDelete();
-            $table->string('type', 255)->comment('タイプ');
-            $table->string('name', 100)->comment('名前');
-            $table->string('data_type', 10)->comment('データ型');
-            $table->string('unit', 30)->nullable()->comment('単位');
-            $table->string('description')->nullable()->comment('説明');
-            $table->integer('order_number')->default('0')->comment('表示順');
-            $table->mediumText('image')->nullable()->comment('イメージ');
+            $table->foreignId('profile_id')->comment('レコーダ所有プロフィールID')->constrained('profiles')->cascadeOnDelete();
+            $table->string('type', 255)->comment('レコーダタイプ');
+            $table->string('name', 100)->comment('レコーダ名');
+            $table->mediumText('image')->nullable()->comment('レコーダイメージ');
+            $table->string('data_type', 10)->comment('レコードデータ型');
+            $table->string('unit', 30)->nullable()->comment('レコード単位ラベル');
+            $table->string('description')->nullable()->comment('レコーダ説明');
+            $table->integer('order_number')->default('0')->comment('レコーダ表示順');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();

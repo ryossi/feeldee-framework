@@ -50,4 +50,18 @@ return [
     72004 => 'TagNameDuplicated',                       // タグ所有プロフィールとタグタイプの中でタグ名が重複している
     72005 => 'TagContentProfileMissmatch',              // タグ所有プロフィールとコンテンツ所有プロフィールが異なる
     72006 => 'TagContentTypeMissmatch',                 // タグタイプとコンテンツ種別が異なる
+
+    // ****************************
+    // *** 73xxx レコード関連     ***
+    // ****************************
+    73001 => 'RecordRecorderProfileRequired',           // レコーダ所有プロフィールが指定されていない
+    73002 => 'RecordRecorderTypeRequired',              // レコーダタイプが指定されていない
+    73003 => 'RecordRecorderNameRequired',              // レコーダ名が指定されていない
+    73004 => 'RecordValueDataTypeInvalid',              // レコードデータ型が指定されていない
+    73005 => 'RecordRecorderNameDuplicated',            // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している
+    73006 => 'RecordDataTypeRequired',                  // レコードデータ型が指定されていない
+    73007 => 'RecordContentProfileMissmatch',           // レコーダ所有プロフィールとコンテンツ所有プロフィールが異なる
+    73008 => 'RecordContentTypeMissmatch',              // レコーダタイプとコンテンツ種別が異なる
+    73009 => 'RecordRecorderIdNotFound',                // レコーダIDに一致するレコーダが見つからない
+    73010 => 'RecordRecorderNameNotFound',              // レコーダ名に一致するレコーダが見つからない
 ];

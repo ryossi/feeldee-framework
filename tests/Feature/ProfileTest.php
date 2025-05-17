@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
+use Feeldee\Framework\Models\Recorder;
 use Feeldee\Framework\Models\Tag;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -382,6 +383,26 @@ class ProfileTest extends TestCase
         $this->assertEquals(3, $profile->tags->count());
         foreach ($profile->tags as $tag) {
             $this->assertEquals($tag->profile->id, $profile->id, 'プロフィールに紐付けられたタグのコレクションであること');
+        }
+    }
+
+    /**
+     * レコーダリスト
+     * 
+     * - プロフィールに紐付けられたレコーダのコレクションであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#レコーダリスト
+     */
+    public function test_recorders()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Recorder::factory(2))->create();
+
+        // 評価
+        $this->assertEquals(2, $profile->recorders->count());
+        foreach ($profile->recorders as $recorder) {
+            $this->assertEquals($recorder->profile->id, $profile->id, 'プロフィールに紐付けられたレコーダのコレクションであること');
         }
     }
 
