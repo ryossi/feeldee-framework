@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
+use Feeldee\Framework\Models\Recorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
@@ -841,5 +842,203 @@ class ItemTest extends TestCase
                 'taggable_type' => Item::type(),
             ]);
         }
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダによって記録されたアイテムのレコードリストであることを確認します。
+     * - レコーダの指定は、レコーダそのものを指定することができることを確認します。
+     * - レコーダの指定は、レコーダIDを指定することができることを確認します。
+     * - レコーダの指定は、レコーダ名を指定することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     */
+    public function test_content_records()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder1 = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+        $recorder2 = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+            'data_type' => 'bool',
+            'name' => 'テストレコーダ2',
+        ]);
+        $recorder3 = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+            'data_type' => 'date',
+            'name' => 'テストレコーダ3',
+        ]);
+
+        // 実行
+        $item->record($recorder1, 1);
+        $item->record($recorder2->id, true);
+        $item->record('テストレコーダ3', '2025-04-22');
+
+        // 評価
+        $this->assertEquals(3, $item->records->count(), 'レコーダによって記録されたアイテムのレコードリストであること');
+        foreach ($item->records as $i => $record) {
+            if ($i == 0) {
+                $this->assertEquals($recorder1->id, $record->recorder_id, 'レコーダそのものを指定することができること');
+            } elseif ($i == 1) {
+                $this->assertEquals($recorder2->id, $record->recorder_id, 'レコーダIDを指定することができること');
+            } elseif ($i == 2) {
+                $this->assertEquals($recorder3->id, $record->recorder_id, 'レコーダ名を指定することができること');
+            }
+        }
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => Profile::factory()->create()->id,
+            'type' => Item::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73007);
+        $item->record($recorder, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73008);
+        $item->record($recorder, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダIDを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_id_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => Profile::factory()->create()->id,
+            'type' => Item::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73007);
+        $item->record($recorder->id, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - レコーダIDを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_id_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Post::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(73008);
+        $item->record($recorder->id, 1);
+    }
+
+    /**
+     * コンテンツレコードリスト
+     * 
+     * - 対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     */
+    public function test_content_records_recorder_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+            'data_type' => 'int',
+            'name' => 'テストレコーダ1',
+        ]);
+
+        // 実行
+        $item->record($recorder, 1);
+        $recorder->delete();
+
+        // 評価
+        $this->assertEquals(0, $item->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
+        $this->assertDatabaseEmpty('records');
     }
 }
