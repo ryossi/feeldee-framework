@@ -239,14 +239,6 @@ class Profile extends Model
     }
 
     /**
-     * コンテンツ閲覧履歴リストを取得します。
-     */
-    public function viewHistories()
-    {
-        return $this->hasMany(ContentViewHistory::class);
-    }
-
-    /**
      * メンバーリスト表示対象プロフィールのみを含むようにクエリのスコープを設定
      */
     public function scopeMembers($query)

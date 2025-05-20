@@ -165,14 +165,6 @@ abstract class Content extends Model
     }
 
     /**
-     * コンテンツ閲覧履歴リストを取得します。
-     */
-    public function viewHistories()
-    {
-        return $this->morphMany(ContentViewHistory::class, 'content');
-    }
-
-    /**
      * タイトルを条件に含むようにクエリのスコープを設定
      */
     public function scopeOfTitle($query, ?string $title, SqlLikeBuilder $like = SqlLikeBuilder::All)
