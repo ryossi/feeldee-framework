@@ -13,7 +13,7 @@ use Intervention\Image\Facades\Image;
  */
 class Profile extends Model
 {
-    use HasFactory, SetUser, Required, AccessCounter;
+    use HasFactory, SetUser, Required;
 
     /**
      * 複数代入可能な属性
