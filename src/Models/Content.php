@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class Content extends Model
 {
-    use HasFactory, HasCategory, HasTag, HasRecord, Required, StripTags, SetUser, AccessCounter;
+    use HasFactory, HasCategory, HasTag, HasRecord, Required, StripTags, SetUser;
 
     /**
      * コンテンツ種別
@@ -162,14 +162,6 @@ abstract class Content extends Model
     public function comments()
     {
         return $this->morphMany(Comment::class, 'commentable');
-    }
-
-    /**
-     * コンテンツ閲覧履歴リストを取得します。
-     */
-    public function viewHistories()
-    {
-        return $this->morphMany(ContentViewHistory::class, 'content');
     }
 
     /**

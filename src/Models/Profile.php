@@ -13,7 +13,7 @@ use Intervention\Image\Facades\Image;
  */
 class Profile extends Model
 {
-    use HasFactory, SetUser, Required, AccessCounter;
+    use HasFactory, SetUser, Required;
 
     /**
      * 複数代入可能な属性
@@ -236,14 +236,6 @@ class Profile extends Model
     public function comments()
     {
         return $this->hasMany(Comment::class);
-    }
-
-    /**
-     * コンテンツ閲覧履歴リストを取得します。
-     */
-    public function viewHistories()
-    {
-        return $this->hasMany(ContentViewHistory::class);
     }
 
     /**
