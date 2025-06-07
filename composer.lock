@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
     "content-hash": "44380ab4dce3279e9eb7982de1a71576",
-=======
-    "content-hash": "89080ffe26fc3bc4af06ddc27b1b72d7",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
     "packages": [
         {
             "name": "brick/math",
@@ -1048,78 +1044,6 @@
             "time": "2025-02-03T10:55:03+00:00"
         },
         {
-<<<<<<< HEAD
-=======
-            "name": "hashids/hashids",
-            "version": "5.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/vinkla/hashids.git",
-                "reference": "197171016b77ddf14e259e186559152eb3f8cf33"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/vinkla/hashids/zipball/197171016b77ddf14e259e186559152eb3f8cf33",
-                "reference": "197171016b77ddf14e259e186559152eb3f8cf33",
-                "shasum": ""
-            },
-            "require": {
-                "ext-mbstring": "*",
-                "php": "^8.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^10.0"
-            },
-            "suggest": {
-                "ext-bcmath": "Required to use BC Math arbitrary precision mathematics (*).",
-                "ext-gmp": "Required to use GNU multiple precision mathematics (*)."
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "5.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Hashids\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Ivan Akimov",
-                    "email": "ivan@barreleye.com"
-                },
-                {
-                    "name": "Vincent Klaiber",
-                    "email": "hello@doubledip.se"
-                }
-            ],
-            "description": "Generate short, unique, non-sequential ids (like YouTube and Bitly) from numbers",
-            "homepage": "https://hashids.org/php",
-            "keywords": [
-                "bitly",
-                "decode",
-                "encode",
-                "hash",
-                "hashid",
-                "hashids",
-                "ids",
-                "obfuscate",
-                "youtube"
-            ],
-            "support": {
-                "issues": "https://github.com/vinkla/hashids/issues",
-                "source": "https://github.com/vinkla/hashids/tree/5.0.2"
-            },
-            "time": "2023-02-23T15:00:54+00:00"
-        },
-        {
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
             "name": "laravel/framework",
             "version": "v10.48.29",
             "source": {
@@ -2159,7 +2083,6 @@
         },
         {
             "name": "nette/utils",
-<<<<<<< HEAD
             "version": "v4.0.7",
             "source": {
                 "type": "git",
@@ -2170,18 +2093,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/nette/utils/zipball/e67c4061eb40b9c113b218214e42cb5a0dda28f2",
                 "reference": "e67c4061eb40b9c113b218214e42cb5a0dda28f2",
-=======
-            "version": "v4.0.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/nette/utils.git",
-                "reference": "ce708655043c7050eb050df361c5e313cf708309"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/nette/utils/zipball/ce708655043c7050eb050df361c5e313cf708309",
-                "reference": "ce708655043c7050eb050df361c5e313cf708309",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -2252,15 +2163,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nette/utils/issues",
-<<<<<<< HEAD
                 "source": "https://github.com/nette/utils/tree/v4.0.7"
             },
             "time": "2025-06-03T04:55:08+00:00"
-=======
-                "source": "https://github.com/nette/utils/tree/v4.0.6"
-            },
-            "time": "2025-03-30T21:06:30+00:00"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
         },
         {
             "name": "nunomaduro/termwind",
@@ -3207,7 +3112,6 @@
         },
         {
             "name": "symfony/console",
-<<<<<<< HEAD
             "version": "v6.4.22",
             "source": {
                 "type": "git",
@@ -3218,18 +3122,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/console/zipball/7d29659bc3c9d8e9a34e2c3414ef9e9e003e6cf3",
                 "reference": "7d29659bc3c9d8e9a34e2c3414ef9e9e003e6cf3",
-=======
-            "version": "v6.4.21",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/console.git",
-                "reference": "a3011c7b7adb58d89f6c0d822abb641d7a5f9719"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/a3011c7b7adb58d89f6c0d822abb641d7a5f9719",
-                "reference": "a3011c7b7adb58d89f6c0d822abb641d7a5f9719",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -3294,11 +3186,7 @@
                 "terminal"
             ],
             "support": {
-<<<<<<< HEAD
                 "source": "https://github.com/symfony/console/tree/v6.4.22"
-=======
-                "source": "https://github.com/symfony/console/tree/v6.4.21"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
             },
             "funding": [
                 {
@@ -3314,11 +3202,7 @@
                     "type": "tidelift"
                 }
             ],
-<<<<<<< HEAD
             "time": "2025-05-07T07:05:04+00:00"
-=======
-            "time": "2025-04-07T15:42:41+00:00"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
         },
         {
             "name": "symfony/css-selector",
@@ -3454,7 +3338,6 @@
         },
         {
             "name": "symfony/error-handler",
-<<<<<<< HEAD
             "version": "v6.4.22",
             "source": {
                 "type": "git",
@@ -3465,18 +3348,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/error-handler/zipball/ce765a2d28b3cce61de1fb916e207767a73171d1",
                 "reference": "ce765a2d28b3cce61de1fb916e207767a73171d1",
-=======
-            "version": "v6.4.20",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/error-handler.git",
-                "reference": "aa3bcf4f7674719df078e61cc8062e5b7f752031"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/error-handler/zipball/aa3bcf4f7674719df078e61cc8062e5b7f752031",
-                "reference": "aa3bcf4f7674719df078e61cc8062e5b7f752031",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -3522,11 +3393,7 @@
             "description": "Provides tools to manage errors and ease debugging PHP code",
             "homepage": "https://symfony.com",
             "support": {
-<<<<<<< HEAD
                 "source": "https://github.com/symfony/error-handler/tree/v6.4.22"
-=======
-                "source": "https://github.com/symfony/error-handler/tree/v6.4.20"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
             },
             "funding": [
                 {
@@ -3542,11 +3409,7 @@
                     "type": "tidelift"
                 }
             ],
-<<<<<<< HEAD
             "time": "2025-05-28T12:00:15+00:00"
-=======
-            "time": "2025-03-01T13:00:38+00:00"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
         },
         {
             "name": "symfony/event-dispatcher",
@@ -3770,7 +3633,6 @@
         },
         {
             "name": "symfony/http-foundation",
-<<<<<<< HEAD
             "version": "v6.4.22",
             "source": {
                 "type": "git",
@@ -3781,18 +3643,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/http-foundation/zipball/6b7c97fe1ddac8df3cc9ba6410c8abc683e148ae",
                 "reference": "6b7c97fe1ddac8df3cc9ba6410c8abc683e148ae",
-=======
-            "version": "v6.4.21",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/http-foundation.git",
-                "reference": "3f0c7ea41db479383b81d436b836d37168fd5b99"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-foundation/zipball/3f0c7ea41db479383b81d436b836d37168fd5b99",
-                "reference": "3f0c7ea41db479383b81d436b836d37168fd5b99",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -3840,11 +3690,7 @@
             "description": "Defines an object-oriented layer for the HTTP specification",
             "homepage": "https://symfony.com",
             "support": {
-<<<<<<< HEAD
                 "source": "https://github.com/symfony/http-foundation/tree/v6.4.22"
-=======
-                "source": "https://github.com/symfony/http-foundation/tree/v6.4.21"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
             },
             "funding": [
                 {
@@ -3860,7 +3706,6 @@
                     "type": "tidelift"
                 }
             ],
-<<<<<<< HEAD
             "time": "2025-05-11T15:36:20+00:00"
         },
         {
@@ -3875,22 +3720,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/http-kernel/zipball/15c105b839a7cfa1bc0989c091bfb6477f23b673",
                 "reference": "15c105b839a7cfa1bc0989c091bfb6477f23b673",
-=======
-            "time": "2025-04-27T13:27:38+00:00"
-        },
-        {
-            "name": "symfony/http-kernel",
-            "version": "v6.4.21",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/http-kernel.git",
-                "reference": "983ca05eec6623920d24ec0f1005f487d3734a0c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-kernel/zipball/983ca05eec6623920d24ec0f1005f487d3734a0c",
-                "reference": "983ca05eec6623920d24ec0f1005f487d3734a0c",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -3975,11 +3804,7 @@
             "description": "Provides a structured process for converting a Request into a Response",
             "homepage": "https://symfony.com",
             "support": {
-<<<<<<< HEAD
                 "source": "https://github.com/symfony/http-kernel/tree/v6.4.22"
-=======
-                "source": "https://github.com/symfony/http-kernel/tree/v6.4.21"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
             },
             "funding": [
                 {
@@ -3995,11 +3820,7 @@
                     "type": "tidelift"
                 }
             ],
-<<<<<<< HEAD
             "time": "2025-05-29T07:23:40+00:00"
-=======
-            "time": "2025-05-02T08:46:38+00:00"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
         },
         {
             "name": "symfony/mailer",
@@ -5032,7 +4853,6 @@
         },
         {
             "name": "symfony/string",
-<<<<<<< HEAD
             "version": "v7.3.0",
             "source": {
                 "type": "git",
@@ -5043,18 +4863,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/string/zipball/f3570b8c61ca887a9e2938e85cb6458515d2b125",
                 "reference": "f3570b8c61ca887a9e2938e85cb6458515d2b125",
-=======
-            "version": "v7.2.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/string.git",
-                "reference": "a214fe7d62bd4df2a76447c67c6b26e1d5e74931"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/string/zipball/a214fe7d62bd4df2a76447c67c6b26e1d5e74931",
-                "reference": "a214fe7d62bd4df2a76447c67c6b26e1d5e74931",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -5112,11 +4920,7 @@
                 "utf8"
             ],
             "support": {
-<<<<<<< HEAD
                 "source": "https://github.com/symfony/string/tree/v7.3.0"
-=======
-                "source": "https://github.com/symfony/string/tree/v7.2.6"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
             },
             "funding": [
                 {
@@ -5132,7 +4936,6 @@
                     "type": "tidelift"
                 }
             ],
-<<<<<<< HEAD
             "time": "2025-04-20T20:19:01+00:00"
         },
         {
@@ -5147,22 +4950,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/symfony/translation/zipball/7e3b3b7146c6fab36ddff304a8041174bf6e17ad",
                 "reference": "7e3b3b7146c6fab36ddff304a8041174bf6e17ad",
-=======
-            "time": "2025-04-20T20:18:16+00:00"
-        },
-        {
-            "name": "symfony/translation",
-            "version": "v6.4.21",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/symfony/translation.git",
-                "reference": "bb92ea5588396b319ba43283a5a3087a034cb29c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation/zipball/bb92ea5588396b319ba43283a5a3087a034cb29c",
-                "reference": "bb92ea5588396b319ba43283a5a3087a034cb29c",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -5228,11 +5015,7 @@
             "description": "Provides tools to internationalize your application",
             "homepage": "https://symfony.com",
             "support": {
-<<<<<<< HEAD
                 "source": "https://github.com/symfony/translation/tree/v6.4.22"
-=======
-                "source": "https://github.com/symfony/translation/tree/v6.4.21"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
             },
             "funding": [
                 {
@@ -5248,11 +5031,7 @@
                     "type": "tidelift"
                 }
             ],
-<<<<<<< HEAD
             "time": "2025-05-29T07:06:44+00:00"
-=======
-            "time": "2025-04-07T19:02:30+00:00"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
         },
         {
             "name": "symfony/translation-contracts",
@@ -6589,7 +6368,6 @@
         },
         {
             "name": "orchestra/sidekick",
-<<<<<<< HEAD
             "version": "v1.2.11",
             "source": {
                 "type": "git",
@@ -6600,18 +6378,6 @@
                 "type": "zip",
                 "url": "https://api.github.com/repos/orchestral/sidekick/zipball/da310142e73935ca01de44104c64399b2da9fab1",
                 "reference": "da310142e73935ca01de44104c64399b2da9fab1",
-=======
-            "version": "v1.2.8",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/orchestral/sidekick.git",
-                "reference": "4e01680e7109596072f22382626970ba1a2ab92a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/orchestral/sidekick/zipball/4e01680e7109596072f22382626970ba1a2ab92a",
-                "reference": "4e01680e7109596072f22382626970ba1a2ab92a",
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
                 "shasum": ""
             },
             "require": {
@@ -6653,15 +6419,9 @@
             "description": "Packages Toolkit Utilities and Helpers for Laravel",
             "support": {
                 "issues": "https://github.com/orchestral/sidekick/issues",
-<<<<<<< HEAD
                 "source": "https://github.com/orchestral/sidekick/tree/v1.2.11"
             },
             "time": "2025-06-02T15:06:32+00:00"
-=======
-                "source": "https://github.com/orchestral/sidekick/tree/v1.2.8"
-            },
-            "time": "2025-05-21T11:25:24+00:00"
->>>>>>> 7f0607b (intervention/imageパッケージへの依存を排除)
         },
         {
             "name": "orchestra/testbench",
