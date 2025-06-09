@@ -237,12 +237,4 @@ class Profile extends Model
     {
         return $this->hasMany(Comment::class);
     }
-
-    /**
-     * メンバーリスト表示対象プロフィールのみを含むようにクエリのスコープを設定
-     */
-    public function scopeMembers($query)
-    {
-        return $query->where('show_members', true);
-    }
 }
