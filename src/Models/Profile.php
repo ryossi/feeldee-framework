@@ -5,7 +5,6 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -160,14 +159,6 @@ class Profile extends Model
     }
 
     // ========================== ここまで整理済み ==========================
-
-    /**
-     * プロフィールのメディアボックスを取得
-     */
-    public function mediaBox(): HasOne
-    {
-        return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
-    }
 
     /**
      * ポイントリストを取得します。

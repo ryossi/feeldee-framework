@@ -4,7 +4,6 @@ namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
-use Feeldee\Framework\Facades\ImageText;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -66,39 +65,6 @@ class Location extends Content
      * @var array
      */
     protected $strip_tags = ['value' => 'text'];
-
-    protected const THUMBNAIL_UPLOAD_DIRECTORY = 'location';
-
-    /**
-     * モデルの「起動」メソッド
-     */
-    protected static function booted(): void
-    {
-        static::created(function (Location $location) {
-            // サムネイルイメージアップロード
-            if (ImageText::isImageText($location->thumbnail)) {
-                $media = $location->profile->mediaBox->upload($location->thumbnail, $location->id, self::THUMBNAIL_UPLOAD_DIRECTORY);
-                $location->thumbnail = $media;
-                $location->save(['timestamps' => false]);
-            }
-        });
-
-        static::updating(function (Location $location) {
-            // サムネイルイメージアップロード
-            if (ImageText::isImageText($location->thumbnail)) {
-                $media = $location->profile->mediaBox->upload($location->thumbnail, $location->id, self::THUMBNAIL_UPLOAD_DIRECTORY);
-                $location->thumbnail = $media;
-            }
-        });
-
-        static::deleted(function (Location $location) {
-            // サムネイルイメージ削除
-            if ($location->thumbnail) {
-                $media = $location->profile->mediaBox->find($location->thumbnail);
-                $media->delete();
-            }
-        });
-    }
 
     // ========================== ここまで整理済み ==========================
 
