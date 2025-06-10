@@ -703,4 +703,41 @@ class ProfileTest extends TestCase
             'value' => '{"value1":"xxxx","value2":"yyyy"}',
         ]);
     }
+
+    /**
+     * コンフィグ値によるプロフィール絞り込み
+     * 
+     * - コンフィグ値でのプロフィールの絞り込みができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値によるプロフィール絞り込み
+     */
+    public function test_config_value_filter()
+    {
+        // 準備
+        config(['feeldee.profile.config.value_objects' => [
+            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile1 = Profile::factory()->create();
+        $profile2 = Profile::factory()->create();
+
+        // プロフィール1にカスタムコンフィグを設定
+        $profile1->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('filter_value', 'value2'),
+        ]);
+
+        // プロフィール2にカスタムコンフィグを設定
+        $profile2->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('value1', 'value2'),
+        ]);
+
+        // 実行
+        $filteredProfiles = Profile::whereConfigContains('custom_config', 'value1', 'filter_value')->get();
+
+        // 評価
+        $this->assertCount(1, $filteredProfiles, 'コンフィグ値でのプロフィールの絞り込みができること');
+        $this->assertEquals($profile1->id, $filteredProfiles->first()->id, '正しいプロフィールが取得されること');
+    }
 }

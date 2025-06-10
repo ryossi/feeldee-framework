@@ -178,7 +178,7 @@ class Profile extends Model
     public function scopeWhereConfigContains(Builder $query, string $type, string $key, mixed $value): void
     {
         $query->whereHas('configs', function ($q) use ($type, $key, $value) {
-            $q->where('type', $type)->whereJsonContains($key, $value);
+            $q->where('type', $type)->where("value->$key", $value);
         });
     }
 
