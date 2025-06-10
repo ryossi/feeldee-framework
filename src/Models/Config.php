@@ -5,6 +5,7 @@ namespace Feeldee\Framework\Models;
 use Feeldee\Framework\Casts\ConfigValue;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\ValueObjects\ValueObject;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -35,10 +36,20 @@ class Config extends Model
     }
 
     /**
-     * 新しい値オブジェクトを生成します。
+     * 定義済みコンフィグタイプの配列を取得します。
      * 
-     * @param string $type タイプ
-     * @return ValueObject 値オブジェクト
+     * @return array 定義済みコンフィグタイプの配列
+     */
+    public static function getTypes(): array
+    {
+        return array_keys(config('feeldee.profile.config.value_objects'));
+    }
+
+    /**
+     * コンフィグタイプに対応したカスタムコンフィグクラのインスタンスを生成します。
+     * 
+     * @param string $type コンフィグタイプ
+     * @return ValueObject カスタムコンフィグクラのインスタンス
      * @throws ApplicationException コンフィグタイプが未定義の場合、10005エラーをスローします。
      */
     public static function newValue(string $type): ValueObject
@@ -54,8 +65,8 @@ class Config extends Model
     /**
      * コンフィグタイプを条件に含むようにクエリスコープを設定
      */
-    public function scopeOfType($query, string $type)
+    public function scopeOfType(Builder $query, string $type): void
     {
-        return $query->where('type', $type);
+        $query->where('type', $type);
     }
 }
