@@ -68,9 +68,7 @@ abstract class ValueObject implements JsonSerializable, Jsonable
 
     public function toJson($options = 0)
     {
-        if (!$this->json) {
-            $this->json = json_encode($this, $options);
-        }
+        $this->json = json_encode($this, $options);
         return $this->json;
     }
 

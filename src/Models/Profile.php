@@ -3,9 +3,9 @@
 namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -54,6 +54,13 @@ class Profile extends Model
         static::updating(function (Self $model) {
             // ニックネーム
             static::bootedNickname($model);
+        });
+
+        static::saved(function (Self $model) {
+            foreach ($model->configCache as $key => $config) {
+                // キャッシュに存在するコンフィグを保存
+                $config->save();
+            }
         });
     }
 
@@ -137,37 +144,45 @@ class Profile extends Model
         return $query->where('nickname', $nickname);
     }
 
+    private $configCache = [];
+
     public function __get($key)
     {
-        if ($key === 'config') {
-            return new class($this->configs())
-            {
-                private $configs;
-
-                public function __construct($configs)
-                {
-                    $this->configs = $configs;
-                }
-
-                public function __get($type)
-                {
-                    $config = $this->configs->ofType($type)->first();
-                    return $config === null ?  Config::newValue($type) : $config->value;
-                }
-            };
+        if (in_array($key, Config::getTypes())) {
+            if (isset($this->configCache[$key])) {
+                // キャッシュに存在する場合はキャッシュから取得
+                return $this->configCache[$key]->value;
+            }
+            $config = $this->configs()->ofType($key)->first();
+            if ($config === null) {
+                // コンフィグが存在しない場合は新しい値オブジェクトを作成
+                $config = $this->configs()->create([
+                    'type' => $key,
+                    'value' => Config::newValue($key),
+                ]);
+            }
+            $this->configCache[$key] = $config;
+            return $config->value;
         }
         return parent::__get($key);
     }
 
-    // ========================== ここまで整理済み ==========================
-
     /**
-     * プロフィールのメディアボックスを取得
+     * コンフィグ値によるプロフィール絞り込みのスコープを設定
+     * 
+     * @param Builder $query クエリビルダ
+     * @param string $type コンフィグのタイプ
+     * @param mixed $value コンフィグの値
+     * @return void
      */
-    public function mediaBox(): HasOne
+    public function scopeWhereConfigContains(Builder $query, string $type, string $key, mixed $value): void
     {
-        return $this->hasOne(MediaBox::class, 'user_id', 'user_id');
+        $query->whereHas('configs', function ($q) use ($type, $key, $value) {
+            $q->where('type', $type)->where("value->$key", $value);
+        });
     }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * ポイントリストを取得します。

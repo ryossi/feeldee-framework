@@ -521,14 +521,14 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * コンフィグリスト
+     * コンフィグ
      * 
-     * - コンフィグタイプを直接指定して取得することができることを確認します。
-     * - コンフィグタイプがデータベースに登録されていない場合でも、カスタムコンフィグクラスのクラスインスタンスを取得できることを確認します。
+     * - コンフィグタイプをプロフィールに直接指定してアクセスすることができることを確認します。
+     * - コンフィグタイプに一致するコンフィグがデータベースに登録されていない場合、新しいカスタムコンフィグクラスのインスタンスを取得できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ
      */
-    public function test_configs_type()
+    public function test_config_access()
     {
         // 準備
         config(['feeldee.profile.config.value_objects' => [
@@ -539,7 +539,7 @@ class ProfileTest extends TestCase
         $profile = Profile::factory()->create();
 
         // 実行
-        $value = $profile->config->custom_config_1;
+        $value = $profile->custom_config_1;
 
         // 評価
         $this->assertNotNull($value, 'コンフィグタイプがデータベースに登録されていない場合でも、カスタムコンフィグクラスのクラスインスタンスを取得できること');
@@ -547,22 +547,23 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * コンフィグリスト
+     * コンフィグ
      * 
-     * - コンフィグタイプが未定義の場合、10005エラーをスローすることを確認します。
+     * - コンフィグタイプが未定義の場合には、コンフィグタイプをプロフィールに直接指定してアクセスすることができないことを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ
      */
-    public function test_configs_type_undefined()
+    public function test_config_access_type_undefined()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
 
+        // 実行
+        $value = $profile->custom_config_1;
+
         // 評価
-        $this->assertThrows(function () use ($profile) {
-            $profile->config->undefined_config;
-        }, ApplicationException::class, 'ProfileConfigTypeUndefined');
+        $this->assertNull($value, 'コンフィグタイプが未定義の場合には、コンフィグタイプを直接指定してアクセスすることができないこと');
     }
 
     /**
@@ -667,5 +668,76 @@ class ProfileTest extends TestCase
             'type' => 'custom_config',
             'value' => '{"value1":"xxxx","value2":"yyyy"}',
         ]);
+    }
+
+    /**
+     * コンフィグ値
+     * 
+     * - プロフィールからコンフィグタイプを指定して直接アクセスして値を変更すると、プロフィール保存時にまとめて変更されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値
+     */
+    public function test_config_value_update()
+    {
+        // 準備
+        config(['feeldee.profile.config.value_objects' => [
+            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $profile->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig(),
+        ]);
+
+        // 実行
+        $profile->custom_config->value1 = 'xxxx';
+        $profile->custom_config->value2 = 'yyyy';
+        $profile->save();
+
+        // 評価
+
+        // プロフィールからコンフィグタイプを指定して直接アクセスして値を変更すると、プロフィール保存時にまとめて変更されること
+        $this->assertDatabaseHas('configs', [
+            'type' => 'custom_config',
+            'value' => '{"value1":"xxxx","value2":"yyyy"}',
+        ]);
+    }
+
+    /**
+     * コンフィグ値によるプロフィール絞り込み
+     * 
+     * - コンフィグ値でのプロフィールの絞り込みができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値によるプロフィール絞り込み
+     */
+    public function test_config_value_filter()
+    {
+        // 準備
+        config(['feeldee.profile.config.value_objects' => [
+            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile1 = Profile::factory()->create();
+        $profile2 = Profile::factory()->create();
+
+        // プロフィール1にカスタムコンフィグを設定
+        $profile1->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('filter_value', 'value2'),
+        ]);
+
+        // プロフィール2にカスタムコンフィグを設定
+        $profile2->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('value1', 'value2'),
+        ]);
+
+        // 実行
+        $filteredProfiles = Profile::whereConfigContains('custom_config', 'value1', 'filter_value')->get();
+
+        // 評価
+        $this->assertCount(1, $filteredProfiles, 'コンフィグ値でのプロフィールの絞り込みができること');
+        $this->assertEquals($profile1->id, $filteredProfiles->first()->id, '正しいプロフィールが取得されること');
     }
 }
