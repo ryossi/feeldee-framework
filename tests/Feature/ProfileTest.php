@@ -14,6 +14,7 @@ use Feeldee\Framework\Models\Tag;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Tests\Models\User;
 
 /**
  * プロフィールの用語を担保するための機能テストです。
@@ -518,5 +519,181 @@ class ProfileTest extends TestCase
         foreach ($profile->configs as $config) {
             $this->assertEquals($config->profile->id, $profile->id, 'プロフィールのカスタムコンフィグリストであること');
         }
+    }
+
+    /**
+     * ユーザEloquentモデルへのプロフィール関連付け
+     * 
+     * - ユーザEloquentモデルからプロフィールリストにアクセスできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
+     */
+    public function test_user_profiles()
+    {
+        // 準備
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $this->actingAs($user);
+
+        // 実行
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+
+        // 評価
+        $this->assertEquals(1, $user->profiles->count(), 'ユーザEloquentモデルからプロフィールリストにアクセスできること');
+        foreach ($user->profiles as $profile) {
+            $this->assertEquals($profile->user_id, $user->id, 'ユーザEloquentモデルからプロフィールリストにアクセスできること');
+        }
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+    }
+
+    /**
+     * ユーザEloquentモデルへのプロフィール関連付け
+     * 
+     * - コンフィグレーションのデフォルトプロフィールの設定値に従ってプロフィールリストの中から最新のプロフィールに直接アクセスできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
+     */
+    public function test_user_profile_default_latest()
+    {
+        // 準備
+        config(['feeldee.profile.default' => 'latest']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $this->actingAs($user);
+
+        // 実行
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
+
+        // 評価
+        $this->assertDatabaseCount('profiles', 2);
+        $this->assertEquals('テストプロフィール2', $user->profile->nickname, 'ユーザEloquentモデルから最新のプロフィールに直接アクセスできること');
+    }
+
+    /**
+     * ユーザEloquentモデルへのプロフィール関連付け
+     * 
+     * - コンフィグレーションのデフォルトプロフィールの設定値に従ってプロフィールリストの中から最初のプロフィールに直接アクセスできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
+     */
+    public function test_user_profile_default_oldest()
+    {
+        // 準備
+        config(['feeldee.profile.default' => 'oldest']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $this->actingAs($user);
+
+        // 実行
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
+
+        // 評価
+        $this->assertDatabaseCount('profiles', 2);
+        $this->assertEquals('テストプロフィール1', $user->profile->nickname, 'ユーザEloquentモデルから最初のプロフィールに直接アクセスできること');
+    }
+
+    /**
+     * ユーザEloquentモデルへのプロフィール関連付け
+     * 
+     * - コンフィグレーションでプロフィールとユーザとの関連付けタイプを"composition"にすることにより、ユーザEloquentモデルがアプリケーションで削除された場合には、関連付けされた全てのプロフィールも同時に削除することができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
+     */
+    public function test_user_profile_composition()
+    {
+        // 準備
+        config(['feeldee.profile.user_relation_type' => 'composition']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $this->actingAs($user);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
+        $this->assertDatabaseCount('profiles', 2);
+
+        // 実行
+        $user->delete();
+
+        // 評価
+        // ユーザEloquentモデルが削除された場合には、関連付けされた全てのプロフィールも同時に削除されること
+        $this->assertDatabaseCount('profiles', 0);
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    /**
+     * ユーザEloquentモデルへのプロフィール関連付け
+     * 
+     * - コンフィグレーションでプロフィールとユーザとの関連付けタイプを"aggregation"にすることにより、ユーザEloquentモデルがアプリケーションで削除された場合には、関連付けされた全てのプロフィールは削除されないことを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
+     */
+    public function test_user_profile_aggregation()
+    {
+        // 準備
+        config(['feeldee.profile.user_relation_type' => 'aggregation']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $this->actingAs($user);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
+        $this->assertDatabaseCount('profiles', 2);
+
+        // 実行
+        $user->delete();
+
+        // 評価
+        // ユーザEloquentモデルが削除された場合には、関連付けされた全てのプロフィールは削除されないこと
+        $this->assertDatabaseCount('profiles', 2);
+        foreach (Profile::all() as $profile) {
+            $this->assertEquals($user->id, $profile->user_id, 'ユーザEloquentモデルが削除された場合には、関連付けされた全てのプロフィールは削除されないこと');
+        }
+        $this->assertDatabaseCount('users', 0);
     }
 }
