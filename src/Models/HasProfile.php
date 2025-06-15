@@ -24,14 +24,11 @@ trait HasProfile
     public function profile()
     {
         if (config('feeldee.profile.default') === 'latest') {
-            // デフォルトのプロファイル取得方法がlatestの場合
+            // デフォルトのプロファイル取得方法がlatestの場合、最新のプロファイルを取得
             return $this->hasOne(Profile::class, 'user_id')->latestOfMany();
-        } elseif (config('feeldee.profile.default') === 'oldest') {
-            // デフォルトのプロファイル取得方法がoldestの場合
-            return $this->hasOne(Profile::class, 'user_id')->oldestOfMany();
         } else {
-            // デフォルトのプロファイル取得方法が設定されていない場合はnullを返す
-            return null;
+            // その他全て最初のプロファイルを取得
+            return $this->hasOne(Profile::class, 'user_id')->oldestOfMany();
         }
     }
 
