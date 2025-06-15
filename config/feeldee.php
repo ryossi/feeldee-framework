@@ -23,6 +23,10 @@ return [
     |
     */
     'profile' => [
+        // プロフィールとユーザとの関連付けタイプ（aggregationまたはcomposition）
+        'user_relation_type' => 'aggregation',
+        // デフォルトプロフィール（oldestまたはlatest）
+        'default' => 'oldest',
         // コンフィグ
         'config' => [
             // カスタムコンフィグクラス定義

@@ -14,6 +14,7 @@ use Feeldee\Framework\Models\Tag;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Tests\Models\User;
 
 /**
  * プロフィールの用語を担保するための機能テストです。
@@ -521,223 +522,178 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * コンフィグ
+     * ユーザEloquentモデルへのプロフィール関連付け
      * 
-     * - コンフィグタイプをプロフィールに直接指定してアクセスすることができることを確認します。
-     * - コンフィグタイプに一致するコンフィグがデータベースに登録されていない場合、新しいカスタムコンフィグクラスのインスタンスを取得できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ
+     * - ユーザEloquentモデルからプロフィールリストにアクセスできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
      */
-    public function test_config_access()
+    public function test_user_profiles()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
-            'custom_config_1' => \Tests\ValueObjects\Configs\CustomConfig::class,
-            'custom_config_2' => \Tests\ValueObjects\Configs\CustomConfig::class,
-        ]]);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $value = $profile->custom_config_1;
-
-        // 評価
-        $this->assertNotNull($value, 'コンフィグタイプがデータベースに登録されていない場合でも、カスタムコンフィグクラスのクラスインスタンスを取得できること');
-        $this->assertInstanceOf(\Tests\ValueObjects\Configs\CustomConfig::class, $value, 'コンフィグタイプを直接指定して取得することができること');
-    }
-
-    /**
-     * コンフィグ
-     * 
-     * - コンフィグタイプが未定義の場合には、コンフィグタイプをプロフィールに直接指定してアクセスすることができないことを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ
-     */
-    public function test_config_access_type_undefined()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $value = $profile->custom_config_1;
-
-        // 評価
-        $this->assertNull($value, 'コンフィグタイプが未定義の場合には、コンフィグタイプを直接指定してアクセスすることができないこと');
-    }
-
-    /**
-     * コンフィグ値
-     * 
-     * - コンフィグタイプごとに事前に定義しておいたカスタムコンフィグクラスに変換されることを確認します。
-     * - 自動的にデシリアライズされることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値
-     */
-    public function test_config_value_deserialized()
-    {
-        // 準備
-        config(['feeldee.profile.config.value_objects' => [
-            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
-        ]]);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $profile->configs()->create([
-            'type' => 'custom_config',
-            'value' => new \Tests\ValueObjects\Configs\CustomConfig('xxxx', 'yyyy'),
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
         ]);
+        $this->actingAs($user);
 
         // 実行
-        $config = $profile->configs()->ofType('custom_config')->first();
-
-        // 評価
-        $this->assertInstanceOf(\Tests\ValueObjects\Configs\CustomConfig::class, $config->value, 'コンフィグタイプごとに事前に定義しておいたカスタムコンフィグクラスに変換されること');
-        $this->assertEquals('xxxx', $config->value->value1, '自動的にデシリアライズされること');
-        $this->assertEquals('yyyy', $config->value->value2, '自動的にデシリアライズされること');
-    }
-
-    /**
-     * コンフィグ値
-     * 
-     * - カスタムコンフィグクラスのインスタンスに設定した値が自動的にJSON形式にシリアライズされてカスタム値に保存されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値
-     */
-    public function test_config_value_serialized()
-    {
-        // 準備
-        config(['feeldee.profile.config.value_objects' => [
-            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
-        ]]);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $custom_config = new \Tests\ValueObjects\Configs\CustomConfig();
-        $custom_config->value1 = 'xxxx';
-        $custom_config->value2 = 'yyyy';
-        $config = $profile->configs()->create([
-            'type' => 'custom_config',
-            'value' => $custom_config,
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
         ]);
 
         // 評価
-
-        // カスタムコンフィグクラスのインスタンスに設定した値が自動的にJSON形式にシリアライズされてカスタム値に保存されること
-        $this->assertDatabaseHas('configs', [
-            'id' => $config->id,
-            'type' => 'custom_config',
-            'value' => '{"value1":"xxxx","value2":"yyyy"}',
+        $this->assertEquals(1, $user->profiles->count(), 'ユーザEloquentモデルからプロフィールリストにアクセスできること');
+        foreach ($user->profiles as $profile) {
+            $this->assertEquals($profile->user_id, $user->id, 'ユーザEloquentモデルからプロフィールリストにアクセスできること');
+        }
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
         ]);
     }
 
     /**
-     * コンフィグ値
+     * ユーザEloquentモデルへのプロフィール関連付け
      * 
-     * - まとめて値を設定することもできることを確認します。
+     * - コンフィグレーションのデフォルトプロフィールの設定値に従ってプロフィールリストの中から最新のプロフィールに直接アクセスできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
      */
-    public function test_config_value_fill()
+    public function test_user_profile_default_latest()
     {
-
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
-            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
-        ]]);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $profile->configs()->create([
-            'type' => 'custom_config',
-            'value' => new \Tests\ValueObjects\Configs\CustomConfig(),
+        config(['feeldee.profile.default' => 'latest']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
         ]);
+        $this->actingAs($user);
 
         // 実行
-        $config = $profile->configs()->ofType('custom_config')->first();
-        $config->value->fill([
-            'value1' => 'xxxx',
-            'value2' => 'yyyy',
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
         ]);
-        $config->save();
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
 
         // 評価
-
-        // まとめて値を設定することもできること
-        $this->assertDatabaseHas('configs', [
-            'id' => $config->id,
-            'type' => 'custom_config',
-            'value' => '{"value1":"xxxx","value2":"yyyy"}',
-        ]);
+        $this->assertDatabaseCount('profiles', 2);
+        $this->assertEquals('テストプロフィール2', $user->profile->nickname, 'ユーザEloquentモデルから最新のプロフィールに直接アクセスできること');
     }
 
     /**
-     * コンフィグ値
+     * ユーザEloquentモデルへのプロフィール関連付け
      * 
-     * - プロフィールからコンフィグタイプを指定して直接アクセスして値を変更すると、プロフィール保存時にまとめて変更されることを確認します。
+     * - コンフィグレーションのデフォルトプロフィールの設定値に従ってプロフィールリストの中から最初のプロフィールに直接アクセスできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
      */
-    public function test_config_value_update()
+    public function test_user_profile_default_oldest()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
-            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
-        ]]);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $profile->configs()->create([
-            'type' => 'custom_config',
-            'value' => new \Tests\ValueObjects\Configs\CustomConfig(),
+        config(['feeldee.profile.default' => 'oldest']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
         ]);
+        $this->actingAs($user);
 
         // 実行
-        $profile->custom_config->value1 = 'xxxx';
-        $profile->custom_config->value2 = 'yyyy';
-        $profile->save();
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
 
         // 評価
-
-        // プロフィールからコンフィグタイプを指定して直接アクセスして値を変更すると、プロフィール保存時にまとめて変更されること
-        $this->assertDatabaseHas('configs', [
-            'type' => 'custom_config',
-            'value' => '{"value1":"xxxx","value2":"yyyy"}',
-        ]);
+        $this->assertDatabaseCount('profiles', 2);
+        $this->assertEquals('テストプロフィール1', $user->profile->nickname, 'ユーザEloquentモデルから最初のプロフィールに直接アクセスできること');
     }
 
     /**
-     * コンフィグ値によるプロフィール絞り込み
+     * ユーザEloquentモデルへのプロフィール関連付け
      * 
-     * - コンフィグ値でのプロフィールの絞り込みができることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ値によるプロフィール絞り込み
+     * - コンフィグレーションでプロフィールとユーザとの関連付けタイプを"composition"にすることにより、ユーザEloquentモデルがアプリケーションで削除された場合には、関連付けされた全てのプロフィールも同時に削除することができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
      */
-    public function test_config_value_filter()
+    public function test_user_profile_composition()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
-            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
-        ]]);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile1 = Profile::factory()->create();
-        $profile2 = Profile::factory()->create();
-
-        // プロフィール1にカスタムコンフィグを設定
-        $profile1->configs()->create([
-            'type' => 'custom_config',
-            'value' => new \Tests\ValueObjects\Configs\CustomConfig('filter_value', 'value2'),
+        config(['feeldee.profile.user_relation_type' => 'composition']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
         ]);
-
-        // プロフィール2にカスタムコンフィグを設定
-        $profile2->configs()->create([
-            'type' => 'custom_config',
-            'value' => new \Tests\ValueObjects\Configs\CustomConfig('value1', 'value2'),
+        $this->actingAs($user);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
         ]);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
+        $this->assertDatabaseCount('profiles', 2);
 
         // 実行
-        $filteredProfiles = Profile::whereConfigContains('custom_config', 'value1', 'filter_value')->get();
+        $user->delete();
 
         // 評価
-        $this->assertCount(1, $filteredProfiles, 'コンフィグ値でのプロフィールの絞り込みができること');
-        $this->assertEquals($profile1->id, $filteredProfiles->first()->id, '正しいプロフィールが取得されること');
+        // ユーザEloquentモデルが削除された場合には、関連付けされた全てのプロフィールも同時に削除されること
+        $this->assertDatabaseCount('profiles', 0);
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    /**
+     * ユーザEloquentモデルへのプロフィール関連付け
+     * 
+     * - コンフィグレーションでプロフィールとユーザとの関連付けタイプを"aggregation"にすることにより、ユーザEloquentモデルがアプリケーションで削除された場合には、関連付けされた全てのプロフィールは削除されないことを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザEloquentモデルへのプロフィール関連付け
+     */
+    public function test_user_profile_aggregation()
+    {
+        // 準備
+        config(['feeldee.profile.user_relation_type' => 'aggregation']);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $this->actingAs($user);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール1',
+            'title' => 'ニックネームテスト1'
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'テストプロフィール2',
+            'title' => 'ニックネームテスト2'
+        ]);
+        $this->assertDatabaseCount('profiles', 2);
+
+        // 実行
+        $user->delete();
+
+        // 評価
+        // ユーザEloquentモデルが削除された場合には、関連付けされた全てのプロフィールは削除されないこと
+        $this->assertDatabaseCount('profiles', 2);
+        foreach (Profile::all() as $profile) {
+            $this->assertEquals($user->id, $profile->user_id, 'ユーザEloquentモデルが削除された場合には、関連付けされた全てのプロフィールは削除されないこと');
+        }
+        $this->assertDatabaseCount('users', 0);
     }
 }
