@@ -40,6 +40,10 @@ class ConfigTest extends TestCase
         // 評価
         $this->assertNotNull($value, 'コンフィグタイプがデータベースに登録されていない場合でも、カスタムコンフィグクラスのクラスインスタンスを取得できること');
         $this->assertInstanceOf(\Tests\ValueObjects\Configs\CustomConfig::class, $value, 'コンフィグタイプを直接指定して取得することができること');
+        $this->assertDatabaseHas('configs', [
+            'type' => 'custom_config_1',
+            'value' => '{"value1":null,"value2":null}',
+        ]);
     }
 
     /**
@@ -60,6 +64,58 @@ class ConfigTest extends TestCase
 
         // 評価
         $this->assertNull($value, 'コンフィグタイプが未定義の場合には、コンフィグタイプを直接指定してアクセスすることができないこと');
+    }
+
+    /**
+     * コンフィグ
+     * 
+     * - config(type)メソッドを使用することでコンフィグタイプに一致するコンフィグが取得できることを確認します。
+     * - コンフィグタイプに一致するコンフィグが登録されてない場合でも、データベースに登録してからコンフィグクラスを返してくれることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ
+     */
+    public function test_config_method_access()
+    {
+        // 準備
+        config(['feeldee.profile.config.value_objects' => [
+            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $config = $profile->config('custom_config');
+
+        // 評価
+        $this->assertNotNull($config, 'コンフィグタイプがデータベースに登録されていない場合でも、カスタムコンフィグクラスのクラスインスタンスを取得できること');
+        $this->assertInstanceOf(\Tests\ValueObjects\Configs\CustomConfig::class, $config->value, 'コンフィグタイプに一致するコンフィグが取得できること');
+        // コンフィグタイプに一致するコンフィグが登録されてない場合でも、データベースに登録してからコンフィグクラスを返してくれること
+        $this->assertDatabaseHas('configs', [
+            'type' => 'custom_config',
+            'value' => '{"value1":null,"value2":null}',
+        ]);
+    }
+
+    /**
+     * コンフィグ
+     * 
+     * - config(type)メソッドを使用することでコンフィグタイプに一致するコンフィグが取得できることを確認します。
+     * - コンフィグタイプが未定義の場合には、アプリケーションエラーが発生することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ
+     */
+    public function test_config_method_access_type_undefined()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 評価
+        $this->expectException(\Feeldee\Framework\Exceptions\ApplicationException::class);
+        $this->expectExceptionMessage('ProfileConfigTypeUndefined');
+
+        // 実行
+        $profile->config('custom_config_1');
     }
 
     /**
