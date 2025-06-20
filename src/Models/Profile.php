@@ -146,6 +146,43 @@ class Profile extends Model
 
     private $configCache = [];
 
+    /**
+     * コンフィグ取得メソッド
+     * 
+     * コンフィグタイプに一致するコンフィグを取得します。
+     * 
+     * コンフィグタイプに一致するコンフィグが登録されてない場合は、データベースに登録してからコンフィグクラスを返します。
+     * 
+     * @param string $type コンフィグタイプ
+     * @return Config コンフィグクラス
+     * @throws ApplicationException コンフィグタイプが未定義の場合
+     */
+    public function config(string $type): Config
+    {
+        $config = $this->configs()->ofType($type)->first();
+        if ($config === null) {
+            // コンフィグが存在しない場合は新しい値オブジェクトを作成
+            $config = $this->configs()->create([
+                'type' => $type,
+                'value' => Config::newValue($type),
+            ]);
+        }
+        $this->configCache[$type] = $config;
+        return $config;
+    }
+
+    /**
+     * コンフィグ値を取得するためのマジックメソッド
+     * 
+     * プロパティ名がコンフィグタイプに一致する場合、対応するコンフィグ値を返します。
+     * 
+     * コンフィグタイプに一致するコンフィグが登録されてない場合は、データベースに登録してからコンフィグクラスを返します。
+     * 
+     * プロパティ名がコンフィグタイプに一致しない場合は、親クラスのマジックメソッドを呼び出します。
+     * 
+     * @param string $key プロパティ名
+     * @return mixed コンフィグ値
+     */
     public function __get($key)
     {
         if (in_array($key, Config::getTypes())) {
