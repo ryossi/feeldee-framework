@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Post;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Foundation\AliasLoader;
 
 class FeeldeeServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,12 @@ class FeeldeeServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(
             __DIR__ . '/../config/feeldee.php',
             'feeldee'
+        );
+
+        // エイリアスを登録 
+        AliasLoader::getInstance()->alias(
+            'PublicLevel',
+            \Feeldee\Framework\Models\PublicLevel::class
         );
     }
 
