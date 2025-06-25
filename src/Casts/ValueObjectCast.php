@@ -5,7 +5,7 @@ namespace Feeldee\Framework\Casts;
 use Feeldee\Framework\Models\Config;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
-class ConfigValue implements CastsAttributes
+class ValueObjectCast implements CastsAttributes
 {
     /**
      * Cast the given value.

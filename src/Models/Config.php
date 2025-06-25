@@ -2,7 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Casts\ConfigValue;
+use Feeldee\Framework\Casts\ValueObjectCast;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\ValueObjects\ValueObject;
 use Illuminate\Database\Eloquent\Builder;
@@ -24,7 +24,7 @@ class Config extends Model
      * @var array
      */
     protected $casts = [
-        'value' => ConfigValue::class,
+        'value' => ValueObjectCast::class,
     ];
 
     /**

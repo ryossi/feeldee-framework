@@ -62,13 +62,12 @@ abstract class ValueObject implements JsonSerializable, Jsonable
                     $this->{$key} = $attributes[$key];
                 }
             }
-            $this->json = json_encode($this);
         }
     }
 
-    public function toJson($options = 0)
+    public function toJson($flags = 0)
     {
-        $this->json = json_encode($this, $options);
+        $this->json = json_encode($this, $flags);
         return $this->json;
     }
 
