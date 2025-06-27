@@ -2,10 +2,11 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Casts\ValueObjectCast;
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\ValueObjects\ValueObject as Value;
 use Feeldee\Framework\ValueObjects\ValueObject;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,20 +20,22 @@ class Config extends Model
     protected $fillable = ['type', 'value'];
 
     /**
-     * キャストする必要のある属性
-     *
-     * @var array
-     */
-    protected $casts = [
-        'value' => ValueObjectCast::class,
-    ];
-
-    /**
      * コンフィグ所有プロフィール
      */
     public function profile()
     {
         return $this->belongsTo(Profile::class);
+    }
+
+    /**
+     * コンフィグ値
+     */
+    protected function value(): Attribute
+    {
+        return Attribute::make(
+            get: fn(string $value, array $attributes) => Config::newValue($attributes['type'])->fromJson($value),
+            set: fn(ValueObject $value) => ['value' => $value->toJson()],
+        );
     }
 
     /**
@@ -49,10 +52,10 @@ class Config extends Model
      * コンフィグタイプに対応したカスタムコンフィグクラのインスタンスを生成します。
      * 
      * @param string $type コンフィグタイプ
-     * @return ValueObject カスタムコンフィグクラのインスタンス
+     * @return Value カスタムコンフィグクラのインスタンス
      * @throws ApplicationException コンフィグタイプが未定義の場合、10005エラーをスローします。
      */
-    public static function newValue(string $type): ValueObject
+    public static function newValue(string $type): Value
     {
         $value_object_classes =  config('feeldee.profile.config.value_objects');
         if (array_key_exists($type, $value_object_classes)) {

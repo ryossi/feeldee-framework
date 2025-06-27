@@ -20,12 +20,6 @@ abstract class ValueObject implements JsonSerializable, Jsonable
 
     public function __construct() {}
 
-    public function fromModelAndJson(mixed $model, mixed $value)
-    {
-        $this->model = $model;
-        $this->fromJson($value);
-    }
-
     public function fromJson(mixed $value)
     {
         if ($value instanceof stdClass) {
@@ -52,6 +46,8 @@ abstract class ValueObject implements JsonSerializable, Jsonable
                 }
             }
         }
+
+        return $this;
     }
 
     public function fill(array $attributes)
