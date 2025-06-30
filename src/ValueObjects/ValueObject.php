@@ -16,17 +16,17 @@ abstract class ValueObject implements JsonSerializable, Jsonable
 
     protected $json = null;
 
-    public $model = null;
-
     public function __construct() {}
 
-    public function fromModelAndJson(mixed $model, mixed $value)
-    {
-        $this->model = $model;
-        $this->fromJson($value);
-    }
-
-    public function fromJson(mixed $value)
+    /**
+     * デシリアライズ
+     * 
+     * ValueObjectをJSON形式の文字列から復元します。
+     * 
+     * @param mixed $value JSON形式の文字列またはstdClassオブジェクト
+     * @return ValueObject 復元されたValueObjectインスタンス
+     */
+    public function fromJson(mixed $value): ValueObject
     {
         if ($value instanceof stdClass) {
             $stdObj = $value;
@@ -34,7 +34,7 @@ abstract class ValueObject implements JsonSerializable, Jsonable
             $stdObj = json_decode($value);
         }
         $vars = get_object_vars($this);
-        array_push($this->excludes, 'fillable', 'excludes', 'casts', 'json', 'model');
+        array_push($this->excludes, 'fillable', 'excludes', 'casts', 'json');
         foreach ($vars as $key => $value) {
             if (!in_array($key, $this->excludes)) {
                 if (array_key_exists($key, $this->casts)) {
@@ -52,8 +52,18 @@ abstract class ValueObject implements JsonSerializable, Jsonable
                 }
             }
         }
+
+        return $this;
     }
 
+    /**
+     * ValueObjectの属性を設定します。
+     * 
+     * このメソッドは、$fillableプロパティに定義された属性のみを設定します。
+     * 
+     * @param array $attributes 設定する属性の連想配列
+     * @return void
+     */
     public function fill(array $attributes)
     {
         if ($this->fillable) {
@@ -62,13 +72,20 @@ abstract class ValueObject implements JsonSerializable, Jsonable
                     $this->{$key} = $attributes[$key];
                 }
             }
-            $this->json = json_encode($this);
         }
     }
 
-    public function toJson($options = 0)
+    /**
+     * シリアライズ
+     * 
+     * ValueObjectをJSON形式の文字列に変換します。
+     * 
+     * @param int $flags json_encodeのフラグと同じ値を指定できます。
+     * @return string JSON形式の文字列
+     */
+    public function toJson($flags = 0)
     {
-        $this->json = json_encode($this, $options);
+        $this->json = json_encode($this, $flags);
         return $this->json;
     }
 
@@ -81,7 +98,7 @@ abstract class ValueObject implements JsonSerializable, Jsonable
         unset($vars['json']);
         unset($vars['model']);
         foreach ($this->excludes as $exclude) {
-            unset($exclude);
+            unset($vars[$exclude]);
         }
         foreach ($vars as $key => $value) {
             if (array_key_exists($key, $this->casts)) {

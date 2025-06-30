@@ -2,6 +2,8 @@
 
 namespace Feeldee\Framework\ValueObjects\Casts;
 
+use Feeldee\Framework\ValueObjects\ValueObject;
+
 interface CastsAttributes
 {
     /**
@@ -13,7 +15,7 @@ interface CastsAttributes
      * @param  array  $attributes
      * @return mixed
      */
-    public function get($valuObject, string $key, $value, array $attributes);
+    public function get(ValueObject $valuObject, string $key, $value, array $attributes): mixed;
 
     /**
      * 値をJson値に変換
@@ -24,5 +26,5 @@ interface CastsAttributes
      * @param  array  $attributes
      * @return mixed
      */
-    public function set($valuObject, string $key, $value, array $attributes);
+    public function set(ValueObject $valuObject, string $key, $value, array $attributes);
 }
