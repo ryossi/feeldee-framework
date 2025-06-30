@@ -3,6 +3,7 @@
 namespace Feeldee\Framework\ValueObjects;
 
 use Illuminate\Contracts\Support\Jsonable;
+use Illuminate\Database\Eloquent\Model;
 use JsonSerializable;
 use stdClass;
 
@@ -16,7 +17,12 @@ abstract class ValueObject implements JsonSerializable, Jsonable
 
     protected $json = null;
 
-    public function __construct() {}
+    protected $model = null;
+
+    public function __construct(?Model $model = null)
+    {
+        $this->model = $model;
+    }
 
     /**
      * デシリアライズ
@@ -34,7 +40,7 @@ abstract class ValueObject implements JsonSerializable, Jsonable
             $stdObj = json_decode($value);
         }
         $vars = get_object_vars($this);
-        array_push($this->excludes, 'fillable', 'excludes', 'casts', 'json');
+        array_push($this->excludes, 'fillable', 'excludes', 'casts', 'json', 'model');
         foreach ($vars as $key => $value) {
             if (!in_array($key, $this->excludes)) {
                 if (array_key_exists($key, $this->casts)) {

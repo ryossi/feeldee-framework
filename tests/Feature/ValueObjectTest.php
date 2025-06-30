@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use Feeldee\Framework\Models\Profile;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * ValueObjectの用語を担保するための機能テストです。
@@ -13,6 +15,35 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class ValueObjectTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * デフォルトコンストラクタ
+     * 
+     * - Illuminate\Database\Eloquent\Modelクラスを渡すことができることを確認します。
+     * - ValueObjectクラスと関連があるモデルに直接アクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/ValueObject
+     */
+    public function test_default_constructor()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $nickname = 'Test Profile';
+        $profile = Profile::factory()->create([
+            'nickname' => $nickname,
+        ]);
+        $value = new \Tests\ValueObjects\Configs\PointConfig(
+            profile: $profile,
+            point_types: collect(['type1', 'type2']),
+        );
+
+        // 実行
+        $profile_nickname = $value->getProfileNickname();
+
+        // 評価
+        $this->assertEquals($nickname, $profile_nickname, 'ValueObjectクラスと関連があるモデルに直接アクセスすることができること');
+    }
+
 
     /**
      * シリアライズ
@@ -84,8 +115,11 @@ class ValueObjectTest extends TestCase
     public function test_cast_set()
     {
         // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $value = new  \Tests\ValueObjects\Configs\PointConfig(
-            point_types: collect(['type1', 'type2'])
+            profile: $profile,
+            point_types: collect(['type1', 'type2']),
         );
 
         // 実行
@@ -105,10 +139,12 @@ class ValueObjectTest extends TestCase
     public function test_cast_get()
     {
         // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
         $json = '{"point_types":["type1","type2"]}';
 
         // 実行
-        $value = new \Tests\ValueObjects\Configs\PointConfig();
+        $value = new \Tests\ValueObjects\Configs\PointConfig(profile: $profile);
         $value->fromJson($json);
 
         // 評価
