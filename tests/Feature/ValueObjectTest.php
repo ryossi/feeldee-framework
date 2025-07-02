@@ -44,7 +44,6 @@ class ValueObjectTest extends TestCase
         $this->assertEquals($nickname, $profile_nickname, 'ValueObjectクラスと関連があるモデルに直接アクセスすることができること');
     }
 
-
     /**
      * シリアライズ
      * 
