@@ -292,4 +292,73 @@ class ConfigTest extends TestCase
         $this->assertCount(1, $filteredProfiles, 'コンフィグ値でのプロフィールの絞り込みができること');
         $this->assertEquals($profile1->id, $filteredProfiles->first()->id, '正しいプロフィールが取得されること');
     }
+
+    /**
+     * スタムコンフィグクラスからコンフィグへのアクセス
+     *
+     * - コンフィグ値生成時に生成元となるコンフィグをセットしてくれることを確認します。
+     * - カスタムコンフィグクラスの中で生成元であるコンフィグにアクセスすることができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#スタムコンフィグクラスからコンフィグへのアクセス
+     */
+    public function test_config_access_from_custom_config()
+    {
+        // 準備
+        config(['feeldee.profile.config.value_objects' => [
+            'custom_config' => \Tests\ValueObjects\Configs\CustomConfigWithModel::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $nickname = 'Test User';
+        $profile = Profile::factory()->create(
+            [
+                'nickname' => $nickname,
+            ]
+        );
+        $profile->configs()->create([
+            'type' => 'custom_config',
+        ]);
+
+        // 実行
+        $accepted_nickname = $profile->custom_config->getProfileNickname();
+
+        // 評価
+        $this->assertEquals($accepted_nickname, $nickname, 'カスタムコンフィグクラスの中で生成元であるコンフィグにアクセスすることができること');
+    }
+
+    /**
+     * スタムコンフィグクラスからコンフィグへのアクセス
+     * 
+     * - シリアライズ時に生成元となるコンフィグをセットしてくれることを確認します。
+     * - カスタムコンフィグクラスの中で生成元であるコンフィグにアクセスすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#スタムコンフィグクラスからコンフィグへのアクセス
+     */
+    public function test_config_access_from_custom_config_serialized()
+    {
+        // 準備
+        config(['feeldee.profile.config.value_objects' => [
+            'custom_config' => \Tests\ValueObjects\Configs\CustomConfigWithModel::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $nickname = 'Test User';
+        $profile = Profile::factory()->create(
+            [
+                'nickname' => $nickname,
+            ]
+        );
+        $profile->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfigWithModel(null, 'xxxx', 'yyyy'),
+        ]);
+        $this->assertDatabaseHas('configs', [
+            'type' => 'custom_config',
+            'value' => '{"value1":"xxxx","value2":"yyyy"}',
+        ]);
+
+        // 実行
+        $accepted_nickname = $profile->custom_config->getProfileNickname();
+
+        // 評価
+        $this->assertEquals($accepted_nickname, $nickname, 'カスタムコンフィグクラスの中で生成元であるコンフィグにアクセスすることができること');
+    }
 }
