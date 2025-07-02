@@ -164,7 +164,6 @@ class Profile extends Model
             // コンフィグが存在しない場合は新しい値オブジェクトを作成
             $config = $this->configs()->create([
                 'type' => $type,
-                'value' => Config::newValue($type),
             ]);
         }
         $this->configCache[$type] = $config;
@@ -195,7 +194,6 @@ class Profile extends Model
                 // コンフィグが存在しない場合は新しい値オブジェクトを作成
                 $config = $this->configs()->create([
                     'type' => $key,
-                    'value' => Config::newValue($key),
                 ]);
             }
             $this->configCache[$key] = $config;

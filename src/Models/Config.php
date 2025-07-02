@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use ReflectionClass;
 
 /**
  * コンフィグをあらわすモデル
@@ -18,6 +19,19 @@ class Config extends Model
     use HasFactory, SetUser;
 
     protected $fillable = ['type', 'value'];
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        // 作成時にvalueが設定されていない場合は、デフォルト値を設定
+        static::creating(function (Self $model) {
+            if (empty($model->attributes['value'])) {
+                $model->attributes['value'] = $model->newValue($model->type);
+            }
+        });
+    }
 
     /**
      * コンフィグ所有プロフィール
@@ -33,7 +47,7 @@ class Config extends Model
     protected function value(): Attribute
     {
         return Attribute::make(
-            get: fn(string $value, array $attributes) => Config::newValue($attributes['type'])->fromJson($value),
+            get: fn(string $value, array $attributes) => $this->newValue($attributes['type'])->fromJson($value),
             set: fn(ValueObject $value) => ['value' => $value->toJson()],
         );
     }
@@ -55,12 +69,20 @@ class Config extends Model
      * @return Value カスタムコンフィグクラのインスタンス
      * @throws ApplicationException コンフィグタイプが未定義の場合、10005エラーをスローします。
      */
-    public static function newValue(string $type): Value
+    protected function newValue(string $type): Value
     {
         $value_object_classes =  config('feeldee.profile.config.value_objects');
         if (array_key_exists($type, $value_object_classes)) {
             $value_object_class = $value_object_classes[$type];
-            return new $value_object_class;
+            $reflection = new ReflectionClass($value_object_class);
+            $constructor = $reflection->getConstructor();
+            $params = $constructor->getParameters();
+            $firstParam = reset($params);
+            if ($firstParam && $firstParam->getType() && $firstParam->getType()->getName() === self::class) {
+                // 最初のパラメータがモデルを受け取る場合は、モデルを渡す
+                return app()->makeWith($value_object_class, ['model' => $this]);
+            }
+            return app()->makeWith($value_object_class);
         }
         throw new ApplicationException(10005, ['type' => $type]);
     }
