@@ -28,13 +28,13 @@ return [
         'user_relation_type' => 'aggregation',
         // デフォルトプロフィール（oldestまたはlatest）
         'default' => 'oldest',
-        // コンフィグ
-        'config' => [
-            // カスタムコンフィグクラス定義
-            'value_objects' => [
-                // 'custom_config' => \App\CustomConfig::class,
-            ],
-        ],
+    ],
+
+    // カスタムコンフィグクラス定義
+    'profile.config.value_objects' => [
+        // ここにカスタムコンフィグクラスを定義することで、コンフィグの値を取得できます。
+        // 例:
+        // 'custom_config' => \App\CustomConfig::class,
     ],
 
     /*

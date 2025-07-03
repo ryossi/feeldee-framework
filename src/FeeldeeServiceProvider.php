@@ -55,11 +55,11 @@ class FeeldeeServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__ . '/../lang' => $this->app->langPath('vendor/feeldee'),
-        ]);
+        ], 'feeldee-lang');
 
         $this->publishes([
             __DIR__ . '/../config/feeldee.php' => config_path('feeldee.php'),
-        ], 'feeldee');
+        ], 'feeldee-config');
 
         AboutCommand::add('Feeldee', fn() => ['Framework Version' => '1.0.0']);
 
