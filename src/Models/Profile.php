@@ -16,6 +16,16 @@ class Profile extends Model
     use HasFactory, SetUser, Required;
 
     /**
+     * プロフィールとユーザとの関連付けタイプコンフィグレーションキー
+     */
+    public const CONFIG_KEY_USER_RELATION_TYPE = 'feeldee.profile_user_relation_type';
+
+    /**
+     * プロフィールデフォルト順位コンフィグレーションキー
+     */
+    public const CONFIG_KEY_DEFAULT_ORDER = 'feeldee.profile_default_order';
+
+    /**
      * 複数代入可能な属性
      *
      * @var array

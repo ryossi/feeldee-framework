@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Feeldee\Framework\Models\Config;
 use Feeldee\Framework\Models\Profile;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -27,7 +28,7 @@ class ConfigTest extends TestCase
     public function test_config_access()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config_1' => \Tests\ValueObjects\Configs\CustomConfig::class,
             'custom_config_2' => \Tests\ValueObjects\Configs\CustomConfig::class,
         ]]);
@@ -77,7 +78,7 @@ class ConfigTest extends TestCase
     public function test_config_method_access()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
@@ -129,7 +130,7 @@ class ConfigTest extends TestCase
     public function test_config_value_deserialized()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
@@ -158,7 +159,7 @@ class ConfigTest extends TestCase
     public function test_config_value_serialized()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
@@ -194,7 +195,7 @@ class ConfigTest extends TestCase
     {
 
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
@@ -232,7 +233,7 @@ class ConfigTest extends TestCase
     public function test_config_value_update()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
@@ -266,7 +267,7 @@ class ConfigTest extends TestCase
     public function test_config_value_filter()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
@@ -304,7 +305,7 @@ class ConfigTest extends TestCase
     public function test_config_access_from_custom_config()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfigWithModel::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
@@ -336,7 +337,7 @@ class ConfigTest extends TestCase
     public function test_config_access_from_custom_config_serialized()
     {
         // 準備
-        config(['feeldee.profile.config.value_objects' => [
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
             'custom_config' => \Tests\ValueObjects\Configs\CustomConfigWithModel::class,
         ]]);
         Auth::shouldReceive('id')->andReturn(1);
