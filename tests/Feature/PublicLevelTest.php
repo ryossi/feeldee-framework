@@ -19,7 +19,7 @@ class PublicLevelTest extends TestCase
     {
 
         // 準備
-        $config = config('feeldee.public_level.label');
+        $config = config(PublicLevel::CONFIG_KEY_LABELS);
 
         // 実行
         $labels = PublicLevel::labels();

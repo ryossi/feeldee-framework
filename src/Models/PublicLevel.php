@@ -28,6 +28,11 @@ enum PublicLevel: int
     case Public = 10;
 
     /**
+     * 公開レベル毎のラベル定義コンフィグレーションキー
+     */
+    public const CONFIG_KEY_LABELS = 'feeldee.public_level_labels';
+
+    /**
      * 公開レベル配列取得
      * 
      * すべての公開レベルとその値の組み合わせを連想配列を取得します。
@@ -48,7 +53,7 @@ enum PublicLevel: int
      */
     public static function labels(): array
     {
-        $config = config('feeldee.public_level.label');
+        $config = config(self::CONFIG_KEY_LABELS, []);
         $values = self::values();
         if (!empty($config)) {
             $values = array_replace($values, $config);
