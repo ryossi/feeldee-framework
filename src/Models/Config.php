@@ -26,6 +26,11 @@ class Config extends Model
     public const CONFIG_KEY_VALUE_OBJECTS = 'feeldee.config_value_objects';
 
     /**
+     * コンフィグタイプが定義されていないエラーコード
+     */
+    public const ERROR_CODE_TYPE_UNDEFINED = 11001;
+
+    /**
      * モデルの「起動」メソッド
      */
     protected static function booted(): void
@@ -72,7 +77,7 @@ class Config extends Model
      * 
      * @param string $type コンフィグタイプ
      * @return Value カスタムコンフィグクラのインスタンス
-     * @throws ApplicationException コンフィグタイプが未定義の場合、10005エラーをスローします。
+     * @throws ApplicationException コンフィグタイプが定義されていない
      */
     protected function newValue(string $type): Value
     {
@@ -89,7 +94,7 @@ class Config extends Model
             }
             return app()->makeWith($value_object_class);
         }
-        throw new ApplicationException(10005, ['type' => $type]);
+        throw new ApplicationException(self::ERROR_CODE_TYPE_UNDEFINED, ['type' => $type]);
     }
 
     /**

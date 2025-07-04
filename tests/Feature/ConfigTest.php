@@ -113,7 +113,7 @@ class ConfigTest extends TestCase
 
         // 評価
         $this->expectException(\Feeldee\Framework\Exceptions\ApplicationException::class);
-        $this->expectExceptionMessage('ProfileConfigTypeUndefined');
+        $this->expectExceptionMessage('ConfigTypeUndefined');
 
         // 実行
         $profile->config('custom_config_1');

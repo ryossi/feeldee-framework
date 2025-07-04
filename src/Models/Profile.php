@@ -26,6 +26,26 @@ class Profile extends Model
     public const CONFIG_KEY_DEFAULT_ORDER = 'feeldee.profile_default_order';
 
     /**
+     * ニックネームが重複しているエラーコード
+     */
+    public const ERROR_CODE_NICKNAME_DUPLICATED = 10001;
+
+    /**
+     * ユーザIDが指定されていないエラーコード
+     */
+    public const ERROR_CODE_USER_ID_REQUIRED = 10002;
+
+    /**
+     * ニックネームが指定されていないエラーコード
+     */
+    public const ERROR_CODE_NICKNAME_REQUIRED = 10003;
+
+    /**
+     * タイトルが指定されていないエラーコード
+     */
+    public const ERROR_CODE_TITLE_REQUIRED = 10004;
+
+    /**
      * 複数代入可能な属性
      *
      * @var array
@@ -38,16 +58,16 @@ class Profile extends Model
      * @var array
      */
     protected $required = [
-        'user_id' => 10002,
-        'nickname' => 10003,
-        'title' => 10004,
+        'user_id' => Profile::ERROR_CODE_USER_ID_REQUIRED,
+        'nickname' => Profile::ERROR_CODE_NICKNAME_REQUIRED,
+        'title' => Profile::ERROR_CODE_TITLE_REQUIRED,
     ];
 
     protected static function bootedNickname(Self $model)
     {
         if (Profile::ofNickname($model->nickname)->first()?->id !== $model->id) {
             // ニックネームが重複している場合
-            throw new ApplicationException(10001, ['nickname' => $model->nickname]);
+            throw new ApplicationException(Profile::ERROR_CODE_NICKNAME_DUPLICATED, ['nickname' => $model->nickname]);
         }
     }
 
