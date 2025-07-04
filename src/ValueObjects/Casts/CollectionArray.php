@@ -8,12 +8,12 @@ use Illuminate\Support\Collection;
 
 class CollectionArray implements CastsAttributes
 {
-    public function get(ValueObject $valuObject, string $key, $value, array $attributes): mixed
+    public function get(ValueObject $valueObject, string $key, $value, array $attributes): mixed
     {
         return new Collection($value);
     }
 
-    public function set(ValueObject $valuObject, string $key, $value, array $attributes)
+    public function set(ValueObject $valueObject, string $key, $value, array $attributes): mixed
     {
         return $value;
     }
