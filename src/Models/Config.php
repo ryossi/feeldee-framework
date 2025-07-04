@@ -23,7 +23,7 @@ class Config extends Model
     /**
      * カスタムコンフィグクラス定義コンフィグレーションキー
      */
-    public const CONFIG_KEY_VALUE_OBJECTSY = 'feeldee.profile.config.value_objects';
+    public const CONFIG_KEY_VALUE_OBJECTS = 'feeldee.config_value_objects';
 
     /**
      * モデルの「起動」メソッド
@@ -64,7 +64,7 @@ class Config extends Model
      */
     public static function getTypes(): array
     {
-        return array_keys(config(self::CONFIG_KEY_VALUE_OBJECTSY) ?? []);
+        return array_keys(config(self::CONFIG_KEY_VALUE_OBJECTS) ?? []);
     }
 
     /**
@@ -76,7 +76,7 @@ class Config extends Model
      */
     protected function newValue(string $type): Value
     {
-        $value_object_classes =  config(self::CONFIG_KEY_VALUE_OBJECTSY) ?? [];
+        $value_object_classes =  config(self::CONFIG_KEY_VALUE_OBJECTS) ?? [];
         if (array_key_exists($type, $value_object_classes)) {
             $value_object_class = $value_object_classes[$type];
             $reflection = new ReflectionClass($value_object_class);
