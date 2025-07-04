@@ -21,12 +21,11 @@ return [
     |--------------------------------------------------------------------------
     |
     */
-    'profile' => [
-        // プロフィールとユーザとの関連付けタイプ（aggregationまたはcomposition）
-        'user_relation_type' => 'aggregation',
-        // デフォルトプロフィール（oldestまたはlatest）
-        'default' => 'oldest',
-    ],
+    // プロフィールとユーザとの関連付けタイプ（aggregationまたはcomposition）
+    'profile_user_relation_type' => 'aggregation',
+
+    // プロフィールデフォルト順位（oldestまたはlatest）
+    'profile_default_order' => 'oldest',
 
     /*
     |--------------------------------------------------------------------------

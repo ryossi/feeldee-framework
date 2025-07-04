@@ -566,7 +566,7 @@ class ProfileTest extends TestCase
     public function test_user_profile_default_latest()
     {
         // 準備
-        config(['feeldee.profile.default' => 'latest']);
+        config([Profile::CONFIG_KEY_DEFAULT_ORDER => 'latest']);
         $user = User::create([
             'name' => 'テストユーザ',
             'email' => 'test@example.com',
@@ -599,7 +599,7 @@ class ProfileTest extends TestCase
     public function test_user_profile_default_oldest()
     {
         // 準備
-        config(['feeldee.profile.default' => 'oldest']);
+        config([Profile::CONFIG_KEY_DEFAULT_ORDER => 'oldest']);
         $user = User::create([
             'name' => 'テストユーザ',
             'email' => 'test@example.com',
@@ -632,7 +632,7 @@ class ProfileTest extends TestCase
     public function test_user_profile_composition()
     {
         // 準備
-        config(['feeldee.profile.user_relation_type' => 'composition']);
+        config([Profile::CONFIG_KEY_USER_RELATION_TYPE => 'composition']);
         $user = User::create([
             'name' => 'テストユーザ',
             'email' => 'test@example.com',
@@ -668,7 +668,7 @@ class ProfileTest extends TestCase
     public function test_user_profile_aggregation()
     {
         // 準備
-        config(['feeldee.profile.user_relation_type' => 'aggregation']);
+        config([Profile::CONFIG_KEY_USER_RELATION_TYPE => 'aggregation']);
         $user = User::create([
             'name' => 'テストユーザ',
             'email' => 'test@example.com',

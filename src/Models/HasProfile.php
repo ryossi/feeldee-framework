@@ -9,7 +9,7 @@ trait HasProfile
     public static function bootHasProfile()
     {
         static::deleting(function (Model $cmodel) {
-            if (config('feeldee.profile.user_relation_type') === 'composition') {
+            if (config(Profile::CONFIG_KEY_USER_RELATION_TYPE) === 'composition') {
                 // 関連付けされた全てのプロフィールも同時に削除
                 $cmodel->profiles()->delete();
             }
@@ -23,7 +23,7 @@ trait HasProfile
      */
     public function profile()
     {
-        if (config('feeldee.profile.default') === 'latest') {
+        if (config(Profile::CONFIG_KEY_DEFAULT_ORDER) === 'latest') {
             // デフォルトのプロファイル取得方法がlatestの場合、最新のプロファイルを取得
             return $this->hasOne(Profile::class, 'user_id')->latestOfMany();
         } else {
