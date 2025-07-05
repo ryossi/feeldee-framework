@@ -10,7 +10,6 @@ use Feeldee\Framework\Models\Post;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
 use Feeldee\Framework\Models\Recorder;
-use Feeldee\Framework\Models\Tag;
 use Feeldee\Framework\Observers\PostPhotoShareObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;

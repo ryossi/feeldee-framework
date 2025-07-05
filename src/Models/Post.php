@@ -14,6 +14,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Post extends Content
 {
     /**
+     * 投稿日が指定されていないエラーコード
+     */
+    const ERROR_CODE_POST_DATE_REQUIRED = 20001;
+
+    /**
+     * 記事タイトルが指定されていないエラーコード
+     */
+    const ERROR_CODE_TITLE_REQUIRED = 20002;
+
+    /**
      * 複数代入可能な属性
      *
      * @var array
@@ -49,8 +59,8 @@ class Post extends Content
      * @var array
      */
     protected $required = [
-        'post_date' => 20001,
-        'title' => 20002,
+        'post_date' => self::ERROR_CODE_POST_DATE_REQUIRED,
+        'title' => self::ERROR_CODE_TITLE_REQUIRED,
     ];
 
     /**
