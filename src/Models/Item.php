@@ -44,15 +44,6 @@ class Item extends Content
     protected $appends = ['category_name'];
 
     /**
-     * キャストする必要のある属性
-     *
-     * @var array
-     */
-    protected $casts = [
-        'value' => Html::class,
-    ];
-
-    /**
      * 必須にする属性
      * 
      * @var array

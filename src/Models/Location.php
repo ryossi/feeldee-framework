@@ -46,8 +46,6 @@ class Location extends Content
         'latitude' => 'float',
         'longitude' => 'float',
         'zoom' => 'integer',
-        'thumbnail' => URL::class,
-        'value' => Html::class,
     ];
 
     /**

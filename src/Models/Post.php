@@ -45,7 +45,6 @@ class Post extends Content
     protected $casts = [
         'is_public' => 'boolean',
         'post_date' => 'date',
-        'thumbnail' => URL::class,
     ];
 
     /**
