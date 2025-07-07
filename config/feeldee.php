@@ -46,15 +46,15 @@ return [
     |--------------------------------------------------------------------------
     |
     */
-    // HTMLフック
-    'html_hooks' => [
+    // HTMLキャストフック
+    'html_cast_hooks' => [
         // フックの定義
-        // 例: 'hook_name' => \App\Hooks\CustomHtmlHook::class,
+        // 例: \App\Hooks\CustomHtmlHook::class,
     ],
 
-    // URLフック
-    'url_hooks' => [
+    // URLキャストフック
+    'url_cast_hooks' => [
         // フックの定義
-        // 例: 'hook_name' => \App\Hooks\CustomUrlHook::class,
+        // 例: \App\Hooks\CustomUrlHook::class,
     ],
 ];

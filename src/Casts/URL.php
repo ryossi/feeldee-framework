@@ -7,9 +7,9 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 class URL implements CastsAttributes
 {
     /**
-     * URLフックコンフィグレーションキー
+     * URLキャストフックコンフィグレーションキー
      */
-    const CONFIG_KEY_URL_HOOKS = 'feeldee.url_hooks';
+    const CONFIG_KEY_URL_CAST_HOOKS = 'feeldee.url_cast_hooks';
 
     /**
      * Cast the given value.
@@ -22,11 +22,11 @@ class URL implements CastsAttributes
      */
     public function get($model, string $key, $value, array $attributes)
     {
-        // URLフック適用
-        $hooks = config(self::CONFIG_KEY_URL_HOOKS, []);
-        foreach ($hooks as $hookKey => $hookClass) {
-            if (strpos($key, $hookKey) === 0 && class_exists($hookClass)) {
-                $hook = new $hookClass;
+        // URLキャストフック適用
+        $hooks = config(self::CONFIG_KEY_URL_CAST_HOOKS, []);
+        foreach ($hooks as $hook) {
+            if (class_exists($hook)) {
+                $hook = new $hook;
                 if (method_exists($hook, 'get')) {
                     $value = $hook->get($model, $key, $value, $attributes);
                 }
@@ -46,11 +46,11 @@ class URL implements CastsAttributes
      */
     public function set($model, string $key, $value, array $attributes)
     {
-        // URLフック適用
-        $hooks = config(self::CONFIG_KEY_URL_HOOKS, []);
-        foreach ($hooks as $hookKey => $hookClass) {
-            if (strpos($key, $hookKey) === 0 && class_exists($hookClass)) {
-                $hook = new $hookClass;
+        // URLキャストフック適用
+        $hooks = config(self::CONFIG_KEY_URL_CAST_HOOKS, []);
+        foreach ($hooks as $hook) {
+            if (class_exists($hook)) {
+                $hook = new $hook;
                 if (method_exists($hook, 'set')) {
                     $value = $hook->set($model, $key, $value, $attributes);
                 }
