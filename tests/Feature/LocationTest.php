@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use Auth;
+use Feeldee\Framework\Casts\HTML;
+use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
@@ -11,6 +13,9 @@ use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
 use Feeldee\Framework\Models\Recorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
+use Tests\Hooks\CustomHtmlHook;
+use Tests\Hooks\CustomUrlHook;
 use Tests\TestCase;
 
 class LocationTest extends TestCase
@@ -1108,5 +1113,139 @@ class LocationTest extends TestCase
         // 評価
         $this->assertEquals(0, $location->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
         $this->assertDatabaseEmpty('records');
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 取得時にHTMLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     */
+    public function test_content_value_html_cast_hook_get()
+    {
+
+        // 準備
+        Config::set(HTML::CONFIG_KEY_HTML_CAST_HOOKS, [
+            CustomHtmlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>テストコンテンツ</p>';
+        $location = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+
+        // 実行
+        $expected = $location->value;
+
+        // 評価
+        $this->assertEquals(CustomHtmlHook::PREFIX . $value, $expected, '取得時にHTMLキャストフックが利用できることを確認します。');
+        $this->assertDatabaseHas('locations', [
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 設定時にHTMLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     */
+    public function test_content_value_html_cast_hook_set()
+    {
+
+        // 準備
+        Config::set(HTML::CONFIG_KEY_HTML_CAST_HOOKS, [
+            CustomHtmlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>テストコンテンツ</p>';
+
+        // 実行
+        $profile->locations()->create([
+            'title' => 'テスト場所',
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'value' => CustomHtmlHook::PREFIX . $value,
+        ]);
+
+        // 評価
+        // 設定時にHTMLキャストフックが利用できること
+        $this->assertDatabaseHas('locations', [
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 場所サムネイル
+     * 
+     * - 取得時にURLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所サムネイル
+     */
+    public function test_thumbnail_url_cast_hook_get()
+    {
+        // 準備
+        Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
+            CustomUrlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $thumbnail = 'test_thumbnail.jpg';
+        $location = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'thumbnail' => $thumbnail,
+        ]);
+
+        // 実行
+        $expected = $location->thumbnail;
+
+        // 評価
+        $this->assertEquals(CustomUrlHook::PREFIX . $thumbnail, $expected, '取得時にURLキャストフックが利用できることを確認します。');
+        $this->assertDatabaseHas('locations', [
+            'profile_id' => $profile->id,
+            'thumbnail' => $thumbnail,
+        ]);
+    }
+
+    /**
+     * 場所サムネイル
+     * 
+     * - 設定時にURLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所サムネイル
+     */
+    public function test_thumbnail_url_cast_hook_set()
+    {
+        // 準備
+        Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
+            CustomUrlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $thumbnail = 'test_thumbnail.jpg';
+
+        // 実行
+        $profile->locations()->create([
+            'title' => 'テスト場所',
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+            'zoom' => 15,
+            'thumbnail' => CustomUrlHook::PREFIX . $thumbnail,
+        ]);
+
+        // 評価
+        // 設定時にURLキャストフックが利用できること
+        $this->assertDatabaseHas('locations', [
+            'profile_id' => $profile->id,
+            'thumbnail' => $thumbnail,
+        ]);
     }
 }

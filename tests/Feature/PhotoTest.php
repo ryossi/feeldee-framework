@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use Carbon\Carbon;
+use Feeldee\Framework\Casts\HTML;
+use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
@@ -14,6 +16,9 @@ use Feeldee\Framework\Models\Recorder;
 use Feeldee\Framework\Observers\PostPhotoShareObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Tests\Hooks\CustomHtmlHook;
+use Tests\Hooks\CustomUrlHook;
 use Tests\TestCase;
 
 class PhotoTest extends TestCase
@@ -1098,5 +1103,136 @@ class PhotoTest extends TestCase
         // 評価
         $this->assertEquals(0, $photo->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
         $this->assertDatabaseEmpty('records');
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 取得時にHTMLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ内容
+     */
+    public function test_content_value_html_cast_hook_get()
+    {
+
+        // 準備
+        Config::set(HTML::CONFIG_KEY_HTML_CAST_HOOKS, [
+            CustomHtmlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>テストコンテンツ</p>';
+        $photo = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+
+        // 実行
+        $expected = $photo->value;
+
+        // 評価
+        $this->assertEquals(CustomHtmlHook::PREFIX . $value, $expected, '取得時にHTMLキャストフックが利用できることを確認します。');
+        $this->assertDatabaseHas('photos', [
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 設定時にHTMLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ内容
+     */
+    public function test_content_value_html_cast_hook_set()
+    {
+
+        // 準備
+        Config::set(HTML::CONFIG_KEY_HTML_CAST_HOOKS, [
+            CustomHtmlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>テストコンテンツ</p>';
+
+        // 実行
+        $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => '/mbox/photo.jpg',
+            'regist_datetime' => now(),
+            'value' => CustomHtmlHook::PREFIX . $value,
+        ]);
+
+        // 評価
+        // 設定時にHTMLキャストフックが利用できること
+        $this->assertDatabaseHas('photos', [
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 写真ソース
+     * 
+     * - 取得時にURLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真ソース
+     */
+    public function test_src_url_cast_hook_get()
+    {
+        // 準備
+        Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
+            CustomUrlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $src = 'http://photo.test/img/photo.jpg';
+        $photo = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'src' => $src,
+        ]);
+
+        // 実行
+        $expected = $photo->src;
+
+        // 評価
+        $this->assertEquals(CustomUrlHook::PREFIX . $src, $expected, '取得時にURLキャストフックが利用できることを確認します。');
+        $this->assertDatabaseHas('photos', [
+            'profile_id' => $profile->id,
+            'src' => $src,
+        ]);
+    }
+
+    /**
+     * 写真ソース
+     * 
+     * - 設定時にURLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真ソース
+     */
+    public function test_src_url_cast_hook_set()
+    {
+        // 準備
+        Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
+            CustomUrlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $src = 'http://photo.test/img/photo.jpg';
+
+        // 実行
+        $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => CustomUrlHook::PREFIX . $src,
+            'regist_datetime' => now(),
+        ]);
+
+        // 評価
+        // 設定時にURLキャストフックが利用できること
+        $this->assertDatabaseHas('photos', [
+            'profile_id' => $profile->id,
+            'src' => $src,
+        ]);
     }
 }

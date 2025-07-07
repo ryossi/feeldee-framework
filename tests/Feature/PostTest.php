@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use Carbon\Carbon;
+use Feeldee\Framework\Casts\HTML;
+use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
@@ -14,6 +16,9 @@ use Feeldee\Framework\Observers\PostPhotoShareObserver;
 use Feeldee\Framework\Observers\PostPhotoSyncObserver;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use Tests\Hooks\CustomHtmlHook;
+use Tests\Hooks\CustomUrlHook;
 use Tests\TestCase;
 
 class PostTest extends TestCase
@@ -1375,5 +1380,135 @@ class PostTest extends TestCase
         // 評価
         $this->assertEquals(0, $post->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
         $this->assertDatabaseEmpty('records');
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 取得時にHTMLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ内容
+     */
+    public function test_content_value_html_cast_hook_get()
+    {
+
+        // 準備
+        Config::set(HTML::CONFIG_KEY_HTML_CAST_HOOKS, [
+            CustomHtmlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>テストコンテンツ</p>';
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+
+        // 実行
+        $expected = $post->value;
+
+        // 評価
+        $this->assertEquals(CustomHtmlHook::PREFIX . $value, $expected, '取得時にHTMLキャストフックが利用できることを確認します。');
+        $this->assertDatabaseHas('posts', [
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * コンテンツ内容
+     * 
+     * - 設定時にHTMLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツ内容
+     */
+    public function test_content_value_html_cast_hook_set()
+    {
+
+        // 準備
+        Config::set(HTML::CONFIG_KEY_HTML_CAST_HOOKS, [
+            CustomHtmlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = '<p>テストコンテンツ</p>';
+
+        // 実行
+        $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'value' => CustomHtmlHook::PREFIX . $value,
+        ]);
+
+        // 評価
+        // 設定時にHTMLキャストフックが利用できること
+        $this->assertDatabaseHas('posts', [
+            'profile_id' => $profile->id,
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 記事サムネイル
+     * 
+     * - 取得時にURLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事サムネイル
+     */
+    public function test_thumbnail_url_cast_hook_get()
+    {
+        // 準備
+        Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
+            CustomUrlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = 'https://example.com/test-thumbnail.jpg';
+        $post = Post::factory()->create([
+            'profile_id' => $profile->id,
+            'thumbnail' => $value,
+        ]);
+
+        // 実行
+        $expected = $post->thumbnail;
+
+        // 評価
+        $this->assertEquals(CustomUrlHook::PREFIX . $value, $expected, '取得時にURLキャストフックが利用できることを確認します。');
+        $this->assertDatabaseHas('posts', [
+            'profile_id' => $profile->id,
+            'thumbnail' => $value,
+        ]);
+    }
+
+    /**
+     * 記事サムネイル
+     * 
+     * - 設定時にURLキャストフックが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事サムネイル
+     */
+    public function test_thumbnail_url_cast_hook_set()
+    {
+        // 準備
+        Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
+            CustomUrlHook::class,
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $value = 'https://example.com/test-thumbnail.jpg';
+
+        // 実行
+        $profile->posts()->create([
+            'title' => 'テスト投稿',
+            'post_date' => now(),
+            'thumbnail' => CustomUrlHook::PREFIX . $value,
+        ]);
+
+        // 評価
+        // 設定時にURLキャストフックが利用できること
+        $this->assertDatabaseHas('posts', [
+            'profile_id' => $profile->id,
+            'thumbnail' => $value,
+        ]);
     }
 }
