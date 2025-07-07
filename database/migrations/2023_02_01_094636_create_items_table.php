@@ -24,7 +24,7 @@ return new class extends Migration
             $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
             $table->foreignId('category_id')->nullable()->comment('カテゴリーID')->constrained('categories')->onDelete('set null');;
             $table->integer('order_number')->default('0')->comment('表示順');
-            $table->mediumText('image')->nullable()->comment('イメージ');
+            $table->mediumText('image')->nullable()->comment('アイテムイメージ');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();

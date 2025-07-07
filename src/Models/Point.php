@@ -25,15 +25,6 @@ class Point extends Model
     protected $visible = ['id', 'title', 'point_datetime', 'date', 'time', 'memo', 'latitude', 'longitude', 'point_type', 'image_src'];
 
     /**
-     * キャストする必要のある属性
-     *
-     * @var array
-     */
-    protected $casts = [
-        'image_src' => URL::class,
-    ];
-
-    /**
      * コンテンツを所有するプロフィール
      *
      * @return Attribute

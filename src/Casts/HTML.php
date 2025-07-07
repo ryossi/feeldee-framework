@@ -4,12 +4,12 @@ namespace Feeldee\Framework\Casts;
 
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
-class URL implements CastsAttributes
+class HTML implements CastsAttributes
 {
     /**
-     * URLキャストフックコンフィグレーションキー
+     * HTMLキャストフックコンフィグレーションキー
      */
-    const CONFIG_KEY_URL_CAST_HOOKS = 'feeldee.url_cast_hooks';
+    const CONFIG_KEY_HTML_CAST_HOOKS = 'feeldee.html_cast_hooks';
 
     /**
      * Cast the given value.
@@ -22,8 +22,8 @@ class URL implements CastsAttributes
      */
     public function get($model, string $key, $value, array $attributes)
     {
-        // URLキャストフック適用
-        $hooks = config(self::CONFIG_KEY_URL_CAST_HOOKS, []);
+        // HTMLキャストフック適用
+        $hooks = config(self::CONFIG_KEY_HTML_CAST_HOOKS, []);
         foreach ($hooks as $hook) {
             if (class_exists($hook)) {
                 $hook = new $hook;
@@ -46,8 +46,8 @@ class URL implements CastsAttributes
      */
     public function set($model, string $key, $value, array $attributes)
     {
-        // URLキャストフック適用
-        $hooks = config(self::CONFIG_KEY_URL_CAST_HOOKS, []);
+        // HTMLキャストフック適用
+        $hooks = config(self::CONFIG_KEY_HTML_CAST_HOOKS, []);
         foreach ($hooks as $hook) {
             if (class_exists($hook)) {
                 $hook = new $hook;
