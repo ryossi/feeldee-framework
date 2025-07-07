@@ -2,6 +2,8 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Casts\HTML;
+use Feeldee\Framework\Casts\URL;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
@@ -40,6 +42,8 @@ class Photo extends Content
      */
     protected $casts = [
         'regist_datetime' => 'date',
+        'value' => HTML::class,
+        'src' => URL::class
     ];
 
     /**

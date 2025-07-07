@@ -39,4 +39,22 @@ return [
         // 例:
         // 'custom_config' => \App\CustomConfig::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | その他に関する設定
+    |--------------------------------------------------------------------------
+    |
+    */
+    // HTMLフック
+    'html_hooks' => [
+        // フックの定義
+        // 例: 'hook_name' => \App\Hooks\CustomHtmlHook::class,
+    ],
+
+    // URLフック
+    'url_hooks' => [
+        // フックの定義
+        // 例: 'hook_name' => \App\Hooks\CustomUrlHook::class,
+    ],
 ];

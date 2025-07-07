@@ -2,9 +2,8 @@
 
 namespace Feeldee\Framework\Models;
 
-use Feeldee\Framework\Casts\Html;
-use Feeldee\Framework\Exceptions\LoginRequiredException;
-use Illuminate\Support\Facades\Auth;
+use Feeldee\Framework\Casts\HTML;
+use Feeldee\Framework\Casts\URL;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -42,6 +41,16 @@ class Item extends Content
      * @var array
      */
     protected $appends = ['category_name'];
+
+    /**
+     * キャストする必要のある属性
+     *
+     * @var array
+     */
+    protected $casts = [
+        'value' => HTML::class,
+        'image' => URL::class,
+    ];
 
     /**
      * 必須にする属性
