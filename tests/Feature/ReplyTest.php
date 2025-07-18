@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Feeldee\Framework\Contracts\HssProfile;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Post;
@@ -279,7 +278,7 @@ class ReplyTest extends TestCase
             'email' => 'test@example.com',
             'password' => bcrypt('password123')
         ]);
-        $replyer = Profile::factory()->create([
+        Profile::factory()->create([
             'user_id' => $user->id,
             'nickname' => 'オリジナルニックネーム',
         ]);
