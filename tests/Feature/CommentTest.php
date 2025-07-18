@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Feeldee\Framework\Contracts\HssProfile;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
@@ -14,6 +13,7 @@ use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\Assert;
+use Tests\Models\User;
 
 /**
  * コメントの用語を担保するための機能テストです。
@@ -34,7 +34,7 @@ class CommentTest extends TestCase
     public function test_profile()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Post::factory()->count(1))->create();
         $post = $profile->posts->first();
 
@@ -62,7 +62,7 @@ class CommentTest extends TestCase
     public function test_commented_at_specify()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Post::factory()->count(1))->create();
         $post = $profile->posts->first();
 
@@ -92,7 +92,7 @@ class CommentTest extends TestCase
     public function test_commented_at_default()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Post::factory()->count(1))->create();
         $post = $profile->posts->first();
 
@@ -120,7 +120,7 @@ class CommentTest extends TestCase
     public function test_body_text()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Post::factory()->count(1))->create();
         $post = $profile->posts->first();
 
@@ -149,7 +149,7 @@ class CommentTest extends TestCase
     public function test_body_html()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Post::factory()->count(1))->create();
         $post = $profile->posts->first();
 
@@ -180,7 +180,7 @@ class CommentTest extends TestCase
     public function test_commentable_posts()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Post::factory()->count(1))->create();
         $post = $profile->posts->first();
 
@@ -214,7 +214,7 @@ class CommentTest extends TestCase
     public function test_commentable_photos()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Photo::factory()->count(1))->create();
         $photo = $profile->photos->first();
 
@@ -248,7 +248,7 @@ class CommentTest extends TestCase
     public function test_commentable_locations()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Location::factory()->count(1))->create();
         $location = $profile->locations->first();
 
@@ -282,7 +282,7 @@ class CommentTest extends TestCase
     public function test_commentable_items()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->twice()->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Item::factory()->count(1))->create();
         $item = $profile->items->first();
 
@@ -314,15 +314,20 @@ class CommentTest extends TestCase
     public function test_commenter_logged_in_user()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(99);
         $profile = Profile::factory()->has(Item::factory()->count(1))->create();
         $item = $profile->items->first();
 
         // コメント者準備
-        Auth::shouldReceive('id')->andReturn(2);
-        $commenter = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($commenter);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $commenter = Profile::factory()->create([
+            'user_id' => $user->id,
+            'nickname' => 'テストユーザ',
+        ]);
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
@@ -375,18 +380,21 @@ class CommentTest extends TestCase
     public function test_nickname_logged_in_user_default()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(99);
         $profile = Profile::factory()->has(Item::factory()->count(1))->create();
         $item = $profile->items->first();
 
         // コメント者準備
         $nickname = 'MyCommenter';
-        Auth::shouldReceive('id')->andReturn(2);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
         $commenter = Profile::factory()->create([
+            'user_id' => $user->id,
             'nickname' => $nickname,
         ]);
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($commenter);
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
@@ -411,15 +419,20 @@ class CommentTest extends TestCase
     public function test_nickname_logged_in_user_specify()
     {
         // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(99);
         $profile = Profile::factory()->has(Item::factory()->count(1))->create();
         $item = $profile->items->first();
 
         // コメント者準備
-        Auth::shouldReceive('id')->andReturn(2);
-        $commenter = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($commenter);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        Profile::factory()->create([
+            'user_id' => $user->id,
+            'nickname' => 'テストプロフィール',
+        ]);
         Auth::shouldReceive('user')->andReturn($user);
         $nickname = 'MyNickname';
 

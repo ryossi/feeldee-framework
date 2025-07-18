@@ -88,7 +88,7 @@ class Comment extends Model
             array_merge(
                 $attributes,
                 [
-                    'commenter' => $user?->getProfile(),
+                    'commenter' => $user?->profile,
                 ]
             )
         );
