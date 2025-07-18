@@ -76,7 +76,7 @@ class Reply extends Model
             array_merge(
                 $attributes,
                 [
-                    'replyer' => $user?->getProfile(),
+                    'replyer' => $user?->profile,
                 ]
             )
         );

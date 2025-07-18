@@ -88,7 +88,7 @@ class Comment extends Model
             array_merge(
                 $attributes,
                 [
-                    'commenter' => $user?->getProfile(),
+                    'commenter' => $user?->profile,
                 ]
             )
         );
@@ -117,14 +117,6 @@ class Comment extends Model
     public function commentable()
     {
         return $this->morphTo();
-    }
-    /**
-     * コメント対象コンテンツ
-     * TODO: 冗長なのでコメント対象と統一する
-     */
-    protected function getCommentableAttribute()
-    {
-        return  $this->commentable()->first();
     }
 
     /**
@@ -165,13 +157,6 @@ class Comment extends Model
     public function replies()
     {
         return $this->hasMany(Reply::class);
-    }
-    /**
-     * TODO: 冗長なので返信リストと統一する
-     */
-    protected function getRepliesAttribute()
-    {
-        return  $this->replies()->get();
     }
 
     /**

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Feeldee\Framework\Contracts\HssProfile;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Post;
@@ -10,6 +9,7 @@ use Feeldee\Framework\Models\Reply;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\Assert;
+use Tests\Models\User;
 use Tests\TestCase;
 
 /**
@@ -172,17 +172,22 @@ class ReplyTest extends TestCase
         $comment = $profile->posts->first()->comments->first();
 
         // 返信者準備
-        Auth::shouldReceive('id')->andReturn(2);
-        $replyer = Profile::factory()->create();
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($replyer);
+        $user = User::create([
+            'name' => '返信者',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $replyer = Profile::factory()->create([
+            'user_id' => $user->id,
+            'nickname' => '返信者プロフィール',
+        ]);
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
         $reply = Reply::create([], $comment);
 
         // 評価
-        Assert::assertEquals($replyer, $reply->replyer, '返信者のプロフィールのIDが返信者プロフィールIDに設定されること');
+        Assert::assertEquals($replyer->id, $reply->replyer->id, '返信者のプロフィールのIDが返信者プロフィールIDに設定されること');
         $this->assertDatabaseHas('replies', [
             'replyer_profile_id' => $replyer->id,
         ]);
@@ -227,19 +232,20 @@ class ReplyTest extends TestCase
     public function test_nickname_logged_in_user_default()
     {
         // 返信対象準備
-        Auth::shouldReceive('id')->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(99);
         $profile = Profile::factory()->has(Post::factory(1)->has(Comment::factory(1)))->create();
         $comment = $profile->posts->first()->comments->first();
 
         // 返信者準備
-        Auth::shouldReceive('id')->andReturn(2);
-        $replyer = Profile::factory()->create(
-            [
-                'nickname' => 'テストユーザ',
-            ]
-        );
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($replyer);
+        $user = User::create([
+            'name' => '返信者',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $replyer = Profile::factory()->create([
+            'user_id' => $user->id,
+            'nickname' => '返信者プロフィール',
+        ]);
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
@@ -262,19 +268,20 @@ class ReplyTest extends TestCase
     public function test_nickname_logged_in_user_specify()
     {
         // 返信対象準備
-        Auth::shouldReceive('id')->andReturn(1);
+        Auth::shouldReceive('id')->andReturn(99);
         $profile = Profile::factory()->has(Post::factory(1)->has(Comment::factory(1)))->create();
         $comment = $profile->posts->first()->comments->first();
 
         // 返信者準備
-        Auth::shouldReceive('id')->andReturn(2);
-        $replyer = Profile::factory()->create(
-            [
-                'nickname' => 'オリジナルニックネーム',
-            ]
-        );
-        $user = $this->mock(HssProfile::class);
-        $user->shouldReceive('getProfile')->andReturn($replyer);
+        $user = User::create([
+            'name' => '返信者',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        Profile::factory()->create([
+            'user_id' => $user->id,
+            'nickname' => 'オリジナルニックネーム',
+        ]);
         Auth::shouldReceive('user')->andReturn($user);
         $nickname = '指定したニックネーム';
 
