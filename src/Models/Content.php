@@ -118,6 +118,14 @@ abstract class Content extends Model
      */
     protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
 
+    /**
+     * コメントリスト
+     */
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
@@ -154,14 +162,6 @@ abstract class Content extends Model
 
         // 公開レベルと最小公開レベルを比較
         return $this->public_level->value >= $this->profile->minPublicLevel($viewer)->value;
-    }
-
-    /**
-     * コンテンツのコメントリストを取得します。
-     */
-    public function comments()
-    {
-        return $this->morphMany(Comment::class, 'commentable');
     }
 
     /**
