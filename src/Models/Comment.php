@@ -115,6 +115,18 @@ class Comment extends Model
     }
 
     /**
+     * コメント公開フラグ
+     * 
+     * @return Attribute
+     */
+    protected function isPublic(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $value ?? false,
+        );
+    }
+
+    /**
      * 返信リスト
      * 
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
@@ -122,16 +134,6 @@ class Comment extends Model
     public function replies()
     {
         return $this->hasMany(Reply::class);
-    }
-
-    /**
-     * コメント公開フラグ
-     *
-     * @return bool
-     */
-    protected function getIsPublicAttribute(): bool
-    {
-        return $this->attributes['is_public'] ?? false;
     }
 
     /**

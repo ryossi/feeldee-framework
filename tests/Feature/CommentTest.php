@@ -528,7 +528,10 @@ class CommentTest extends TestCase
         ]);
 
         // 評価
-        Assert::assertFalse($comment->isPublic, 'コメント公開フラグは、デフォルトで非公開であること');
+        $this->assertDatabaseHas('comments', [
+            'is_public' => false,
+        ]);
+        $this->assertFalse($comment->is_public, 'コメント公開フラグは、デフォルトで非公開であること');
     }
 
     /**
@@ -549,7 +552,7 @@ class CommentTest extends TestCase
         $comment->doPublic();
 
         // 評価
-        Assert::assertTrue($comment->isPublic, '公開できること');
+        Assert::assertTrue($comment->is_public, '公開できること');
     }
 
     /**
@@ -570,7 +573,7 @@ class CommentTest extends TestCase
         $comment->doPrivate();
 
         // 評価
-        Assert::assertFalse($comment->isPublic, '非公開にできること');
+        Assert::assertFalse($comment->is_public, '非公開にできること');
     }
 
     /**
