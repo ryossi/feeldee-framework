@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
@@ -450,12 +451,12 @@ class CommentTest extends TestCase
 
     /**
      * コメント者ニックネーム
-     * 
-     * - 匿名ユーザは、ニックネームが必須であることを確認します。
-     * 
+     *
+     * - コメント者プロフィールまたはコメント者ニックネームのどちらか一方は必ず指定する必要があることを確認します。
+     *
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_nickname_anonymous_required()
+    public function test_commenter_nickname_required()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -471,7 +472,7 @@ class CommentTest extends TestCase
             $item->comments()->create([
                 'body' => 'これはテストコメントです。',
             ]);
-        }, \Illuminate\Validation\ValidationException::class);
+        }, ApplicationException::class, 'CommenterNicknameRequired');
     }
 
     /**

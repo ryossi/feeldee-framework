@@ -3,6 +3,7 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -51,6 +52,11 @@ class Comment extends Model
      */
     protected static function booted(): void
     {
+        // デフォルトの並び順は、コメント日時降順
+        static::addGlobalScope('order_number', function ($builder) {
+            $builder->orderBy('commented_at', 'desc');
+        });
+
         static::saving(function (self $model) {
             // コメント日時
             if (empty($model->commented_at)) {
@@ -60,6 +66,9 @@ class Comment extends Model
             if (!empty($model->commenter) && $model->commenter instanceof Profile) {
                 $model->commenter_profile_id = $model->commenter->id;
                 unset($model->commenter);
+            } elseif (empty($model->commenter_nickname)) {
+                // コメント者ニックネームが指定されていない場合は、例外をスロー
+                throw new ApplicationException(60001);
             }
         });
 
@@ -107,7 +116,7 @@ class Comment extends Model
     protected function commenterNickname(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => empty($attributes['commenter_nickname']) ? $this->commenter->nickname : $attributes['commenter_nickname'],
+            get: fn($value, $attributes) => empty($value) ? $this->commenter?->nickname : $value,
             set: fn($value) => [
                 'commenter_nickname' => $value,
             ]
@@ -164,8 +173,11 @@ class Comment extends Model
 
     /**
      * コメント対象種別を条件に含むようにクエリのスコープを設定
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $commentableType コメント対象コンテンツ種別
      */
-    public function scopeOfType($query, string $commentableType)
+    public function scopeWhereCommentableType($query, string $commentableType)
     {
         $query->where('commentable_type', $commentableType);
     }
