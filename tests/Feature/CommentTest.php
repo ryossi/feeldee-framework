@@ -43,10 +43,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $post->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $post);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($comment->profile, $comment->commentable->profile, 'コメント対象に紐付くプロフィールであること');
@@ -72,11 +72,11 @@ class CommentTest extends TestCase
         $commented_at = '2025-03-27 09:30:20';
 
         // 実行
-        $comment = Comment::create([
+        $comment = $post->comments()->create([
             'commented_at' => $commented_at,
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $post);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($commented_at, $comment->commented_at->format('Y-m-d H:i:s'), '指定した日時であること');
@@ -101,10 +101,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $post->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $post);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertNotEmpty($comment->commented_at, 'システム日時が設定されること');
@@ -130,10 +130,10 @@ class CommentTest extends TestCase
         $body = 'これはテストコメントです。';
 
         // 実行
-        $comment = Comment::create([
+        $comment = $post->comments()->create([
             'body' => $body,
-            'nickname' => 'テストユーザ'
-        ], $post);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($body, $comment->body, 'テキストが使用できること');
@@ -159,10 +159,10 @@ class CommentTest extends TestCase
         $body = '<h1>>これはテストコメントです。</h1>';
 
         // 実行
-        $comment = Comment::create([
+        $comment = $post->comments()->create([
             'body' => $body,
-            'nickname' => 'テストユーザ'
-        ], $post);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($body, $comment->body, 'HTMLが使用できること');
@@ -189,10 +189,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $post->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $post);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($post->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
@@ -223,10 +223,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $photo->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $photo);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($photo->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
@@ -257,10 +257,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $location->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $location);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($location->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
@@ -291,10 +291,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $item->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $item);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($item->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
@@ -305,13 +305,13 @@ class CommentTest extends TestCase
     }
 
     /**
-     * コメント者
+     * コメント者プロフィール
      * 
-     * - コメント者がログインユーザの場合は、コメント者プロフィールIDには、コメント者のプロフィールIDが設定されることを確認します。
+     * - コメントしたユーザのプロフィールであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者プロフィール
      */
-    public function test_commenter_logged_in_user()
+    public function test_commenter()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(99);
@@ -331,9 +331,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $item->comments()->create([
             'body' => 'これはテストコメントです。',
-        ], $item);
+            'commenter' => $commenter,
+        ]);
 
         // 評価
         Assert::assertEquals($commenter->id, $comment->commenter->id, 'コメント者のプロフィールのIDがコメント者プロフィールIDに設定されること');
@@ -343,11 +344,11 @@ class CommentTest extends TestCase
     }
 
     /**
-     * コメント者
+     * コメント者プロフィール
      * 
-     * - コメント者が匿名ユーザの場合は、コメント者プロフィールIDは設定されないことを確認します。
+     * - コメント者が匿名ユーザの場合は、コメント者プロフィールは設定されないことを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者プロフィール
      */
     public function test_commenter_anonymous()
     {
@@ -361,10 +362,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $item->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ'
-        ], $item);
+            'commenter_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertNull($comment->commenter, 'コメント者プロフィールIDは設定されないこと');
@@ -373,11 +374,11 @@ class CommentTest extends TestCase
     /**
      * コメント者ニックネーム
      * 
-     * - ログインユーザ、かつコメント者ニックネームが指定されなかった場合は、コメント者のプロフィールのニックネームであることを確認します。
+     * - コメント作成時に指定がなかった場合は、コメント者プロフィールのニックネームであることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_nickname_logged_in_user_default()
+    public function test_commenter_nickname_default()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(99);
@@ -398,12 +399,13 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $item->comments()->create([
             'body' => 'これはテストコメントです。',
-        ], $item);
+            'commenter' => $commenter,
+        ]);
 
         // 評価
-        Assert::assertEquals($commenter->nickname, $comment->nickname, 'コメント者のプロフィールのニックネームであること');
+        Assert::assertEquals($commenter->nickname, $comment->commenter_nickname, 'コメント者プロフィールのニックネームであること');
         $this->assertDatabaseHas('comments', [
             'commenter_nickname' => null,
         ]);
@@ -412,11 +414,11 @@ class CommentTest extends TestCase
     /**
      * コメント者ニックネーム
      * 
-     * - ログインユーザ、かつコメント者ニックネームが指定された場合は、指定したニックネームが設定されることを確認します。
+     * - コメント時に指定したコメント者のニックネームであることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者ニックネーム
      */
-    public function test_nickname_logged_in_user_specify()
+    public function test_commenter_nickname()
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(99);
@@ -437,13 +439,13 @@ class CommentTest extends TestCase
         $nickname = 'MyNickname';
 
         // 実行
-        $comment = Comment::create([
+        $comment = $item->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => $nickname,
-        ], $item);
+            'commenter_nickname' => $nickname,
+        ]);
 
         // 評価
-        Assert::assertEquals($nickname, $comment->nickname, '指定したニックネームであること');
+        Assert::assertEquals($nickname, $comment->commenter_nickname, 'コメント時に指定したコメント者のニックネームであること');
     }
 
     /**
@@ -466,9 +468,9 @@ class CommentTest extends TestCase
 
         // 実行
         $this->assertThrows(function () use ($item) {
-            Comment::create([
+            $item->comments()->create([
                 'body' => 'これはテストコメントです。',
-            ], $item);
+            ]);
         }, \Illuminate\Validation\ValidationException::class);
     }
 
@@ -492,13 +494,13 @@ class CommentTest extends TestCase
         $nickname = 'MyNickname';
 
         // 実行
-        $comment = Comment::create([
+        $comment = $item->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => $nickname,
-        ], $item);
+            'commenter_nickname' => $nickname,
+        ]);
 
         // 評価
-        Assert::assertEquals($nickname, $comment->nickname, '指定したニックネームであること');
+        Assert::assertEquals($nickname, $comment->commenter_nickname, '指定したニックネームであること');
     }
 
     /**
@@ -520,10 +522,10 @@ class CommentTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $comment = Comment::create([
+        $comment = $item->comments()->create([
             'body' => 'これはテストコメントです。',
-            'nickname' => 'テストユーザ',
-        ], $item);
+            'commenter_nickname' => 'テストユーザ',
+        ]);
 
         // 評価
         Assert::assertFalse($comment->isPublic, 'コメント公開フラグは、デフォルトで非公開であること');

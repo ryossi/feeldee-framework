@@ -6,10 +6,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 /**
  * コメントをあらわすモデル
@@ -23,21 +22,21 @@ class Comment extends Model
      *
      * @var array
      */
-    protected $fillable = ['body', 'commenter', 'nickname', 'commented_at'];
+    protected $fillable = ['commenter', 'commenter_nickname', 'body',  'commented_at'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'body', 'commented_at', 'is_public', 'commenter', 'nickname', 'replies', 'commentable'];
+    protected $visible = ['id', 'body', 'commented_at', 'is_public', 'replies', 'commentable'];
 
     /**
      * 配列に追加する属性
      * 
      * @var array
      */
-    protected $appends = ['commenter', 'nickname', 'replies', 'commentable'];
+    protected $appends = ['replies', 'commentable'];
 
     /**
      * 変換する属性
@@ -52,61 +51,32 @@ class Comment extends Model
      */
     protected static function booted(): void
     {
+        static::saving(function (self $model) {
+            // コメント日時
+            if (empty($model->commented_at)) {
+                $model->commented_at = Carbon::now();
+            }
+            // コメント者プロフィール
+            if (!empty($model->commenter) && $model->commenter instanceof Profile) {
+                $model->commenter_profile_id = $model->commenter->id;
+                unset($model->commenter);
+            }
+        });
+
         static::creating(function (self $model) {
             // コメント所有者
-            $model->profile = $model->commentable->profile;
+            $model->profile_id = $model->commentable->profile_id;
         });
     }
 
     /**
-     * コメントを作成します。
-     * 
-     * @param array<string, mixed>  $attributes　属性
-     * @param Content $ommentable コメント対象
-     * @return Self 作成したコメント
-     */
-    public static function create($attributes = [], Content $commentable): Self
-    {
-        // ログインユーザ取得
-        $user = Auth::user();
-
-        // バリデーション
-        Validator::validate($attributes, [
-            // 匿名ユーザは、ニックネームが必須
-            'nickname' => Rule::requiredIf(!$user),
-        ]);
-
-        // コメント日時
-        if (!array_key_exists('commented_at', $attributes) || empty($attributes['commented_at'])) {
-            // コメント日時が指定されなかった場合
-            // システム日時が自動で設定される
-            $attributes['commented_at'] = Carbon::now();
-        }
-
-        // コメント作成
-        return $commentable->comments()->create(
-            array_merge(
-                $attributes,
-                [
-                    'commenter' => $user?->profile,
-                ]
-            )
-        );
-    }
-
-    /**
-     * コメント所有者
+     * コメント所有者プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value?->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
 
     /**
@@ -120,18 +90,13 @@ class Comment extends Model
     }
 
     /**
-     * コメント者
+     * コメント所有者プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function commenter(): Attribute
+    public function commenter(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value, $attributes) => $attributes['commenter_profile_id'] ? $this->belongsTo(Profile::class, 'commenter_profile_id')->get()->first() : null,
-            set: fn($value) => [
-                'commenter_profile_id' => $value?->id,
-            ]
-        );
+        return $this->belongsTo(Profile::class, 'commenter_profile_id');
     }
 
     /**
@@ -139,7 +104,7 @@ class Comment extends Model
      * 
      * @return Attribute
      */
-    protected function nickname(): Attribute
+    protected function commenterNickname(): Attribute
     {
         return Attribute::make(
             get: fn($value, $attributes) => empty($attributes['commenter_nickname']) ? $this->commenter->nickname : $attributes['commenter_nickname'],
