@@ -99,7 +99,7 @@ class Comment extends Model
     }
 
     /**
-     * コメント所有者プロフィール
+     * コメント者プロフィール
      *
      * @return BelongsTo
      */
@@ -116,7 +116,7 @@ class Comment extends Model
     protected function commenterNickname(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => empty($value) ? $this->commenter?->nickname : $value,
+            get: fn($value) => empty($value) ? $this->commenter?->nickname : $value,
             set: fn($value) => [
                 'commenter_nickname' => $value,
             ]
@@ -172,12 +172,30 @@ class Comment extends Model
     }
 
     /**
+     * 最新のものから並び替えるクエリのスコープを設定
+     */
+    public function scopeOrderLatest($query)
+    {
+        return $query->latest('commented_at');
+    }
+
+    /**
+     * 古いものから並び替えるクエリのスコープを設定
+     */
+    public function scopeOrderOldest($query)
+    {
+        return $query->oldest('commented_at');
+    }
+
+    // ========================== ここまで整理ずみ ==========================
+
+    /**
      * コメント対象種別を条件に含むようにクエリのスコープを設定
      * 
      * @param \Illuminate\Database\Eloquent\Builder $query
      * @param string $commentableType コメント対象コンテンツ種別
      */
-    public function scopeWhereCommentableType($query, string $commentableType)
+    public function scopeOfCommentableType($query, string $commentableType)
     {
         $query->where('commentable_type', $commentableType);
     }
@@ -229,21 +247,5 @@ class Comment extends Model
                     ->where('profile_id', Auth::user()?->profile->id);
             });
         });
-    }
-
-    /**
-     * 最新のものから並び替えるクエリのスコープを設定
-     */
-    public function scopeOrderLatest($query)
-    {
-        return $query->latest('commented_at');
-    }
-
-    /**
-     * 古いものから並び替えるクエリのスコープを設定
-     */
-    public function scopeOrderOldest($query)
-    {
-        return $query->oldest('commented_at');
     }
 }

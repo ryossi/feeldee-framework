@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Post;
@@ -13,7 +14,7 @@ use Tests\Models\User;
 use Tests\TestCase;
 
 /**
- * 返信の用語を担保するための機能テストです。
+ * 返信の機能テストです。
  * 
  * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信
  */
@@ -39,8 +40,8 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ'
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ'
         ], $comment);
 
         // 評価
@@ -66,9 +67,9 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
+        $reply = $comment->replies()->create([
             'replied_at' => $replied_at,
-            'nickname' => 'テストユーザ',
+            'replyer_nickname' => 'テストユーザ',
         ], $comment);
 
         // 評価
@@ -93,8 +94,8 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ',
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ',
         ], $comment);
 
         // 評価
@@ -120,10 +121,10 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
+        $reply = $comment->replies()->create([
             'body' => $body,
-            'nickname' => 'テストユーザ'
-        ], $comment);
+            'replyer_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($body, $reply->body, 'テキストが使用できること');
@@ -148,21 +149,21 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
+        $reply = $comment->replies()->create([
             'body' => $body,
-            'nickname' => 'テストユーザ'
-        ], $comment);
+            'replyer_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($body, $reply->body, 'HTMLが使用できること');
     }
 
     /**
-     * 返信者
+     * 返信者プロフィール
      * 
      * - 返信者がログインユーザの場合は、返信者のプロフィールのIDが返信者プロフィールIDに設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者プロフィール
      */
     public function test_replyer_logged_in_user()
     {
@@ -184,7 +185,9 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
-        $reply = Reply::create([], $comment);
+        $reply = $comment->replies()->create([
+            'replyer' => $replyer,
+        ]);
 
         // 評価
         Assert::assertEquals($replyer->id, $reply->replyer->id, '返信者のプロフィールのIDが返信者プロフィールIDに設定されること');
@@ -194,11 +197,11 @@ class ReplyTest extends TestCase
     }
 
     /**
-     * 返信者
+     * 返信者プロフィール
      * 
      * - 返信者が匿名ユーザの場合は、返信者のプロフィールのIDは設定されないことを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者プロフィール
      */
     public function test_replyer_anonymous()
     {
@@ -211,9 +214,9 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ'
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertNull($reply->replyer, '返信者プロフィールIDは設定されないこと');
@@ -249,10 +252,12 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
-        $reply = Reply::create([], $comment);
+        $reply = $comment->replies()->create([
+            'replyer' => $replyer,
+        ]);
 
         // 評価
-        Assert::assertEquals($replyer->nickname, $reply->nickname, 'ログインユーザのニックネームであること');
+        Assert::assertEquals($replyer->nickname, $reply->replyer_nickname, 'ログインユーザのニックネームであること');
         $this->assertDatabaseHas('replies', [
             'replyer_nickname' => null,
         ]);
@@ -286,12 +291,12 @@ class ReplyTest extends TestCase
         $nickname = '指定したニックネーム';
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => $nickname
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => $nickname
+        ]);
 
         // 評価
-        Assert::assertEquals($nickname, $reply->nickname, '指定したニックネームであること');
+        Assert::assertEquals($nickname, $reply->replyer_nickname, '指定したニックネームであること');
     }
 
     /**
@@ -313,8 +318,8 @@ class ReplyTest extends TestCase
 
         // 実行
         $this->assertThrows(function () use ($comment) {
-            Reply::create([], $comment);
-        }, \Illuminate\Validation\ValidationException::class);
+            $comment->replies()->create([]);
+        }, ApplicationException::class, 'ReplyerNicknameRequired');
     }
 
     /**
@@ -336,12 +341,12 @@ class ReplyTest extends TestCase
         $nickname = '指定したニックネーム';
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => $nickname
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => $nickname
+        ]);
 
         // 評価
-        Assert::assertEquals($nickname, $reply->nickname, '指定したニックネームであること');
+        Assert::assertEquals($nickname, $reply->replyer_nickname, '指定したニックネームであること');
     }
 
     /**
@@ -362,12 +367,12 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ',
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ',
+        ]);
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '公開フラグがデフォルトであること');
+        Assert::assertFalse($reply->is_public, '公開フラグがデフォルトであること');
     }
 
     /**
@@ -390,7 +395,7 @@ class ReplyTest extends TestCase
         $reply->doPublic();
 
         // 評価
-        Assert::assertTrue($reply->isPublic, '公開できること');
+        Assert::assertTrue($reply->is_public, '公開できること');
     }
 
     /**
@@ -413,7 +418,7 @@ class ReplyTest extends TestCase
         $reply->doPrivate();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開にできること');
+        Assert::assertFalse($reply->is_public, '非公開にできること');
     }
 
     /**
@@ -434,7 +439,7 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertTrue($reply->isPublic, '公開であること');
+        Assert::assertTrue($reply->is_public, '公開であること');
     }
 
     /**
@@ -455,7 +460,7 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開であること');
+        Assert::assertFalse($reply->is_public, '非公開であること');
     }
 
     /**
@@ -476,7 +481,7 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開であること');
+        Assert::assertFalse($reply->is_public, '非公開であること');
     }
 
     /**
@@ -497,6 +502,6 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開であること');
+        Assert::assertFalse($reply->is_public, '非公開であること');
     }
 }

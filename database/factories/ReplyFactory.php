@@ -23,7 +23,7 @@ class ReplyFactory extends Factory
     {
         return [
             'replied_at' => fake()->date(),
-            'nickname' => fake()->name(),
+            'replyer_nickname' => fake()->name(),
         ];
     }
 }

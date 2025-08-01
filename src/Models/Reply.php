@@ -3,12 +3,11 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * 返信をあらわすモデル
@@ -22,21 +21,14 @@ class Reply extends Model
      *
      * @var array
      */
-    protected $fillable = ['body', 'replyer', 'nickname', 'replied_at'];
+    protected $fillable = ['body', 'replyer', 'replyer_nickname', 'replied_at'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'body', 'replied_at', 'is_public', 'replyer', 'nickname'];
-
-    /**
-     * 配列に追加する属性
-     * 
-     * @var array
-     */
-    protected $appends = ['replyer', 'nickname'];
+    protected $visible = ['id', 'body', 'replied_at', 'is_public', 'replyer', 'replyer_nickname'];
 
     /**
      * 変換する属性
@@ -47,39 +39,29 @@ class Reply extends Model
     ];
 
     /**
-     * 返信を作成します。
-     * 
-     * @param array<string, mixed>  $attributes　属性
-     * @param Comment $comment 返信対象
-     * @return Self 作成した返信
+     * モデルの「起動」メソッド
      */
-    public static function create($attributes = [], Comment $comment): Self
+    protected static function booted(): void
     {
-        // ログインユーザ取得
-        $user = Auth::user();
+        // デフォルトの並び順は、返信日時降順
+        static::addGlobalScope('order_number', function ($builder) {
+            $builder->orderBy('replied_at', 'desc');
+        });
 
-        // バリデーション
-        Validator::validate($attributes, [
-            // 匿名ユーザは、ニックネームが必須
-            'nickname' => Rule::requiredIf(!$user),
-        ]);
-
-        // 返信日時
-        if (!array_key_exists('replied_at', $attributes) || empty($attributes['replied_at'])) {
-            // 返信日時が指定されなかった場合
-            // システム日時が自動で設定される
-            $attributes['replied_at'] = Carbon::now();
-        }
-
-        // 返信作成
-        return $comment->replies()->create(
-            array_merge(
-                $attributes,
-                [
-                    'replyer' => $user?->profile,
-                ]
-            )
-        );
+        static::saving(function (self $model) {
+            // 返信日時
+            if (empty($model->replied_at)) {
+                $model->replied_at = Carbon::now();
+            }
+            // 返信者プロフィール
+            if (!empty($model->replyer) && $model->replyer instanceof Profile) {
+                $model->replyer_profile_id = $model->replyer->id;
+                unset($model->replyer);
+            } elseif (empty($model->replyer_nickname)) {
+                // 返信者ニックネームが指定されていない場合は、例外をスロー
+                throw new ApplicationException(60002);
+            }
+        });
     }
 
     /**
@@ -93,18 +75,13 @@ class Reply extends Model
     }
 
     /**
-     * 返信者
+     * 返信者プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function replyer(): Attribute
+    public function replyer(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value, $attributes) => $attributes['replyer_profile_id'] ? $this->belongsTo(Profile::class, 'replyer_profile_id')->get()->first() : null,
-            set: fn($value) => [
-                'replyer_profile_id' => $value?->id,
-            ]
-        );
+        return $this->belongsTo(Profile::class, 'replyer_profile_id');
     }
 
     /**
@@ -112,10 +89,10 @@ class Reply extends Model
      * 
      * @return Attribute
      */
-    protected function nickname(): Attribute
+    protected function replyerNickname(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => empty($attributes['replyer_nickname']) ? $this->replyer->nickname : $attributes['replyer_nickname'],
+            get: fn($value) => empty($value) ? $this->replyer?->nickname : $value,
             set: fn($value) => [
                 'replyer_nickname' => $value,
             ]
@@ -125,12 +102,13 @@ class Reply extends Model
     /**
      * 返信公開フラグ
      * 
-     * @return bool
+     * @return Attribute
      */
-    protected function getIsPublicAttribute(): bool
+    protected function isPublic(): Attribute
     {
-        // 返信対象のコメント公開フラグとのAND条件
-        return ($this->attributes['is_public'] ?? false) && $this->comment->isPublic;
+        return Attribute::make(
+            get: fn($value) => $this->comment?->is_public ? (boolval($value) ?? false) : false,
+        );
     }
 
     /**
@@ -157,5 +135,21 @@ class Reply extends Model
     {
         $this->is_public = false;
         $this->save();
+    }
+
+    /**
+     * 最新のものから並び替えるクエリのスコープを設定
+     */
+    public function scopeOrderLatest($query)
+    {
+        return $query->latest('replied_at');
+    }
+
+    /**
+     * 古いものから並び替えるクエリのスコープを設定
+     */
+    public function scopeOrderOldest($query)
+    {
+        return $query->oldest('replied_at');
     }
 }

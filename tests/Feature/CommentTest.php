@@ -17,7 +17,7 @@ use Illuminate\Testing\Assert;
 use Tests\Models\User;
 
 /**
- * コメントの用語を担保するための機能テストです。
+ * コメントの機能テストです。
  * 
  * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント
  */
