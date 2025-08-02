@@ -753,4 +753,114 @@ class CommentTest extends TestCase
         // 評価
         Assert::assertFalse($comment->is_public, 'コメントを非公開にできること');
     }
+
+    /**
+     * コメントリストの並び順
+     * 
+     * - コメントリストのデフォルトの並び順は、コメント日時の降順（最新順）であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメントリストの並び順
+     */
+    public function test_comments_order_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $post = $profile->posts->first();
+        $comment1 = $post->comments()->create([
+            'body' => '最初のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 09:00:00'
+        ]);
+        $comment2 = $post->comments()->create([
+            'body' => '次のコメント',
+            'commenter_nickname' => 'ユーザ2',
+            'commented_at' => '2025-07-24 10:00:00'
+        ]);
+        $comment3 = $post->comments()->create([
+            'body' => '最後のコメント',
+            'commenter_nickname' => 'ユーザ3',
+            'commented_at' => '2025-07-24 11:00:00'
+        ]);
+
+        // 実行
+        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $comments = $post->comments;
+
+        // 評価
+        Assert::assertEquals([$comment3->id, $comment2->id, $comment1->id], $comments->pluck('id')->toArray(), 'コメントリストのデフォルトの並び順は、コメント日時の降順（最新順）であること');
+    }
+
+    /**
+     * コメントリストの並び順
+     * 
+     * - 古いコメントから順番に並び替えたい場合は、コメント日時昇順でソートできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメントリストの並び順
+     */
+    public function test_comments_order_asc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $post = $profile->posts->first();
+        $comment1 = $post->comments()->create([
+            'body' => '最初のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 09:00:00'
+        ]);
+        $comment2 = $post->comments()->create([
+            'body' => '次のコメント',
+            'commenter_nickname' => 'ユーザ2',
+            'commented_at' => '2025-07-24 10:00:00'
+        ]);
+        $comment3 = $post->comments()->create([
+            'body' => '最後のコメント',
+            'commenter_nickname' => 'ユーザ3',
+            'commented_at' => '2025-07-24 11:00:00'
+        ]);
+
+        // 実行
+        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $comments = $post->comments()->orderOldest()->get();
+
+        // 評価
+        Assert::assertEquals([$comment1->id, $comment2->id, $comment3->id], $comments->pluck('id')->toArray(), '古いコメントから順番に並び替えたい場合は、コメント日時昇順でソートできること');
+    }
+
+    /**
+     * コメントリストの並び順
+     * 
+     * - 独自のSQLにおいてソート指定することも可能であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメントリストの並び順
+     */
+    public function test_comments_order_custom_sql()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $post = $profile->posts->first();
+        $comment1 = $post->comments()->create([
+            'body' => '最初のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 09:00:00'
+        ]);
+        $comment2 = $post->comments()->create([
+            'body' => '次のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 10:00:00'
+        ]);
+        $comment3 = $post->comments()->create([
+            'body' => '最後のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 11:00:00'
+        ]);
+
+        // 実行
+        $comments = Comment::by('ユーザ1')->orderLatest()->get();
+
+        // 評価
+        Assert::assertEquals([$comment3->id, $comment2->id, $comment1->id], $comments->pluck('id')->toArray(), '独自のSQLにおいてソート指定することも可能であること');
+    }
 }

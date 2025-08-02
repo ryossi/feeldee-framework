@@ -4,6 +4,7 @@ namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -185,6 +186,19 @@ class Comment extends Model
     public function scopeOrderOldest($query)
     {
         return $query->oldest('commented_at');
+    }
+
+    /**
+     * コメント者ニックネームで絞り込むためのローカルスコープ
+     */
+    public function scopeBy(Builder $query, $nickname): void
+    {
+        $query->where(function ($query) use ($nickname) {
+            $query->where('commenter_nickname', $nickname)
+                ->orWhereHas('commenter', function ($query) use ($nickname) {
+                    $query->where('nickname', $nickname);
+                });
+        });
     }
 
     // ========================== ここまで整理ずみ ==========================
