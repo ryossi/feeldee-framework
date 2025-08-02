@@ -504,4 +504,163 @@ class ReplyTest extends TestCase
         // 評価
         Assert::assertFalse($reply->is_public, '非公開であること');
     }
+
+    /**
+     * 返信作成
+     * 
+     * - コメントに対する返信を作成することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+
+        // 返信者準備
+        $user = User::create([
+            'id' => 99,
+            'name' => '返信者',
+            'email' => 'replyer@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $replyer = $user->profiles()->create([
+            'id' => 99,
+            'nickname' => '返信者プロフィール',
+            'title' => '返信者プロフィールタイトル'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'replyer' => Auth::user()->profile,
+            'body' => 'これはテスト返信です。',
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => $replyer->id,
+            'replyer_nickname' => null,
+            'body' => 'これはテスト返信です。',
+        ]);
+        $this->assertEquals($replyer->id, $reply->replyer->id, '返信者プロフィールのIDが設定されていること');
+    }
+
+    /**
+     * 返信作成
+     * 
+     * - 返信者プロフィールおよび返信者ニックネームの両方を指定することもできることを確認します。
+     * 
+     * @link　https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply_with_both_profile_and_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+
+        // 返信者準備
+        $user = User::create([
+            'id' => 99,
+            'name' => '返信者',
+            'email' => 'replyer@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $replyer = $user->profiles()->create([
+            'id' => 99,
+            'nickname' => '返信者プロフィール',
+            'title' => '返信者プロフィールタイトル'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        $replyer_nickname = 'test456';
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'replyer' => Auth::user()->profile,
+            'body' => 'これはテスト返信です。',
+            'replyer_nickname' => $replyer_nickname,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => $replyer->id,
+            'replyer_nickname' => $replyer_nickname,
+            'body' => 'これはテスト返信です。',
+        ]);
+        $this->assertEquals($replyer_nickname, $reply->replyer_nickname, '返信者プロフィールおよび返信者ニックネームの両方を指定することもできること');
+    }
+
+    /**
+     * 返信作成
+     * 
+     * - 匿名ユーザの場合は、返信者ニックネームが必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply_anonymous_nickname_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+        $replyer_nickname = 'test456';
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'body' => 'これはテスト返信です。',
+            'replyer_nickname' => $replyer_nickname,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => null,
+            'replyer_nickname' => $replyer_nickname,
+            'body' => 'これはテスト返信です。',
+        ]);
+        $this->assertEquals($replyer_nickname, $reply->replyer_nickname, '匿名ユーザの場合は、返信者ニックネームが必須であること');
+    }
+
+    /**
+     * 返信作成
+     * 
+     * - 返信日時は、テストなどで任意の日付を指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply_with_replied_at()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+        $replyer_nickname = 'test456';
+        $replied_at = '2025-03-30 10:34:10';
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'body' => 'これはテスト返信です。',
+            'replyer_nickname' => $replyer_nickname,
+            'replied_at' => $replied_at,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => null,
+            'replyer_nickname' => $replyer_nickname,
+            'body' => 'これはテスト返信です。',
+            'replied_at' => $replied_at,
+        ]);
+        $this->assertEquals($replied_at, $reply->replied_at, '返信日時は、テストなどで任意の日付を指定することもできること');
+    }
 }
