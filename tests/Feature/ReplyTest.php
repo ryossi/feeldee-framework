@@ -670,4 +670,105 @@ class ReplyTest extends TestCase
         // 評価
         Assert::assertFalse($reply->is_public, '非公開にできること');
     }
+
+    /**
+     * 返信リストの並び順
+     * 
+     * - 返信リストのデフォルトの並び順は、返信日時の降順（最新順）であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リストの並び順
+     */
+    public function test_replies_order()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00'
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->first();
+        $replies = $comment->replies;
+
+        // 評価
+        Assert::assertEquals([3, 2, 1], $replies->pluck('id')->toArray(), '返信リストのデフォルトの並び順は、返信日時の降順（最新順）であること');
+    }
+
+    /**
+     * 返信リストの並び順
+     * 
+     * - 古い返信から順番に並び替えたい場合は、返信日時昇順でソートできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リストの並び順
+     */
+    public function test_replies_order_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00'
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->first();
+        $replies = $comment->replies()->orderOldest()->get();
+
+        // 評価
+        Assert::assertEquals([1, 2, 3], $replies->pluck('id')->toArray(), '古い返信から順番に並び替えたい場合は、返信日時昇順でソートできること');
+    }
+
+    /**
+     * 返信リストの並び順
+     * 
+     * - 独自のSQLにおいてソート指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リストの並び順
+     */
+    public function test_replies_order_custom_sql()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00',
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::by('test456')->orderLatest()->get();
+
+        // 評価
+        Assert::assertEquals([3, 2, 1], $replies->pluck('id')->toArray(), '独自のSQLにおいてソート指定することもできること');
+    }
 }
