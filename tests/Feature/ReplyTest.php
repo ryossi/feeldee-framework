@@ -378,52 +378,6 @@ class ReplyTest extends TestCase
     /**
      * 返信公開フラグ
      * 
-     * - 公開できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
-     */
-    public function test_is_public_doPublic()
-    {
-        // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory(1)
-            ->has(Comment::factory(1, ['is_public' => true])
-                ->has(Reply::factory(1, ['is_public' => false]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
-
-        // 実行
-        $reply->doPublic();
-
-        // 評価
-        Assert::assertTrue($reply->is_public, '公開できること');
-    }
-
-    /**
-     * 返信公開フラグ
-     * 
-     * - 非公開にできることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
-     */
-    public function test_is_public_doPrivate()
-    {
-        // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory(1)
-            ->has(Comment::factory(1, ['is_public' => true])
-                ->has(Reply::factory(1, ['is_public' => true]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
-
-        // 実行
-        $reply->doPrivate();
-
-        // 評価
-        Assert::assertFalse($reply->is_public, '非公開にできること');
-    }
-
-    /**
-     * 返信公開フラグ
-     * 
      * - 取得時の返信公開フラグは、常に返信対象のコメント公開フラグとのAND条件となることを確認します。
      * - 返信対象のコメント公開フラグが公開、返信公開フラグが公開の場合は、取得時の返信公開フラグは公開であることを確認します。
      * 
@@ -662,5 +616,58 @@ class ReplyTest extends TestCase
             'replied_at' => $replied_at,
         ]);
         $this->assertEquals($replied_at, $reply->replied_at, '返信日時は、テストなどで任意の日付を指定することもできること');
+    }
+
+    /**
+     * 返信公開
+     * 
+     * - 返信を公開できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開
+     */
+    public function test_doPublic()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, [
+                    'replyer_nickname' => 'test456',
+                    'replied_at' => '2000-01-01 09:00:00',
+                    'is_public' => false
+                ]))))->create();
+
+        // 実行
+        $reply = Reply::by('test456')->at('2000-01-01 09:00:00')->first();
+        $reply->doPublic();
+
+        // 評価
+        Assert::assertTrue($reply->is_public, '公開できること');
+    }
+
+    /**
+     * 返信公開
+     * 
+     * - 返信を非公開にできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開
+     */
+    public function test_doPrivate()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, [
+                    'replyer_nickname' => 'test456',
+                    'replied_at' => '2000-01-01 09:00:00',
+                    'is_public' => true
+                ]))))->create();
+        // 実行
+        $reply = Reply::by('test456')->at('2000-01-01 09:00:00')->first();
+        $reply->doPrivate();
+
+        // 評価
+        Assert::assertFalse($reply->is_public, '非公開にできること');
     }
 }

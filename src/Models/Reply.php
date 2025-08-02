@@ -3,7 +3,9 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -151,5 +153,33 @@ class Reply extends Model
     public function scopeOrderOldest($query)
     {
         return $query->oldest('replied_at');
+    }
+
+    /**
+     * 返信者ニックネームで絞り込むためのローカルスコープ
+     */
+    public function scopeBy(Builder $query, $nickname): void
+    {
+        $query->where(function ($query) use ($nickname) {
+            $query->where('replyer_nickname', $nickname)
+                ->orWhereHas('replyer', function ($query) use ($nickname) {
+                    $query->where('nickname', $nickname);
+                });
+        });
+    }
+
+    /**
+     * 返信日時で絞り込むためのローカルスコープ
+     */
+    public function scopeAt(Builder $query, $datetime): void
+    {
+        // 時刻が指定されていない場合は、00:00:00を付与
+        if (is_string($datetime) && !str_contains($datetime, ' ')) {
+            $datetime .= ' 00:00:00';
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+        }
+        $query->where('replied_at', $datetime);
     }
 }

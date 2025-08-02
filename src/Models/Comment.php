@@ -3,6 +3,7 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -199,6 +200,22 @@ class Comment extends Model
                     $query->where('nickname', $nickname);
                 });
         });
+    }
+
+    /**
+     * コメント日時で絞り込むためのローカルスコープ
+     * 
+     */
+    public function scopeAt(Builder $query, $datetime): void
+    {
+        // 時刻が指定されていない場合は、00:00:00を付与
+        if (is_string($datetime) && !str_contains($datetime, ' ')) {
+            $datetime .= ' 00:00:00';
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+        }
+        $query->where('commented_at', $datetime);
     }
 
     // ========================== ここまで整理ずみ ==========================
