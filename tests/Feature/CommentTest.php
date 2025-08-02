@@ -537,48 +537,6 @@ class CommentTest extends TestCase
     }
 
     /**
-     * コメント公開フラグ
-     * 
-     * - 公開できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
-     */
-    public function test_is_public_doPublic()
-    {
-        // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => false])))->create();
-        $comment = $profile->items->first()->comments->first();
-
-        // 実行
-        $comment->doPublic();
-
-        // 評価
-        Assert::assertTrue($comment->is_public, '公開できること');
-    }
-
-    /**
-     * コメント公開フラグ
-     * 
-     * - 非公開にできることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
-     */
-    public function test_is_public_doPrivate()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => true])))->create();
-        $comment = $profile->items->first()->comments->first();
-
-        // 実行
-        $comment->doPrivate();
-
-        // 評価
-        Assert::assertFalse($comment->is_public, '非公開にできること');
-    }
-
-    /**
      * 返信リスト
      * 
      * - 返信リストが取得できることを確認します。
@@ -752,5 +710,47 @@ class CommentTest extends TestCase
             'commented_at' => $commented_at,
         ]);
         $this->assertEquals($commented_at, $comment->commented_at, 'テストなどで任意の日付を指定することも可能であること');
+    }
+
+    /**
+     * コメント公開
+     * 
+     * - コメントを公開できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開
+     */
+    public function test_doPublic()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => false])))->create();
+        $comment = $profile->items->first()->comments->first();
+
+        // 実行
+        $comment->doPublic();
+
+        // 評価
+        Assert::assertTrue($comment->is_public, 'コメントを公開できること');
+    }
+
+    /**
+     * コメント公開
+     * 
+     * - コメントを非公開にできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開
+     */
+    public function test_doPrivate()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => true])))->create();
+        $comment = $profile->items->first()->comments->first();
+
+        // 実行
+        $comment->doPrivate();
+
+        // 評価
+        Assert::assertFalse($comment->is_public, 'コメントを非公開にできること');
     }
 }
