@@ -151,6 +151,14 @@ class Profile extends Model
     }
 
     /**
+     * コメントリスト
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
      * コンフィグリスト
      */
     public function configs()
@@ -308,13 +316,5 @@ class Profile extends Model
         if (!$viewer) return false;
 
         return false;
-    }
-
-    /**
-     * コメントリストを取得します。
-     */
-    public function comments()
-    {
-        return $this->hasMany(Comment::class);
     }
 }

@@ -3,13 +3,15 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Feeldee\Framework\Exceptions\ApplicationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 /**
  * コメントをあらわすモデル
@@ -23,21 +25,21 @@ class Comment extends Model
      *
      * @var array
      */
-    protected $fillable = ['body', 'commenter', 'nickname', 'commented_at'];
+    protected $fillable = ['commenter', 'commenter_nickname', 'body',  'commented_at'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'body', 'commented_at', 'is_public', 'commenter', 'nickname', 'replies', 'commentable'];
+    protected $visible = ['id', 'body', 'commented_at', 'is_public', 'replies', 'commentable'];
 
     /**
      * 配列に追加する属性
      * 
      * @var array
      */
-    protected $appends = ['commenter', 'nickname', 'replies', 'commentable'];
+    protected $appends = ['replies', 'commentable'];
 
     /**
      * 変換する属性
@@ -52,61 +54,40 @@ class Comment extends Model
      */
     protected static function booted(): void
     {
+        // デフォルトの並び順は、コメント日時降順
+        static::addGlobalScope('order_number', function ($builder) {
+            $builder->orderBy('commented_at', 'desc');
+        });
+
+        static::saving(function (self $model) {
+            // コメント日時
+            if (empty($model->commented_at)) {
+                $model->commented_at = Carbon::now();
+            }
+            // コメント者プロフィール
+            if (!empty($model->commenter) && $model->commenter instanceof Profile) {
+                $model->commenter_profile_id = $model->commenter->id;
+                unset($model->commenter);
+            } elseif (empty($model->commenter_nickname)) {
+                // コメント者ニックネームが指定されていない場合は、例外をスロー
+                throw new ApplicationException(60001);
+            }
+        });
+
         static::creating(function (self $model) {
             // コメント所有者
-            $model->profile = $model->commentable->profile;
+            $model->profile_id = $model->commentable->profile_id;
         });
     }
 
     /**
-     * コメントを作成します。
-     * 
-     * @param array<string, mixed>  $attributes　属性
-     * @param Content $ommentable コメント対象
-     * @return Self 作成したコメント
-     */
-    public static function create($attributes = [], Content $commentable): Self
-    {
-        // ログインユーザ取得
-        $user = Auth::user();
-
-        // バリデーション
-        Validator::validate($attributes, [
-            // 匿名ユーザは、ニックネームが必須
-            'nickname' => Rule::requiredIf(!$user),
-        ]);
-
-        // コメント日時
-        if (!array_key_exists('commented_at', $attributes) || empty($attributes['commented_at'])) {
-            // コメント日時が指定されなかった場合
-            // システム日時が自動で設定される
-            $attributes['commented_at'] = Carbon::now();
-        }
-
-        // コメント作成
-        return $commentable->comments()->create(
-            array_merge(
-                $attributes,
-                [
-                    'commenter' => $user?->profile,
-                ]
-            )
-        );
-    }
-
-    /**
-     * コメント所有者
+     * コメント所有者プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function profile(): Attribute
+    public function profile(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value) => $this->belongsTo(Profile::class, 'profile_id')->get()->first(),
-            set: fn($value) => [
-                'profile_id' => $value?->id
-            ]
-        );
+        return $this->belongsTo(Profile::class);
     }
 
     /**
@@ -120,18 +101,13 @@ class Comment extends Model
     }
 
     /**
-     * コメント者
+     * コメント者プロフィール
      *
-     * @return Attribute
+     * @return BelongsTo
      */
-    protected function commenter(): Attribute
+    public function commenter(): BelongsTo
     {
-        return Attribute::make(
-            get: fn($value, $attributes) => $attributes['commenter_profile_id'] ? $this->belongsTo(Profile::class, 'commenter_profile_id')->get()->first() : null,
-            set: fn($value) => [
-                'commenter_profile_id' => $value?->id,
-            ]
-        );
+        return $this->belongsTo(Profile::class, 'commenter_profile_id');
     }
 
     /**
@@ -139,13 +115,25 @@ class Comment extends Model
      * 
      * @return Attribute
      */
-    protected function nickname(): Attribute
+    protected function commenterNickname(): Attribute
     {
         return Attribute::make(
-            get: fn($value, $attributes) => empty($attributes['commenter_nickname']) ? $this->commenter->nickname : $attributes['commenter_nickname'],
+            get: fn($value) => empty($value) ? $this->commenter?->nickname : $value,
             set: fn($value) => [
                 'commenter_nickname' => $value,
             ]
+        );
+    }
+
+    /**
+     * コメント公開フラグ
+     * 
+     * @return Attribute
+     */
+    protected function isPublic(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $value ?? false,
         );
     }
 
@@ -157,16 +145,6 @@ class Comment extends Model
     public function replies()
     {
         return $this->hasMany(Reply::class);
-    }
-
-    /**
-     * コメント公開フラグ
-     *
-     * @return bool
-     */
-    protected function getIsPublicAttribute(): bool
-    {
-        return $this->attributes['is_public'] ?? false;
     }
 
     /**
@@ -196,9 +174,59 @@ class Comment extends Model
     }
 
     /**
-     * コメント対象種別を条件に含むようにクエリのスコープを設定
+     * 最新のものから並び替えるクエリのスコープを設定
      */
-    public function scopeOfType($query, string $commentableType)
+    public function scopeOrderLatest($query)
+    {
+        return $query->latest('commented_at');
+    }
+
+    /**
+     * 古いものから並び替えるクエリのスコープを設定
+     */
+    public function scopeOrderOldest($query)
+    {
+        return $query->oldest('commented_at');
+    }
+
+    /**
+     * コメント者ニックネームで絞り込むためのローカルスコープ
+     */
+    public function scopeBy(Builder $query, $nickname): void
+    {
+        $query->where(function ($query) use ($nickname) {
+            $query->where('commenter_nickname', $nickname)
+                ->orWhereHas('commenter', function ($query) use ($nickname) {
+                    $query->where('nickname', $nickname);
+                });
+        });
+    }
+
+    /**
+     * コメント日時で絞り込むためのローカルスコープ
+     * 
+     */
+    public function scopeAt(Builder $query, $datetime): void
+    {
+        // 時刻が指定されていない場合は、00:00:00を付与
+        if (is_string($datetime) && !str_contains($datetime, ' ')) {
+            $datetime .= ' 00:00:00';
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+        }
+        $query->where('commented_at', $datetime);
+    }
+
+    // ========================== ここまで整理ずみ ==========================
+
+    /**
+     * コメント対象種別を条件に含むようにクエリのスコープを設定
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $commentableType コメント対象コンテンツ種別
+     */
+    public function scopeOfCommentableType($query, string $commentableType)
     {
         $query->where('commentable_type', $commentableType);
     }
@@ -250,21 +278,5 @@ class Comment extends Model
                     ->where('profile_id', Auth::user()?->profile->id);
             });
         });
-    }
-
-    /**
-     * 最新のものから並び替えるクエリのスコープを設定
-     */
-    public function scopeOrderLatest($query)
-    {
-        return $query->latest('commented_at');
-    }
-
-    /**
-     * 古いものから並び替えるクエリのスコープを設定
-     */
-    public function scopeOrderOldest($query)
-    {
-        return $query->oldest('commented_at');
     }
 }

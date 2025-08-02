@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Post;
@@ -13,7 +14,7 @@ use Tests\Models\User;
 use Tests\TestCase;
 
 /**
- * 返信の用語を担保するための機能テストです。
+ * 返信の機能テストです。
  * 
  * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信
  */
@@ -39,8 +40,8 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ'
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ'
         ], $comment);
 
         // 評価
@@ -66,9 +67,9 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
+        $reply = $comment->replies()->create([
             'replied_at' => $replied_at,
-            'nickname' => 'テストユーザ',
+            'replyer_nickname' => 'テストユーザ',
         ], $comment);
 
         // 評価
@@ -93,8 +94,8 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ',
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ',
         ], $comment);
 
         // 評価
@@ -120,10 +121,10 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
+        $reply = $comment->replies()->create([
             'body' => $body,
-            'nickname' => 'テストユーザ'
-        ], $comment);
+            'replyer_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($body, $reply->body, 'テキストが使用できること');
@@ -148,21 +149,21 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
+        $reply = $comment->replies()->create([
             'body' => $body,
-            'nickname' => 'テストユーザ'
-        ], $comment);
+            'replyer_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertEquals($body, $reply->body, 'HTMLが使用できること');
     }
 
     /**
-     * 返信者
+     * 返信者プロフィール
      * 
      * - 返信者がログインユーザの場合は、返信者のプロフィールのIDが返信者プロフィールIDに設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者プロフィール
      */
     public function test_replyer_logged_in_user()
     {
@@ -184,7 +185,9 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
-        $reply = Reply::create([], $comment);
+        $reply = $comment->replies()->create([
+            'replyer' => $replyer,
+        ]);
 
         // 評価
         Assert::assertEquals($replyer->id, $reply->replyer->id, '返信者のプロフィールのIDが返信者プロフィールIDに設定されること');
@@ -194,11 +197,11 @@ class ReplyTest extends TestCase
     }
 
     /**
-     * 返信者
+     * 返信者プロフィール
      * 
      * - 返信者が匿名ユーザの場合は、返信者のプロフィールのIDは設定されないことを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者プロフィール
      */
     public function test_replyer_anonymous()
     {
@@ -211,9 +214,9 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ'
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ'
+        ]);
 
         // 評価
         Assert::assertNull($reply->replyer, '返信者プロフィールIDは設定されないこと');
@@ -249,10 +252,12 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn($user);
 
         // 実行
-        $reply = Reply::create([], $comment);
+        $reply = $comment->replies()->create([
+            'replyer' => $replyer,
+        ]);
 
         // 評価
-        Assert::assertEquals($replyer->nickname, $reply->nickname, 'ログインユーザのニックネームであること');
+        Assert::assertEquals($replyer->nickname, $reply->replyer_nickname, 'ログインユーザのニックネームであること');
         $this->assertDatabaseHas('replies', [
             'replyer_nickname' => null,
         ]);
@@ -286,12 +291,12 @@ class ReplyTest extends TestCase
         $nickname = '指定したニックネーム';
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => $nickname
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => $nickname
+        ]);
 
         // 評価
-        Assert::assertEquals($nickname, $reply->nickname, '指定したニックネームであること');
+        Assert::assertEquals($nickname, $reply->replyer_nickname, '指定したニックネームであること');
     }
 
     /**
@@ -313,8 +318,8 @@ class ReplyTest extends TestCase
 
         // 実行
         $this->assertThrows(function () use ($comment) {
-            Reply::create([], $comment);
-        }, \Illuminate\Validation\ValidationException::class);
+            $comment->replies()->create([]);
+        }, ApplicationException::class, 'ReplyerNicknameRequired');
     }
 
     /**
@@ -336,12 +341,12 @@ class ReplyTest extends TestCase
         $nickname = '指定したニックネーム';
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => $nickname
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => $nickname
+        ]);
 
         // 評価
-        Assert::assertEquals($nickname, $reply->nickname, '指定したニックネームであること');
+        Assert::assertEquals($nickname, $reply->replyer_nickname, '指定したニックネームであること');
     }
 
     /**
@@ -362,58 +367,12 @@ class ReplyTest extends TestCase
         Auth::shouldReceive('user')->andReturn(null);
 
         // 実行
-        $reply = Reply::create([
-            'nickname' => 'テストユーザ',
-        ], $comment);
+        $reply = $comment->replies()->create([
+            'replyer_nickname' => 'テストユーザ',
+        ]);
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '公開フラグがデフォルトであること');
-    }
-
-    /**
-     * 返信公開フラグ
-     * 
-     * - 公開できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
-     */
-    public function test_is_public_doPublic()
-    {
-        // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory(1)
-            ->has(Comment::factory(1, ['is_public' => true])
-                ->has(Reply::factory(1, ['is_public' => false]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
-
-        // 実行
-        $reply->doPublic();
-
-        // 評価
-        Assert::assertTrue($reply->isPublic, '公開できること');
-    }
-
-    /**
-     * 返信公開フラグ
-     * 
-     * - 非公開にできることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開フラグ
-     */
-    public function test_is_public_doPrivate()
-    {
-        // コメント対象準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory(1)
-            ->has(Comment::factory(1, ['is_public' => true])
-                ->has(Reply::factory(1, ['is_public' => true]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
-
-        // 実行
-        $reply->doPrivate();
-
-        // 評価
-        Assert::assertFalse($reply->isPublic, '非公開にできること');
+        Assert::assertFalse($reply->is_public, '公開フラグがデフォルトであること');
     }
 
     /**
@@ -434,7 +393,7 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertTrue($reply->isPublic, '公開であること');
+        Assert::assertTrue($reply->is_public, '公開であること');
     }
 
     /**
@@ -455,7 +414,7 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開であること');
+        Assert::assertFalse($reply->is_public, '非公開であること');
     }
 
     /**
@@ -476,7 +435,7 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開であること');
+        Assert::assertFalse($reply->is_public, '非公開であること');
     }
 
     /**
@@ -497,6 +456,319 @@ class ReplyTest extends TestCase
         $reply = $profile->posts->first()->comments->first()->replies->first();
 
         // 評価
-        Assert::assertFalse($reply->isPublic, '非公開であること');
+        Assert::assertFalse($reply->is_public, '非公開であること');
+    }
+
+    /**
+     * 返信作成
+     * 
+     * - コメントに対する返信を作成することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+
+        // 返信者準備
+        $user = User::create([
+            'id' => 99,
+            'name' => '返信者',
+            'email' => 'replyer@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $replyer = $user->profiles()->create([
+            'id' => 99,
+            'nickname' => '返信者プロフィール',
+            'title' => '返信者プロフィールタイトル'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'replyer' => Auth::user()->profile,
+            'body' => 'これはテスト返信です。',
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => $replyer->id,
+            'replyer_nickname' => null,
+            'body' => 'これはテスト返信です。',
+        ]);
+        $this->assertEquals($replyer->id, $reply->replyer->id, '返信者プロフィールのIDが設定されていること');
+    }
+
+    /**
+     * 返信作成
+     * 
+     * - 返信者プロフィールおよび返信者ニックネームの両方を指定することもできることを確認します。
+     * 
+     * @link　https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply_with_both_profile_and_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+
+        // 返信者準備
+        $user = User::create([
+            'id' => 99,
+            'name' => '返信者',
+            'email' => 'replyer@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $replyer = $user->profiles()->create([
+            'id' => 99,
+            'nickname' => '返信者プロフィール',
+            'title' => '返信者プロフィールタイトル'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        $replyer_nickname = 'test456';
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'replyer' => Auth::user()->profile,
+            'body' => 'これはテスト返信です。',
+            'replyer_nickname' => $replyer_nickname,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => $replyer->id,
+            'replyer_nickname' => $replyer_nickname,
+            'body' => 'これはテスト返信です。',
+        ]);
+        $this->assertEquals($replyer_nickname, $reply->replyer_nickname, '返信者プロフィールおよび返信者ニックネームの両方を指定することもできること');
+    }
+
+    /**
+     * 返信作成
+     * 
+     * - 匿名ユーザの場合は、返信者ニックネームが必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply_anonymous_nickname_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+        $replyer_nickname = 'test456';
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'body' => 'これはテスト返信です。',
+            'replyer_nickname' => $replyer_nickname,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => null,
+            'replyer_nickname' => $replyer_nickname,
+            'body' => 'これはテスト返信です。',
+        ]);
+        $this->assertEquals($replyer_nickname, $reply->replyer_nickname, '匿名ユーザの場合は、返信者ニックネームが必須であること');
+    }
+
+    /**
+     * 返信作成
+     * 
+     * - 返信日時は、テストなどで任意の日付を指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信作成
+     */
+    public function test_create_reply_with_replied_at()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])
+            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+        $replyer_nickname = 'test456';
+        $replied_at = '2025-03-30 10:34:10';
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->by('ユーザ1')->first();
+        $reply = $comment->replies()->create([
+            'body' => 'これはテスト返信です。',
+            'replyer_nickname' => $replyer_nickname,
+            'replied_at' => $replied_at,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'replyer_profile_id' => null,
+            'replyer_nickname' => $replyer_nickname,
+            'body' => 'これはテスト返信です。',
+            'replied_at' => $replied_at,
+        ]);
+        $this->assertEquals($replied_at, $reply->replied_at, '返信日時は、テストなどで任意の日付を指定することもできること');
+    }
+
+    /**
+     * 返信公開
+     * 
+     * - 返信を公開できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開
+     */
+    public function test_doPublic()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, [
+                    'replyer_nickname' => 'test456',
+                    'replied_at' => '2000-01-01 09:00:00',
+                    'is_public' => false
+                ]))))->create();
+
+        // 実行
+        $reply = Reply::by('test456')->at('2000-01-01 09:00:00')->first();
+        $reply->doPublic();
+
+        // 評価
+        Assert::assertTrue($reply->is_public, '公開できること');
+    }
+
+    /**
+     * 返信公開
+     * 
+     * - 返信を非公開にできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信公開
+     */
+    public function test_doPrivate()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(Post::factory(1)
+            ->has(Comment::factory(1, ['is_public' => true])
+                ->has(Reply::factory(1, [
+                    'replyer_nickname' => 'test456',
+                    'replied_at' => '2000-01-01 09:00:00',
+                    'is_public' => true
+                ]))))->create();
+        // 実行
+        $reply = Reply::by('test456')->at('2000-01-01 09:00:00')->first();
+        $reply->doPrivate();
+
+        // 評価
+        Assert::assertFalse($reply->is_public, '非公開にできること');
+    }
+
+    /**
+     * 返信リストの並び順
+     * 
+     * - 返信リストのデフォルトの並び順は、返信日時の降順（最新順）であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リストの並び順
+     */
+    public function test_replies_order()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00'
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->first();
+        $replies = $comment->replies;
+
+        // 評価
+        Assert::assertEquals([3, 2, 1], $replies->pluck('id')->toArray(), '返信リストのデフォルトの並び順は、返信日時の降順（最新順）であること');
+    }
+
+    /**
+     * 返信リストの並び順
+     * 
+     * - 古い返信から順番に並び替えたい場合は、返信日時昇順でソートできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リストの並び順
+     */
+    public function test_replies_order_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00'
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $comment = Post::by('feeldee')->at('2025-07-24')->first()->comments()->first();
+        $replies = $comment->replies()->orderOldest()->get();
+
+        // 評価
+        Assert::assertEquals([1, 2, 3], $replies->pluck('id')->toArray(), '古い返信から順番に並び替えたい場合は、返信日時昇順でソートできること');
+    }
+
+    /**
+     * 返信リストの並び順
+     * 
+     * - 独自のSQLにおいてソート指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リストの並び順
+     */
+    public function test_replies_order_custom_sql()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00',
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::by('test456')->orderLatest()->get();
+
+        // 評価
+        Assert::assertEquals([3, 2, 1], $replies->pluck('id')->toArray(), '独自のSQLにおいてソート指定することもできること');
     }
 }

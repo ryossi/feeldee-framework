@@ -5,7 +5,7 @@ namespace Feeldee\Framework\Models;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
-use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -90,6 +90,22 @@ class Post extends Content
     public function photos(): BelongsToMany
     {
         return $this->belongsToMany(Photo::class, 'posted_photos');
+    }
+
+    /**
+     * 投稿日で絞り込むためのローカルスコープ
+     * 
+     */
+    public function scopeAt(Builder $query, $date): void
+    {
+        // 時刻が指定されていない場合は、00:00:00を付与
+        if (is_string($date) && !str_contains($date, ' ')) {
+            $date .= ' 00:00:00';
+        } elseif ($date instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $date = $date->format('Y-m-d H:i:s');
+        }
+        $query->where('post_date', $date);
     }
 
     // ========================== ここまで整理ずみ ==========================

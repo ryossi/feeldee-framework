@@ -23,7 +23,7 @@ class CommentFactory extends Factory
     {
         return [
             'commented_at' => fake()->date(),
-            'nickname' => fake()->name(),
+            'commenter_nickname' => fake()->name(),
         ];
     }
 }
