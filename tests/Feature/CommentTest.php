@@ -13,6 +13,7 @@ use Feeldee\Framework\Models\Reply;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\Assert;
 use Tests\Models\User;
 
@@ -597,5 +598,159 @@ class CommentTest extends TestCase
 
         // 評価
         Assert::assertEquals($count, $replies->count(), '返信リストが取得できること');
+    }
+
+    /**
+     * コメント作成
+     * 
+     * - コメントが、コンテンツ毎に付与されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント作成
+     */
+    public function test_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'id' => 99,
+            'name' => 'コメント者',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'コメント者プロフィール',
+            'title' => 'コメント者プロフィールタイトル'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+
+        // 実行
+        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $comment = $post->comments()->create([
+            'commenter' => Auth::user()->profile,
+            'body' => 'これはテストコメントです。',
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Post::type(),
+            'commentable_id' => $post->id,
+            'commenter_profile_id' => Auth::user()->profile->id,
+            'commenter_nickname' => null,
+            'body' => 'これはテストコメントです。',
+        ]);
+        $this->assertEquals($post->id, $comment->commentable->id, 'コメントが、コンテンツ毎に付与されること');
+        $this->assertInstanceOf(Post::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+    }
+
+    /**
+     * コメント作成
+     * 
+     * - コメント者プロフィールおよびコメント者ニックネームの両方を指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント作成
+     */
+    public function test_create_with_commenter_and_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'id' => 99,
+            'name' => 'コメント者',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'コメント者プロフィール',
+            'title' => 'コメント者プロフィールタイトル'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $commenter_nickname = 'テストニックネーム';
+
+        // 実行
+        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $comment = $post->comments()->create([
+            'commenter' => Auth::user()->profile,
+            'commenter_nickname' => $commenter_nickname,
+            'body' => 'これはテストコメントです。',
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Post::type(),
+            'commentable_id' => $post->id,
+            'commenter_profile_id' => Auth::user()->profile->id,
+            'commenter_nickname' => $commenter_nickname,
+            'body' => 'これはテストコメントです。',
+        ]);
+        $this->assertEquals($commenter_nickname, $comment->commenter_nickname, 'コメント者プロフィールおよびコメント者ニックネームの両方を指定することもできること');
+    }
+
+    /**
+     * コメント作成
+     * 
+     * - 匿名ユーザの場合は、コメント者ニックネームが必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント作成
+     */
+    public function test_create_anonymous_nickname_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $commenter_nickname = 'テストニックネーム';
+
+        // 実行
+        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $comment = $post->comments()->create([
+            'commenter_nickname' => $commenter_nickname,
+            'body' => 'これはテストコメントです。',
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Post::type(),
+            'commentable_id' => $post->id,
+            'commenter_profile_id' => null,
+            'commenter_nickname' => $commenter_nickname,
+            'body' => 'これはテストコメントです。',
+        ]);
+        $this->assertEquals($commenter_nickname, $comment->commenter_nickname, '匿名ユーザの場合は、コメント者ニックネームが必須であること');
+    }
+
+    /**
+     * コメント作成
+     * 
+     * - コメント日時は、テストなどで任意の日付を指定することも可能であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント作成
+     */
+    public function test_create_with_commented_at()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $commenter_nickname = 'テストニックネーム';
+        $commented_at = '2025-03-27 09:30:20';
+
+        // 実行
+        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $comment = $post->comments()->create([
+            'commenter_nickname' => $commenter_nickname,
+            'body' => 'これはテストコメントです。',
+            'commented_at' => $commented_at,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('comments', [
+            'commentable_type' => Post::type(),
+            'commentable_id' => $post->id,
+            'commenter_profile_id' => null,
+            'commenter_nickname' => $commenter_nickname,
+            'body' => 'これはテストコメントです。',
+            'commented_at' => $commented_at,
+        ]);
+        $this->assertEquals($commented_at, $comment->commented_at, 'テストなどで任意の日付を指定することも可能であること');
     }
 }

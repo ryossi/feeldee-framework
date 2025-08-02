@@ -126,6 +126,14 @@ abstract class Content extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    /**
+     * コンテンツ所有プロフィールのニックネームで絞り込むためのローカルスコープ
+     */
+    public function scopeBy(Builder $query, $nickname): void
+    {
+        $query->whereHas('profile', fn($q) => $q->where('nickname', $nickname));
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
