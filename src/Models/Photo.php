@@ -19,14 +19,14 @@ class Photo extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'photo_type', 'src', 'regist_datetime'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'photo_type', 'src', 'posted_at'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'photo_type', 'src', 'regist_datetime', 'albums'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'photo_type', 'src', 'posted_at', 'albums'];
 
     /**
      * 配列に追加する属性
@@ -41,7 +41,7 @@ class Photo extends Content
      * @var array
      */
     protected $casts = [
-        'regist_datetime' => 'date',
+        'posted_at' => 'date',
         'value' => HTML::class,
         'src' => URL::class
     ];
@@ -51,7 +51,7 @@ class Photo extends Content
      * 
      * @var array
      */
-    protected $order_column = 'regist_datetime';
+    protected $order_column = 'posted_at';
 
     /**
      * 文字列から HTML および PHP タグを取り除く属性

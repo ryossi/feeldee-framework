@@ -471,7 +471,7 @@ class ReplyTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory(['nickname' => 'feeldee'])
-            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+            ->has(Post::factory(['posted_at' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
 
         // 返信者準備
         $user = User::create([
@@ -516,7 +516,7 @@ class ReplyTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory(['nickname' => 'feeldee'])
-            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+            ->has(Post::factory(['posted_at' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
 
         // 返信者準備
         $user = User::create([
@@ -563,7 +563,7 @@ class ReplyTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory(['nickname' => 'feeldee'])
-            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+            ->has(Post::factory(['posted_at' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
         $replyer_nickname = 'test456';
 
         // 実行
@@ -595,7 +595,7 @@ class ReplyTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory(['nickname' => 'feeldee'])
-            ->has(Post::factory(['post_date' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
+            ->has(Post::factory(['posted_at' => '2025-07-24'])->has(Comment::factory(['commenter_nickname' => 'ユーザ1'])->count(1))->count(1))->create();
         $replyer_nickname = 'test456';
         $replied_at = '2025-03-30 10:34:10';
 
@@ -683,7 +683,7 @@ class ReplyTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory(['nickname' => 'feeldee'])->has(
-            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+            Post::factory(1, ['posted_at' => '2025-07-24'])->has(
                 Comment::factory(1)->has(
                     Reply::factory(3, [
                         'replyer_nickname' => 'test456',
@@ -717,7 +717,7 @@ class ReplyTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory(['nickname' => 'feeldee'])->has(
-            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+            Post::factory(1, ['posted_at' => '2025-07-24'])->has(
                 Comment::factory(1)->has(
                     Reply::factory(3, [
                         'replyer_nickname' => 'test456',
@@ -751,7 +751,7 @@ class ReplyTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         Profile::factory(['nickname' => 'feeldee'])->has(
-            Post::factory(1, ['post_date' => '2025-07-24'])->has(
+            Post::factory(1, ['posted_at' => '2025-07-24'])->has(
                 Comment::factory(1)->has(
                     Reply::factory(3, [
                         'replyer_nickname' => 'test456',

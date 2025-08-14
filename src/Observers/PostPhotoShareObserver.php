@@ -21,7 +21,7 @@ class PostPhotoShareObserver
                 if ($photo === null) {
                     $photo = $model->profile->photos()->create([
                         'src' => $image->src,
-                        'regist_datetime' => $model->post_date,
+                        'posted_at' => $model->posted_at,
                     ]);
                 }
                 array_push($photo_ids, $photo->id);

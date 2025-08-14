@@ -23,9 +23,9 @@ return new class extends Migration
             $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
             $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
             $table->foreignId('category_id')->nullable()->comment('コンテンツカテゴリーID')->constrained('categories')->onDelete('set null');;
+            $table->dateTime('posted_at')->comment('コンテンツ投稿日時');
             $table->string('photo_type', 255)->comment('写真タイプ');
             $table->string('src', 767)->comment('写真ソース');
-            $table->dateTime('regist_datetime')->comment('写真登録日時');
             $table->integer('width')->nullable()->comment('写真イメージ幅');
             $table->integer('height')->nullable()->comment('写真イメージ高さ');
             $table->decimal('latitude', 9, 7, true)->nullable()->comment('撮影緯度');

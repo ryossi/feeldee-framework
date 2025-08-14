@@ -22,7 +22,7 @@ class PostFactory extends Factory
     public function definition(): array
     {
         return [
-            'post_date' => fake()->date(),
+            'posted_at' => fake()->date(),
             'title' => fake()->title(),
         ];
     }

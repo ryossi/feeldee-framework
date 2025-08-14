@@ -29,14 +29,14 @@ class Post extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'post_date', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'posted_at', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'post_date', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'posted_at', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
 
     /**
      * キャストする必要のある属性
@@ -45,7 +45,7 @@ class Post extends Content
      */
     protected $casts = [
         'is_public' => 'boolean',
-        'post_date' => 'date',
+        'posted_at' => 'date',
         'value' => HTML::class,
         'thumbnail' => URL::class,
     ];
@@ -53,7 +53,7 @@ class Post extends Content
     /**
      * コンテンツをソートするカラム名
      */
-    protected $order_column = 'post_date';
+    protected $order_column = 'posted_at';
 
     /**
      * 必須にする属性
@@ -61,7 +61,7 @@ class Post extends Content
      * @var array
      */
     protected $required = [
-        'post_date' => self::ERROR_CODE_POST_DATE_REQUIRED,
+        'posted_at' => self::ERROR_CODE_POST_DATE_REQUIRED,
         'title' => self::ERROR_CODE_TITLE_REQUIRED,
     ];
 
@@ -105,7 +105,7 @@ class Post extends Content
             // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
             $date = $date->format('Y-m-d H:i:s');
         }
-        $query->where('post_date', $date);
+        $query->where('posted_at', $date);
     }
 
     // ========================== ここまで整理ずみ ==========================

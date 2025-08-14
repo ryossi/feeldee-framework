@@ -41,7 +41,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
         ]);
 
         // 検証
@@ -64,7 +64,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
         ]);
 
         // 検証
@@ -91,7 +91,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => $title,
-            'post_date' => now(),
+            'posted_at' => now(),
         ]);
 
         // 検証
@@ -115,7 +115,7 @@ class PostTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($profile) {
             $profile->posts()->create([
-                'post_date' => now(),
+                'posted_at' => now(),
             ]);
         }, ApplicationException::class, 'PostTitleRequired');
     }
@@ -138,7 +138,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'value' => $value,
         ]);
 
@@ -168,7 +168,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'value' => $value,
         ]);
 
@@ -199,7 +199,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'value' => $value,
         ]);
 
@@ -257,7 +257,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
         ]);
 
         // 評価
@@ -328,7 +328,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
         ]);
 
         // 評価
@@ -355,7 +355,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'public_level' => PublicLevel::Public,
         ]);
 
@@ -417,7 +417,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'category' => $category,
         ]);
 
@@ -451,7 +451,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'category_id' => $category->id,
         ]);
 
@@ -485,7 +485,7 @@ class PostTest extends TestCase
         $this->assertThrows(function () use ($otherProfile, $category) {
             $otherProfile->posts()->create([
                 'title' => 'テスト投稿',
-                'post_date' => now(),
+                'posted_at' => now(),
                 'category' => $category,
             ]);
         }, ApplicationException::class, 'CategoryContentProfileMissmatch');
@@ -512,7 +512,7 @@ class PostTest extends TestCase
         $this->assertThrows(function () use ($profile, $category) {
             $profile->posts()->create([
                 'title' => 'テスト投稿',
-                'post_date' => now(),
+                'posted_at' => now(),
                 'category' => $category,
             ]);
         }, ApplicationException::class, 'CategoryContentTypeMissmatch');
@@ -539,7 +539,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'category' => 'テストカテゴリ',
         ]);
 
@@ -572,7 +572,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'category' => 'テストカテゴリ2',
         ]);
 
@@ -639,7 +639,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'tags' => [$tag1, $tag2],
         ]);
 
@@ -678,7 +678,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'tags' => [$tag1->id, $tag2->id],
         ]);
 
@@ -719,7 +719,7 @@ class PostTest extends TestCase
         $this->assertThrows(function () use ($otherProfile, $tag1, $tag2) {
             $otherProfile->posts()->create([
                 'title' => 'テスト投稿',
-                'post_date' => now(),
+                'posted_at' => now(),
                 'tags' => [$tag1->id, $tag2->id],
             ]);
         }, ApplicationException::class, 'TagContentProfileMissmatch');
@@ -750,7 +750,7 @@ class PostTest extends TestCase
         $this->assertThrows(function () use ($profile, $tag1, $tag2) {
             $profile->posts()->create([
                 'title' => 'テスト投稿',
-                'post_date' => now(),
+                'posted_at' => now(),
                 'tags' => [$tag1->id, $tag2->id],
             ]);
         }, ApplicationException::class, 'TagContentTypeMissmatch');
@@ -780,7 +780,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'tags' => ['タグ1', 'タグ2'],
         ]);
 
@@ -819,7 +819,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'tags' => ['タグ3', 'タグ2'],
         ]);
 
@@ -856,7 +856,7 @@ class PostTest extends TestCase
         ]);
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'tags' => [$tag1, $tag2],
         ]);
 
@@ -881,23 +881,23 @@ class PostTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日
      */
-    public function test_post_date()
+    public function test_posted_at()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $post_date = '2025-04-01';
+        $posted_at = '2025-04-01';
 
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => $post_date,
+            'posted_at' => $posted_at,
         ]);
 
         // 検証
-        $this->assertEquals($post_date, $post->post_date->format('Y-m-d'), '投稿した日付であること');
+        $this->assertEquals($posted_at, $post->posted_at->format('Y-m-d'), '投稿した日付であること');
         $this->assertDatabaseHas('posts', [
-            'post_date' => $post_date . ' 00:00:00',
+            'posted_at' => $posted_at . ' 00:00:00',
         ]);
     }
 
@@ -909,7 +909,7 @@ class PostTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日
      */
-    public function test_post_date_required()
+    public function test_posted_at_required()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -940,7 +940,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'thumbnail' => $thumbnail,
         ]);
 
@@ -970,7 +970,7 @@ class PostTest extends TestCase
         // 実行
         $post = $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'thumbnail' => $thumbnail,
         ]);
 
@@ -1001,7 +1001,7 @@ class PostTest extends TestCase
 
         // 実行
         $postA = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-22'),
+            'posted_at' => Carbon::parse('2025-04-22'),
             'title' => '投稿A',
             'value' => 'これは写真リストのテストです。<br>
                 1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
@@ -1010,7 +1010,7 @@ class PostTest extends TestCase
                 ',
         ]);
         $postB = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-23'),
+            'posted_at' => Carbon::parse('2025-04-23'),
             'title' => '投稿B',
         ]);
         $postB->value = '
@@ -1026,13 +1026,13 @@ class PostTest extends TestCase
         foreach ($postA->photos as $index => $photo) {
             $fileNo = $index + 1;
             $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
-            $this->assertEquals('2025-04-22 00:00:00', $photo->regist_datetime->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+            $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
         }
         $this->assertEquals(3, $postB->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
         foreach ($postB->photos as $index => $photo) {
             $fileNo = $index + 2;
             $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
-            $this->assertEquals('2025-04-23 00:00:00', $photo->regist_datetime->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+            $this->assertEquals('2025-04-23 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
         }
         $this->assertEquals(5, $profile->photos->count(), '全て個別の写真として登録および更新時に登録されること');
     }
@@ -1053,7 +1053,7 @@ class PostTest extends TestCase
 
         // 実行
         $postA = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-22'),
+            'posted_at' => Carbon::parse('2025-04-22'),
             'title' => '投稿A',
             'value' => 'これは写真リストのテストです。<br>
                 1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
@@ -1061,7 +1061,7 @@ class PostTest extends TestCase
                 ',
         ]);
         $postB = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-23'),
+            'posted_at' => Carbon::parse('2025-04-23'),
             'title' => '投稿B',
             'public_level' => PublicLevel::Member,
         ]);
@@ -1099,7 +1099,7 @@ class PostTest extends TestCase
 
         // 実行
         $postA = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-22'),
+            'posted_at' => Carbon::parse('2025-04-22'),
             'title' => '投稿A',
             'value' => 'これは写真リストのテストです。<br>
                 1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
@@ -1108,7 +1108,7 @@ class PostTest extends TestCase
                 ',
         ]);
         $postB = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-23'),
+            'posted_at' => Carbon::parse('2025-04-23'),
             'title' => '投稿B',
         ]);
         $postB->value = '
@@ -1124,7 +1124,7 @@ class PostTest extends TestCase
         foreach ($postA->photos as $index => $photo) {
             $fileNo = $index + 1;
             $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
-            $this->assertEquals('2025-04-22 00:00:00', $photo->regist_datetime->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+            $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
         }
         $this->assertEquals(3, $postB->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
         foreach ($postB->photos as $index => $photo) {
@@ -1132,9 +1132,9 @@ class PostTest extends TestCase
             $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
             if ($fileNo == 2) {
                 // 共有写真
-                $this->assertEquals('2025-04-22 00:00:00', $photo->regist_datetime->format('Y-m-d H:i:s'), '一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに写真リストに追加のみ行われること');
+                $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに写真リストに追加のみ行われること');
             } else {
-                $this->assertEquals('2025-04-23 00:00:00', $photo->regist_datetime->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+                $this->assertEquals('2025-04-23 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
             }
         }
         $this->assertEquals(4, $profile->photos->count(), '一致する写真ソースの写真が存在しない場合のみ、登録および更新時に写真を登録されること');
@@ -1157,7 +1157,7 @@ class PostTest extends TestCase
 
         // 実行
         $postA = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-22'),
+            'posted_at' => Carbon::parse('2025-04-22'),
             'title' => '投稿A',
             'value' => 'これは写真リストのテストです。<br>
                 1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
@@ -1165,7 +1165,7 @@ class PostTest extends TestCase
                 ',
         ]);
         $postB = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-23'),
+            'posted_at' => Carbon::parse('2025-04-23'),
             'title' => '投稿B',
             'public_level' => PublicLevel::Member,
         ]);
@@ -1436,7 +1436,7 @@ class PostTest extends TestCase
         // 実行
         $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'value' => CustomHtmlHook::PREFIX . $value,
         ]);
 
@@ -1500,7 +1500,7 @@ class PostTest extends TestCase
         // 実行
         $profile->posts()->create([
             'title' => 'テスト投稿',
-            'post_date' => now(),
+            'posted_at' => now(),
             'thumbnail' => CustomUrlHook::PREFIX . $value,
         ]);
 
