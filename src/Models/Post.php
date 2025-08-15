@@ -15,14 +15,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Post extends Content
 {
     /**
-     * 投稿日が指定されていないエラーコード
-     */
-    const ERROR_CODE_POST_DATE_REQUIRED = 20001;
-
-    /**
      * 記事タイトルが指定されていないエラーコード
      */
-    const ERROR_CODE_TITLE_REQUIRED = 20002;
+    const ERROR_CODE_TITLE_REQUIRED = 20001;
 
     /**
      * 複数代入可能な属性
@@ -61,7 +56,6 @@ class Post extends Content
      * @var array
      */
     protected $required = [
-        'posted_at' => self::ERROR_CODE_POST_DATE_REQUIRED,
         'title' => self::ERROR_CODE_TITLE_REQUIRED,
     ];
 
@@ -71,6 +65,21 @@ class Post extends Content
      * @var array
      */
     protected $strip_tags = ['value' => 'text'];
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::saving(
+            function (self $model) {
+                // コンテンツ投稿日時
+                if (empty($model->posted_at)) {
+                    $model->posted_at = CarbonImmutable::today();
+                }
+            }
+        );
+    }
 
     /**
      * コンテンツ種別

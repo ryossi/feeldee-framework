@@ -99,28 +99,6 @@ class PostTest extends TestCase
     }
 
     /**
-     * コンテンツタイトル
-     * 
-     * - 投稿時に必ず指定する必要があることを確認します。
-     * - 例外コード:20002のメッセージであることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コンテンツタイトル
-     */
-    public function test_title_required()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $this->assertThrows(function () use ($profile) {
-            $profile->posts()->create([
-                'posted_at' => now(),
-            ]);
-        }, ApplicationException::class, 'PostTitleRequired');
-    }
-
-    /**
      * コンテンツ内容
      * 
      * - 投稿した記事の本文であることを確認します。
@@ -902,27 +880,6 @@ class PostTest extends TestCase
     }
 
     /**
-     * 投稿日
-     * 
-     * - 投稿時に必ず指定する必要があることを確認します。
-     * - 例外コード:20001のメッセージであることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日
-     */
-    public function test_posted_at_required()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        // 実行
-        $this->assertThrows(function () use ($profile) {
-            $profile->posts()->create([
-                'title' => 'テスト投稿',
-            ]);
-        }, ApplicationException::class, 'PostDateRequired');
-    }
-
-    /**
      * 記事サムネイル
      * 
      * - 投稿記事のサムネイルイメージであることを確認します。
@@ -980,208 +937,6 @@ class PostTest extends TestCase
         $this->assertDatabaseHas('posts', [
             'thumbnail' => $thumbnail,
         ]);
-    }
-
-    /**
-     * 投稿写真リスト
-     * 
-     * - 投稿の記事内容に含まれる写真のコレクションであることを確認します。
-     * - 写真ソースは、記事内容の<img />タグのsrc属性の値であることを確認します。
-     * - 写真登録日時は、投稿日（時刻は00:00:00）であることを確認します。
-     * - 全て個別の写真として登録および更新時に登録されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
-     */
-    public function test_photos_sync_mode()
-    {
-        // 準備
-        Post::observe(PostPhotoSyncObserver::class);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $postA = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-22'),
-            'title' => '投稿A',
-            'value' => 'これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                3枚目の写真:<img src="http://photo.test/img/2.png" /><br3
-                ',
-        ]);
-        $postB = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-23'),
-            'title' => '投稿B',
-        ]);
-        $postB->value = '
-                これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
-                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
-                ';
-        $postB->save();
-
-        // 評価
-        $this->assertEquals(2, $postA->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
-        foreach ($postA->photos as $index => $photo) {
-            $fileNo = $index + 1;
-            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
-            $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
-        }
-        $this->assertEquals(3, $postB->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
-        foreach ($postB->photos as $index => $photo) {
-            $fileNo = $index + 2;
-            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
-            $this->assertEquals('2025-04-23 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
-        }
-        $this->assertEquals(5, $profile->photos->count(), '全て個別の写真として登録および更新時に登録されること');
-    }
-
-    /**
-     * 投稿写真リスト
-     * 
-     * - 投稿の削除時には、投稿写真リストに含まれる写真も一緒に削除されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
-     */
-    public function test_photos_sync_mode_delete()
-    {
-        // 準備
-        Post::observe(PostPhotoSyncObserver::class);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $postA = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-22'),
-            'title' => '投稿A',
-            'value' => 'これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                ',
-        ]);
-        $postB = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-23'),
-            'title' => '投稿B',
-            'public_level' => PublicLevel::Member,
-        ]);
-        $postB->doPublic();
-        $postB->value = '
-                これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
-                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
-                ';
-        $postB->save();
-        $postA->delete();
-
-        // 評価
-        $this->assertEquals(3, $profile->photos->count(), '投稿の削除時には、写真リストに含まれる写真も一緒に削除されること');
-    }
-
-    /**
-     * 投稿写真リスト
-     * 
-     * - 投稿の記事内容に含まれる写真のコレクションであることを確認します。
-     * - 写真ソースは、記事内容の<img />タグのsrc属性の値であることを確認します。
-     * - 写真登録日時は、投稿日（時刻は00:00:00）であることを確認します。
-     * - 一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに投稿写真リストに追加のみ行われることを確認します。
-     * - 一致する写真ソースの写真が存在しない場合のみ、登録および更新時に写真を登録されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
-     */
-    public function test_photos_share_mode()
-    {
-        // 準備
-        Post::observe(PostPhotoShareObserver::class);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $postA = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-22'),
-            'title' => '投稿A',
-            'value' => 'これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                3枚目の写真:<img src="http://photo.test/img/2.png" /><br3
-                ',
-        ]);
-        $postB = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-23'),
-            'title' => '投稿B',
-        ]);
-        $postB->value = '
-                これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
-                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
-                ';
-        $postB->save();
-
-        // 評価
-        $this->assertEquals(2, $postA->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
-        foreach ($postA->photos as $index => $photo) {
-            $fileNo = $index + 1;
-            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
-            $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
-        }
-        $this->assertEquals(3, $postB->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
-        foreach ($postB->photos as $index => $photo) {
-            $fileNo = $index + 2;
-            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
-            if ($fileNo == 2) {
-                // 共有写真
-                $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに写真リストに追加のみ行われること');
-            } else {
-                $this->assertEquals('2025-04-23 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
-            }
-        }
-        $this->assertEquals(4, $profile->photos->count(), '一致する写真ソースの写真が存在しない場合のみ、登録および更新時に写真を登録されること');
-    }
-
-    /**
-     * 投稿写真リスト
-     * 
-     * - 投稿を削除した場合は、投稿写真リストからは削除されることを確認します。
-     * - 登録した写真そのものは、削除した投稿とは紐付かない写真として残ることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リスト
-     */
-    public function test_photos_share_mode_delete()
-    {
-        // 準備
-        Post::observe(PostPhotoShareObserver::class);
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $postA = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-22'),
-            'title' => '投稿A',
-            'value' => 'これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                ',
-        ]);
-        $postB = $profile->posts()->create([
-            'posted_at' => Carbon::parse('2025-04-23'),
-            'title' => '投稿B',
-            'public_level' => PublicLevel::Member,
-        ]);
-        $postB->doPublic();
-        $postB->value = '
-                これは写真リストのテストです。<br>
-                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
-                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
-                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
-                ';
-        $postB->save();
-        $postA->delete();
-
-        // 評価
-        $this->assertEquals(1, $profile->photos()->ofSrc('http://photo.test/img/2.png')->first()->posts->count(), '投稿を削除した場合は、写真リストからは削除されること');
-        $this->assertEquals(4, $profile->photos->count(), '登録した写真そのものは、削除した投稿とは紐付かない写真として残ること');
     }
 
     /**
@@ -1510,5 +1265,293 @@ class PostTest extends TestCase
             'profile_id' => $profile->id,
             'thumbnail' => $value,
         ]);
+    }
+
+    /**
+     * 投稿作成
+     * 
+     * - 投稿の作成は、投稿を追加したいプロフィールの投稿リストに追加することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿作成
+     */
+    public function test_create_post()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = 'テスト投稿';
+        $value = 'これはテスト投稿です。';
+        $postedAt = today();
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => $title,
+            'posted_at' => $postedAt,
+            'value' => $value,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'profile_id' => $profile->id,
+            'title' => $title,
+            'posted_at' => $postedAt->format('Y-m-d H:i:s'),
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 投稿作成
+     * 
+     * - コンテンツタイトルは、必須であることを確認します。
+     * - 例外コード:20002のメッセージであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿作成
+     */
+    public function test_create_post_title_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->posts()->create([
+                'posted_at' => now(),
+            ]);
+        }, ApplicationException::class, 'PostTitleRequired');
+    }
+
+    /**
+     * 投稿作成
+     * 
+     * - コンテンツ投稿日時を省略した場合は、システム日付が設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿作成
+     */
+    public function test_create_post_posted_at_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = 'テスト投稿';
+        $value = 'これはテスト投稿です。';
+
+        // 実行
+        $post = $profile->posts()->create([
+            'title' => $title,
+            'value' => $value,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('posts', [
+            'id' => $post->id,
+            'profile_id' => $profile->id,
+            'title' => $title,
+            'posted_at' => today()->format('Y-m-d H:i:s'),
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * 投稿写真リストの自動維持
+     * 
+     * - 投稿の記事内容に含まれる写真のコレクションであることを確認します。
+     * - 写真ソースは、記事内容の<img />タグのsrc属性の値であることを確認します。
+     * - 写真登録日時は、投稿日（時刻は00:00:00）であることを確認します。
+     * - 全て個別の写真として登録および更新時に登録されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リストの自動維持
+     */
+    public function test_photos_sync_mode()
+    {
+        // 準備
+        Post::observe(PostPhotoSyncObserver::class);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $postA = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-22'),
+            'title' => '投稿A',
+            'value' => 'これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/2.png" /><br3
+                ',
+        ]);
+        $postB = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-23'),
+            'title' => '投稿B',
+        ]);
+        $postB->value = '
+                これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
+                ';
+        $postB->save();
+
+        // 評価
+        $this->assertEquals(2, $postA->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
+        foreach ($postA->photos as $index => $photo) {
+            $fileNo = $index + 1;
+            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
+            $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+        }
+        $this->assertEquals(3, $postB->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
+        foreach ($postB->photos as $index => $photo) {
+            $fileNo = $index + 2;
+            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
+            $this->assertEquals('2025-04-23 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+        }
+        $this->assertEquals(5, $profile->photos->count(), '全て個別の写真として登録および更新時に登録されること');
+    }
+
+    /**
+     * 投稿写真リストの自動維持
+     * 
+     * - 投稿の削除時には、投稿写真リストに含まれる写真も一緒に削除されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リストの自動維持
+     */
+    public function test_photos_sync_mode_delete()
+    {
+        // 準備
+        Post::observe(PostPhotoSyncObserver::class);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $postA = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-22'),
+            'title' => '投稿A',
+            'value' => 'これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                ',
+        ]);
+        $postB = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-23'),
+            'title' => '投稿B',
+            'public_level' => PublicLevel::Member,
+        ]);
+        $postB->doPublic();
+        $postB->value = '
+                これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
+                ';
+        $postB->save();
+        $postA->delete();
+
+        // 評価
+        $this->assertEquals(3, $profile->photos->count(), '投稿の削除時には、写真リストに含まれる写真も一緒に削除されること');
+    }
+
+    /**
+     * 投稿写真リストの自動維持
+     * 
+     * - 投稿の記事内容に含まれる写真のコレクションであることを確認します。
+     * - 写真ソースは、記事内容の<img />タグのsrc属性の値であることを確認します。
+     * - 写真登録日時は、投稿日（時刻は00:00:00）であることを確認します。
+     * - 一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに投稿写真リストに追加のみ行われることを確認します。
+     * - 一致する写真ソースの写真が存在しない場合のみ、登録および更新時に写真を登録されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リストの自動維持
+     */
+    public function test_photos_share_mode()
+    {
+        // 準備
+        Post::observe(PostPhotoShareObserver::class);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $postA = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-22'),
+            'title' => '投稿A',
+            'value' => 'これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/2.png" /><br3
+                ',
+        ]);
+        $postB = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-23'),
+            'title' => '投稿B',
+        ]);
+        $postB->value = '
+                これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
+                ';
+        $postB->save();
+
+        // 評価
+        $this->assertEquals(2, $postA->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
+        foreach ($postA->photos as $index => $photo) {
+            $fileNo = $index + 1;
+            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
+            $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+        }
+        $this->assertEquals(3, $postB->photos->count(), '投稿の記事内容に含まれる写真のコレクションであること');
+        foreach ($postB->photos as $index => $photo) {
+            $fileNo = $index + 2;
+            $this->assertEquals("http://photo.test/img/{$fileNo}.png", $photo->src, '写真ソースは、記事内容の<img />タグのsrc属性の値であること');
+            if ($fileNo == 2) {
+                // 共有写真
+                $this->assertEquals('2025-04-22 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '一致する写真ソースの写真が既に存在する場合には、登録および更新時に写真は登録せずに写真リストに追加のみ行われること');
+            } else {
+                $this->assertEquals('2025-04-23 00:00:00', $photo->posted_at->format('Y-m-d H:i:s'), '写真登録日時は、投稿日（時刻は00:00:00）であること');
+            }
+        }
+        $this->assertEquals(4, $profile->photos->count(), '一致する写真ソースの写真が存在しない場合のみ、登録および更新時に写真を登録されること');
+    }
+
+    /**
+     * 投稿写真リストの自動維持
+     * 
+     * - 投稿を削除した場合は、投稿写真リストからは削除されることを確認します。
+     * - 登録した写真そのものは、削除した投稿とは紐付かない写真として残ることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿写真リストの自動維持
+     */
+    public function test_photos_share_mode_delete()
+    {
+        // 準備
+        Post::observe(PostPhotoShareObserver::class);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $postA = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-22'),
+            'title' => '投稿A',
+            'value' => 'これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/1.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                ',
+        ]);
+        $postB = $profile->posts()->create([
+            'posted_at' => Carbon::parse('2025-04-23'),
+            'title' => '投稿B',
+            'public_level' => PublicLevel::Member,
+        ]);
+        $postB->doPublic();
+        $postB->value = '
+                これは写真リストのテストです。<br>
+                1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
+                2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
+                3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
+                ';
+        $postB->save();
+        $postA->delete();
+
+        // 評価
+        $this->assertEquals(1, $profile->photos()->ofSrc('http://photo.test/img/2.png')->first()->posts->count(), '投稿を削除した場合は、写真リストからは削除されること');
+        $this->assertEquals(4, $profile->photos->count(), '登録した写真そのものは、削除した投稿とは紐付かない写真として残ること');
     }
 }
