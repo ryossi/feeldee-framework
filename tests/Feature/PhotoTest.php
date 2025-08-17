@@ -1235,4 +1235,88 @@ class PhotoTest extends TestCase
             'src' => $src,
         ]);
     }
+
+    /**
+     * 新規作成
+     * 
+     * - 写真の作成は、写真を追加したいプロフィールの写真リストに追加することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
+     */
+    public function test_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = 'テスト写真';
+        $src = '/mbox/photo.jpg';
+        $postedAt = now();
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => $title,
+            'src' => $src,
+            'posted_at' => $postedAt,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'profile_id' => $profile->id,
+            'title' => $title,
+            'src' => $src,
+            'posted_at' => $postedAt,
+        ]);
+    }
+
+    /**
+     * 新規作成
+     * 
+     * - 写真ソースは、必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
+     */
+    public function test_create_src_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->photos()->create([
+                'title' => 'テスト写真',
+                'posted_at' => now(),
+            ]);
+        }, ApplicationException::class, 'PhotoSrcRequired');
+    }
+
+    /**
+     * 新規作成
+     * 
+     * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
+     */
+    public function test_create_posted_at_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $src = '/mbox/photo.jpg';
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'テスト写真',
+            'src' => $src,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'profile_id' => $profile->id,
+            'src' => $src,
+            'posted_at' => $photo->posted_at->format('Y-m-d H:i:s'), // システム日時が設定されていること
+        ]);
+    }
 }

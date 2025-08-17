@@ -15,11 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Post extends Content
 {
     /**
-     * 記事タイトルが指定されていないエラーコード
-     */
-    const ERROR_CODE_TITLE_REQUIRED = 20001;
-
-    /**
      * 複数代入可能な属性
      *
      * @var array
@@ -56,7 +51,7 @@ class Post extends Content
      * @var array
      */
     protected $required = [
-        'title' => self::ERROR_CODE_TITLE_REQUIRED,
+        'title' => 20001, // 記事タイトルが指定されていない
     ];
 
     /**

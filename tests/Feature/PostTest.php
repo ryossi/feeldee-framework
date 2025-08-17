@@ -1304,7 +1304,6 @@ class PostTest extends TestCase
      * 投稿作成
      * 
      * - コンテンツタイトルは、必須であることを確認します。
-     * - 例外コード:20002のメッセージであることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿作成
      */
