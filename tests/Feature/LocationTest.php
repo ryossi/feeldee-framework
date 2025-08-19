@@ -102,30 +102,6 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタイトル
-     * 
-     * - 登録時に必ず指定する必要があることを確認します。
-     * - 例外コード:40001のメッセージであることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタイトル
-     */
-    public function test_title_required()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $this->assertThrows(function () use ($profile) {
-            $profile->locations()->create([
-                'latitude' => 35.681236,
-                'longitude' => 139.767125,
-                'zoom' => 15,
-            ]);
-        }, ApplicationException::class, 'LocationTitleRequired');
-    }
-
-    /**
      * コンテンツ内容
      * 
      * - 場所の説明またはメモ書きなどであることを確認します。
@@ -1246,6 +1222,143 @@ class LocationTest extends TestCase
         $this->assertDatabaseHas('locations', [
             'profile_id' => $profile->id,
             'thumbnail' => $thumbnail,
+        ]);
+    }
+
+    /**
+     * 新規作成
+     * 
+     * - 場所の作成は、場所を追加したいプロフィールの場所リストに追加することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     */
+    public function test_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $posted_at = now();
+        $latitude = 35.681236;
+        $longitude = 139.767125;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'posted_at' => $posted_at,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'posted_at' => $posted_at,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+    }
+
+    /**
+     * 新規作成
+     * 
+     * - 緯度は必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     */
+    public function test_create_latitude_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(40001);
+        $profile->locations()->create([
+            'longitude' => 139.767125,
+            'zoom' => 15,
+        ]);
+    }
+
+    /**
+     * 新規作成
+     * 
+     * - 経度は必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     */
+    public function test_create_longitude_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(40002);
+        $profile->locations()->create([
+            'latitude' => 35.681236,
+            'zoom' => 15,
+        ]);
+    }
+
+    /**
+     * 新規作成
+     * 
+     * - 縮尺は必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     */
+    public function test_create_zoom_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(40003);
+        $profile->locations()->create([
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+        ]);
+    }
+
+    /**
+     * 新規作成
+     * 
+     * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     */
+    public function test_create_posted_at_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $latitude = 35.681236;
+        $longitude = 139.767125;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertNotNull($location->posted_at, 'コンテンツ投稿日時を省略した場合は、システム日時が設定されること');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'posted_at' => $location->posted_at, // システム日時が設定されていること
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
         ]);
     }
 }

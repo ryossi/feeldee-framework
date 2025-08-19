@@ -1248,13 +1248,11 @@ class PhotoTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $title = 'テスト写真';
         $src = '/mbox/photo.jpg';
         $postedAt = now();
 
         // 実行
         $photo = $profile->photos()->create([
-            'title' => $title,
             'src' => $src,
             'posted_at' => $postedAt,
         ]);
@@ -1263,7 +1261,6 @@ class PhotoTest extends TestCase
         $this->assertDatabaseHas('photos', [
             'id' => $photo->id,
             'profile_id' => $profile->id,
-            'title' => $title,
             'src' => $src,
             'posted_at' => $postedAt,
         ]);
@@ -1285,7 +1282,6 @@ class PhotoTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($profile) {
             $profile->photos()->create([
-                'title' => 'テスト写真',
                 'posted_at' => now(),
             ]);
         }, ApplicationException::class, 'PhotoSrcRequired');
@@ -1307,7 +1303,6 @@ class PhotoTest extends TestCase
 
         // 実行
         $photo = $profile->photos()->create([
-            'title' => 'テスト写真',
             'src' => $src,
         ]);
 

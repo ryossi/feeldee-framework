@@ -27,7 +27,9 @@ return [
     // ****************************
     // *** 4xxxx 場所関連        ***
     // ****************************
-    40001 => 'LocationTitleRequired',                   // 場所タイトルが指定されていない 
+    40001 => 'LocationLatitudeRequired',                // 緯度が指定されていない
+    40002 => 'LocationLongitudeRequired',               // 経度が指定されていない
+    40003 => 'LocationZoomRequired',                    // 縮尺が指定されていない
 
     // ****************************
     // *** 5xxxx アイテム関連     ***

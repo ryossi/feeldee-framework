@@ -20,7 +20,7 @@ return new class extends Migration
 
             $table->id();
             $table->foreignId('profile_id')->comment('コンテンツ所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
-            $table->string('title')->comment('コンテンツタイトル');
+            $table->string('title')->nullable()->comment('コンテンツタイトル');
             $table->mediumText('value')->nullable()->comment('コンテンツ内容');
             $table->mediumText('text')->nullable()->comment('コンテンツテキスト');
             $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
