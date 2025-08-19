@@ -1361,4 +1361,78 @@ class LocationTest extends TestCase
             'zoom' => $zoom,
         ]);
     }
+
+    /**
+     * 緯度と経度の精度
+     * 
+     * - 緯度のデフォルト精度は小数点7桁で、小数点7桁を超えた分は四捨五入されることを確認します。
+     * - 経度のデフォルト精度は小数点7桁で、小数点7桁を超えた分は四捨五入されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#緯度と経度の精度
+     */
+    public function test_latitude_longitude_precision_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $latitude = 35.6407253874837;
+        $longitude = 139.7232563338492;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertEquals(35.6407254, $location->latitude, '緯度精度は、小数点7桁で四捨五入');
+        $this->assertEquals(139.7232563, $location->longitude, '経度精度は、小数点7桁で四捨五入');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+    }
+
+    /**
+     * 緯度と経度の精度
+     * 
+     * - 緯度の精度をコンフィグレーションで変更できることを確認します。
+     * - 経度の精度をコンフィグレーションで変更できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#緯度と経度の精度
+     */
+    public function test_latitude_longitude_precision_config()
+    {
+        // 準備
+        Config::set(Location::CONFIG_KEY_LATITUDE_PRECISION, 12);
+        Config::set(Location::CONFIG_KEY_LONGITUDE_PRECISION, 10);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $latitude = 35.6407253874837;
+        $longitude = 139.7232563338492;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertEquals(35.640725387484, $location->latitude, '緯度精度は、コンフィグで設定した小数点12桁で四捨五入');
+        $this->assertEquals(139.7232563338, $location->longitude, '経度精度は、コンフィグで設定した小数点12桁で四捨五入');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+    }
 }

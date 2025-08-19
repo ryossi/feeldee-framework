@@ -15,6 +15,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Location extends Content
 {
     /**
+     * 緯度の精度コンフィグレーションキー
+     */
+    public const CONFIG_KEY_LATITUDE_PRECISION = 'feeldee.location_latitude_precision';
+
+    /**
+     * 経度の精度コンフィグレーションキー
+     */
+    public const CONFIG_KEY_LONGITUDE_PRECISION = 'feeldee.location_longitude_precision';
+
+    /**
      * コンテンツ種別
      * 
      * @return string
