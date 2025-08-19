@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -19,14 +20,14 @@ class Photo extends Content
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'photo_type', 'src', 'regist_datetime'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'src', 'posted_at'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'photo_type', 'src', 'regist_datetime', 'albums'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'photo_type', 'src', 'posted_at', 'albums'];
 
     /**
      * 配列に追加する属性
@@ -41,7 +42,7 @@ class Photo extends Content
      * @var array
      */
     protected $casts = [
-        'regist_datetime' => 'date',
+        'posted_at' => 'datetime',
         'value' => HTML::class,
         'src' => URL::class
     ];
@@ -51,7 +52,16 @@ class Photo extends Content
      * 
      * @var array
      */
-    protected $order_column = 'regist_datetime';
+    protected $order_column = 'posted_at';
+
+    /**
+     * 必須にする属性
+     * 
+     * @var array
+     */
+    protected $required = [
+        'src' => 30001, // 写真ソースが指定されていない
+    ];
 
     /**
      * 文字列から HTML および PHP タグを取り除く属性
@@ -69,6 +79,15 @@ class Photo extends Content
             // 写真準備
             $model->prepare();
         });
+
+        static::saving(
+            function (self $model) {
+                // コンテンツ投稿日時
+                if (empty($model->posted_at)) {
+                    $model->posted_at = CarbonImmutable::now();
+                }
+            }
+        );
     }
 
     /**

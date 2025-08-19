@@ -41,7 +41,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
         ]);
 
         // 検証
@@ -64,7 +64,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
         ]);
 
         // 検証
@@ -92,7 +92,7 @@ class PhotoTest extends TestCase
         $photo = $profile->photos()->create([
             'title' => $title,
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
         ]);
 
         // 検証
@@ -117,7 +117,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'value' => $value,
         ]);
 
@@ -147,7 +147,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'value' => $value,
         ]);
 
@@ -178,7 +178,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'value' => $value,
         ]);
 
@@ -236,7 +236,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
         ]);
 
         // 評価
@@ -307,7 +307,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
         ]);
 
         // 評価
@@ -334,7 +334,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'public_level' => PublicLevel::Member,
         ]);
 
@@ -396,7 +396,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'category' => $category,
         ]);
 
@@ -430,7 +430,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'category_id' => $category->id,
         ]);
 
@@ -464,7 +464,7 @@ class PhotoTest extends TestCase
         $this->assertThrows(function () use ($otherProfile, $category) {
             $otherProfile->photos()->create([
                 'src' => '/mbox/photo.jpg',
-                'regist_datetime' => now(),
+                'posted_at' => now(),
                 'category_id' => $category->id,
             ]);
         }, ApplicationException::class, 'CategoryContentProfileMissmatch');
@@ -491,7 +491,7 @@ class PhotoTest extends TestCase
         $this->assertThrows(function () use ($profile, $category) {
             $profile->photos()->create([
                 'src' => '/mbox/photo.jpg',
-                'regist_datetime' => now(),
+                'posted_at' => now(),
                 'category' => $category,
             ]);
         }, ApplicationException::class, 'CategoryContentTypeMissmatch');
@@ -518,7 +518,7 @@ class PhotoTest extends TestCase
         // 実行
         $photo = $profile->photos()->create([
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'category' => 'テストカテゴリ',
         ]);
 
@@ -552,7 +552,7 @@ class PhotoTest extends TestCase
         $photo = $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'category' => 'テストカテゴリ2',
         ]);
 
@@ -620,7 +620,7 @@ class PhotoTest extends TestCase
         $photo = $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'tags' => [$tag1, $tag2],
         ]);
 
@@ -660,7 +660,7 @@ class PhotoTest extends TestCase
         $photo = $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'tags' => [$tag1->id, $tag2->id],
         ]);
 
@@ -702,7 +702,7 @@ class PhotoTest extends TestCase
             $otherProfile->photos()->create([
                 'title' => 'テスト写真',
                 'src' => '/mbox/photo.jpg',
-                'regist_datetime' => now(),
+                'posted_at' => now(),
                 'tags' => [$tag1->id, $tag2->id],
             ]);
         }, ApplicationException::class, 'TagContentProfileMissmatch');
@@ -734,7 +734,7 @@ class PhotoTest extends TestCase
             $profile->photos()->create([
                 'title' => 'テスト写真',
                 'src' => '/mbox/photo.jpg',
-                'regist_datetime' => now(),
+                'posted_at' => now(),
                 'tags' => [$tag1->id, $tag2->id],
             ]);
         }, ApplicationException::class, 'TagContentTypeMissmatch');
@@ -765,7 +765,7 @@ class PhotoTest extends TestCase
         $photo = $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'tags' => ['タグ1', 'タグ2'],
         ]);
 
@@ -805,7 +805,7 @@ class PhotoTest extends TestCase
         $photo = $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'tags' => ['タグ3', 'タグ2'],
         ]);
 
@@ -843,7 +843,7 @@ class PhotoTest extends TestCase
         $photo = $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'tags' => [$tag1, $tag2],
         ]);
 
@@ -883,12 +883,12 @@ class PhotoTest extends TestCase
 
         // 実行
         $postA = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-22'),
+            'posted_at' => Carbon::parse('2025-04-22'),
             'title' => '投稿A',
             'value' => $value,
         ]);
         $postB = $profile->posts()->create([
-            'post_date' => Carbon::parse('2025-04-23'),
+            'posted_at' => Carbon::parse('2025-04-23'),
             'title' => '投稿B',
         ]);
         $postB->value = '
@@ -1160,7 +1160,7 @@ class PhotoTest extends TestCase
         $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => '/mbox/photo.jpg',
-            'regist_datetime' => now(),
+            'posted_at' => now(),
             'value' => CustomHtmlHook::PREFIX . $value,
         ]);
 
@@ -1225,7 +1225,7 @@ class PhotoTest extends TestCase
         $profile->photos()->create([
             'title' => 'テスト写真',
             'src' => CustomUrlHook::PREFIX . $src,
-            'regist_datetime' => now(),
+            'posted_at' => now(),
         ]);
 
         // 評価
@@ -1233,6 +1233,85 @@ class PhotoTest extends TestCase
         $this->assertDatabaseHas('photos', [
             'profile_id' => $profile->id,
             'src' => $src,
+        ]);
+    }
+
+    /**
+     * 写真作成
+     * 
+     * - 写真の作成は、写真を追加したいプロフィールの写真リストに追加することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
+     */
+    public function test_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $src = '/mbox/photo.jpg';
+        $postedAt = now();
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'src' => $src,
+            'posted_at' => $postedAt,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'profile_id' => $profile->id,
+            'src' => $src,
+            'posted_at' => $postedAt,
+        ]);
+    }
+
+    /**
+     * 写真作成
+     * 
+     * - 写真ソースは、必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
+     */
+    public function test_create_src_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->photos()->create([
+                'posted_at' => now(),
+            ]);
+        }, ApplicationException::class, 'PhotoSrcRequired');
+    }
+
+    /**
+     * 写真作成
+     * 
+     * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
+     */
+    public function test_create_posted_at_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $src = '/mbox/photo.jpg';
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'src' => $src,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'profile_id' => $profile->id,
+            'src' => $src,
+            'posted_at' => $photo->posted_at->format('Y-m-d H:i:s'), // システム日時が設定されていること
         ]);
     }
 }

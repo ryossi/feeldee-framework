@@ -20,12 +20,13 @@ return new class extends Migration
 
             $table->id();
             $table->foreignId('profile_id')->comment('コンテンツ所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
-            $table->string('title')->comment('コンテンツタイトル');
+            $table->string('title')->nullable()->comment('コンテンツタイトル');
             $table->mediumText('value')->nullable()->comment('コンテンツ内容');
             $table->mediumText('text')->nullable()->comment('コンテンツテキスト');
             $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
             $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
-            $table->foreignId('category_id')->nullable()->comment('カテゴリーID')->constrained('categories')->onDelete('set null');;
+            $table->foreignId('category_id')->nullable()->comment('コンテンツカテゴリーID')->constrained('categories')->onDelete('set null');
+            $table->dateTime('posted_at')->comment('コンテンツ投稿日時');
             $table->decimal('latitude', $precision_latitude + 2, $precision_latitude, true)->comment('緯度');
             $table->decimal('longitude', $precision_longitude + 3, $precision_longitude, true)->comment('経度');
             $table->integer('zoom')->comment('縮尺');

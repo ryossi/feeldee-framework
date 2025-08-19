@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -13,6 +14,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Location extends Content
 {
+    /**
+     * 緯度の精度コンフィグレーションキー
+     */
+    public const CONFIG_KEY_LATITUDE_PRECISION = 'feeldee.location_latitude_precision';
+
+    /**
+     * 経度の精度コンフィグレーションキー
+     */
+    public const CONFIG_KEY_LONGITUDE_PRECISION = 'feeldee.location_longitude_precision';
+
     /**
      * コンテンツ種別
      * 
@@ -43,6 +54,7 @@ class Location extends Content
      * @var array
      */
     protected $casts = [
+        'posted_at' => 'datetime',
         'latitude' => 'float',
         'longitude' => 'float',
         'zoom' => 'integer',
@@ -56,7 +68,9 @@ class Location extends Content
      * @var array
      */
     protected $required = [
-        'title' => 40001,
+        'latitude' => 40001,    // 緯度が指定されていない
+        'longitude' => 40002,    // 経度が指定されていない
+        'zoom' => 40003,         // 縮尺が指定されていない
     ];
 
     /**
@@ -65,6 +79,41 @@ class Location extends Content
      * @var array
      */
     protected $strip_tags = ['value' => 'text'];
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::saving(
+            function (self $model) {
+                // コンテンツ投稿日時
+                if (empty($model->posted_at)) {
+                    $model->posted_at = CarbonImmutable::now();
+                }
+            }
+        );
+    }
+
+    /**
+     * 緯度（精度に合わせて四捨五入）
+     */
+    protected function latitude(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $value ? round($value, config(self::CONFIG_KEY_LATITUDE_PRECISION, 7)) : null,
+        );
+    }
+
+    /**
+     * 経度（精度に合わせて四捨五入）
+     */
+    protected function longitude(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => $value ? round($value, config(self::CONFIG_KEY_LONGITUDE_PRECISION, 7)) : null,
+        );
+    }
 
     // ========================== ここまで整理済み ==========================
 
@@ -85,26 +134,6 @@ class Location extends Content
     {
         return Attribute::make(
             get: fn($value, $attributes) => implode(',', [$attributes['latitude'], $attributes['longitude'], $attributes['zoom']]),
-        );
-    }
-
-    /**
-     * 緯度（精度に合わせて四捨五入）
-     */
-    protected function latitude(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => round($value, config('feeldee.location.precision.latitude', 7)),
-        );
-    }
-
-    /**
-     * 経度（精度に合わせて四捨五入）
-     */
-    protected function longitude(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => round($value, config('feeldee.location.precision.longitude', 7)),
         );
     }
 

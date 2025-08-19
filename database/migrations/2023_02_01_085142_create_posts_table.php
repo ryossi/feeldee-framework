@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
             $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
             $table->foreignId('category_id')->nullable()->comment('コンテンツカテゴリーID')->constrained('categories')->onDelete('set null');
-            $table->dateTime('post_date')->comment('投稿日');
+            $table->dateTime('posted_at')->comment('コンテンツ投稿日時');
             $table->mediumText('thumbnail')->nullable()->comment('記事サムネイル');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');

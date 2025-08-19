@@ -580,7 +580,7 @@ class CommentTest extends TestCase
             'title' => 'コメント者プロフィールタイトル'
         ]);
         Auth::shouldReceive('user')->andReturn($user);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
 
         // 実行
         $post = Post::by('feeldee')->at('2025-07-24')->first();
@@ -623,7 +623,7 @@ class CommentTest extends TestCase
             'title' => 'コメント者プロフィールタイトル'
         ]);
         Auth::shouldReceive('user')->andReturn($user);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $commenter_nickname = 'テストニックネーム';
 
         // 実行
@@ -656,7 +656,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $commenter_nickname = 'テストニックネーム';
 
         // 実行
@@ -688,7 +688,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $commenter_nickname = 'テストニックネーム';
         $commented_at = '2025-03-27 09:30:20';
 
@@ -765,7 +765,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $post = $profile->posts->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',
@@ -802,7 +802,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $post = $profile->posts->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',
@@ -839,7 +839,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['post_date' => '2025-07-24'])->count(1))->create();
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $post = $profile->posts->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',

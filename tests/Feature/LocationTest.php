@@ -102,30 +102,6 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタイトル
-     * 
-     * - 登録時に必ず指定する必要があることを確認します。
-     * - 例外コード:40001のメッセージであることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタイトル
-     */
-    public function test_title_required()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 実行
-        $this->assertThrows(function () use ($profile) {
-            $profile->locations()->create([
-                'latitude' => 35.681236,
-                'longitude' => 139.767125,
-                'zoom' => 15,
-            ]);
-        }, ApplicationException::class, 'LocationTitleRequired');
-    }
-
-    /**
      * コンテンツ内容
      * 
      * - 場所の説明またはメモ書きなどであることを確認します。
@@ -1246,6 +1222,217 @@ class LocationTest extends TestCase
         $this->assertDatabaseHas('locations', [
             'profile_id' => $profile->id,
             'thumbnail' => $thumbnail,
+        ]);
+    }
+
+    /**
+     * 場所作成
+     * 
+     * - 場所の作成は、場所を追加したいプロフィールの場所リストに追加することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     */
+    public function test_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $posted_at = now();
+        $latitude = 35.681236;
+        $longitude = 139.767125;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'posted_at' => $posted_at,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'posted_at' => $posted_at,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+    }
+
+    /**
+     * 場所作成
+     * 
+     * - 緯度は必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     */
+    public function test_create_latitude_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(40001);
+        $profile->locations()->create([
+            'longitude' => 139.767125,
+            'zoom' => 15,
+        ]);
+    }
+
+    /**
+     * 場所作成
+     * 
+     * - 経度は必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     */
+    public function test_create_longitude_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(40002);
+        $profile->locations()->create([
+            'latitude' => 35.681236,
+            'zoom' => 15,
+        ]);
+    }
+
+    /**
+     * 場所作成
+     * 
+     * - 縮尺は必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     */
+    public function test_create_zoom_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->expectException(ApplicationException::class);
+        $this->expectExceptionCode(40003);
+        $profile->locations()->create([
+            'latitude' => 35.681236,
+            'longitude' => 139.767125,
+        ]);
+    }
+
+    /**
+     * 場所作成
+     * 
+     * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     */
+    public function test_create_posted_at_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $latitude = 35.681236;
+        $longitude = 139.767125;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertNotNull($location->posted_at, 'コンテンツ投稿日時を省略した場合は、システム日時が設定されること');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'posted_at' => $location->posted_at, // システム日時が設定されていること
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+    }
+
+    /**
+     * 緯度と経度の精度
+     * 
+     * - 緯度のデフォルト精度は小数点7桁で、小数点7桁を超えた分は四捨五入されることを確認します。
+     * - 経度のデフォルト精度は小数点7桁で、小数点7桁を超えた分は四捨五入されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#緯度と経度の精度
+     */
+    public function test_latitude_longitude_precision_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $latitude = 35.6407253874837;
+        $longitude = 139.7232563338492;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertEquals(35.6407254, $location->latitude, '緯度精度は、小数点7桁で四捨五入');
+        $this->assertEquals(139.7232563, $location->longitude, '経度精度は、小数点7桁で四捨五入');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+    }
+
+    /**
+     * 緯度と経度の精度
+     * 
+     * - 緯度の精度をコンフィグレーションで変更できることを確認します。
+     * - 経度の精度をコンフィグレーションで変更できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#緯度と経度の精度
+     */
+    public function test_latitude_longitude_precision_config()
+    {
+        // 準備
+        Config::set(Location::CONFIG_KEY_LATITUDE_PRECISION, 12);
+        Config::set(Location::CONFIG_KEY_LONGITUDE_PRECISION, 10);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $latitude = 35.6407253874837;
+        $longitude = 139.7232563338492;
+        $zoom = 15;
+
+        // 実行
+        $location = $profile->locations()->create([
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
+        ]);
+
+        // 評価
+        $this->assertEquals(35.640725387484, $location->latitude, '緯度精度は、コンフィグで設定した小数点12桁で四捨五入');
+        $this->assertEquals(139.7232563338, $location->longitude, '経度精度は、コンフィグで設定した小数点12桁で四捨五入');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'profile_id' => $profile->id,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'zoom' => $zoom,
         ]);
     }
 }

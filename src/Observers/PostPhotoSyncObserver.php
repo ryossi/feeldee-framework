@@ -21,7 +21,7 @@ class PostPhotoSyncObserver
                 if ($photo === null) {
                     $photo = $model->profile->photos()->create([
                         'src' => $image->src,
-                        'regist_datetime' => $model->post_date,
+                        'posted_at' => $model->posted_at,
                     ]);
                     $model->photos()->attach($photo->id);
                 }

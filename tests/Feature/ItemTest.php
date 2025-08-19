@@ -1170,4 +1170,89 @@ class ItemTest extends TestCase
             'image' => $image,
         ]);
     }
+
+    /**
+     * アイテム作成
+     * 
+     * - アイテムの作成は、アイテムを追加したいプロフィールのアイテムリストに追加することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテム作成
+     */
+    public function test_create_item()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = 'テストアイテム';
+        $value = 'これはテストアイテムです。';
+        $postedAt = now();
+
+        // 実行
+        $item = $profile->items()->create([
+            'title' => $title,
+            'posted_at' => $postedAt,
+            'value' => $value,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('items', [
+            'id' => $item->id,
+            'profile_id' => $profile->id,
+            'title' => $title,
+            'posted_at' => $postedAt->format('Y-m-d H:i:s'),
+            'value' => $value,
+        ]);
+    }
+
+    /**
+     * アイテム作成
+     * 
+     * - コンテンツタイトルは、必須であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテム作成
+     */
+    public function test_create_item_title_required()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile) {
+            $profile->items()->create([
+                'posted_at' => now(),
+            ]);
+        }, ApplicationException::class, 'ItemTitleRequired');
+    }
+
+    /**
+     * アイテム作成
+     * 
+     * - コンテンツアイテム日時を省略した場合は、システム日付が設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテム作成
+     */
+    public function test_create_item_posted_at_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $title = 'テストアイテム';
+        $value = 'これはテストアイテムです。';
+
+        // 実行
+        $item = $profile->items()->create([
+            'title' => $title,
+            'value' => $value,
+        ]);
+
+        // 評価
+        $this->assertDatabaseHas('items', [
+            'id' => $item->id,
+            'profile_id' => $profile->id,
+            'title' => $title,
+            'posted_at' => $item->posted_at->format('Y-m-d H:i:s'),
+            'value' => $value,
+        ]);
+    }
 }

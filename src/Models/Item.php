@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
 use Intervention\Image\Facades\Image;
@@ -81,6 +82,15 @@ class Item extends Content
             // 表示順割り当て
             $item->newOrderNumber();
         });
+
+        static::saving(
+            function (self $model) {
+                // コンテンツ投稿日時
+                if (empty($model->posted_at)) {
+                    $model->posted_at = CarbonImmutable::now();
+                }
+            }
+        );
     }
 
     // ========================== ここまで整理済み ==========================

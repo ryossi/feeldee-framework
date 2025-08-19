@@ -25,7 +25,7 @@ class PhotoFactory extends Factory
         return [
             'photo_type' => fake()->randomElement(PhotoType::cases()),
             'src' => fake()->url(),
-            'regist_datetime' => fake()->dateTime(),
+            'posted_at' => fake()->dateTime(),
         ];
     }
 }
