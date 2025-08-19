@@ -1237,11 +1237,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 写真作成
      * 
      * - 写真の作成は、写真を追加したいプロフィールの写真リストに追加することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
      */
     public function test_create()
     {
@@ -1267,11 +1267,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 写真作成
      * 
      * - 写真ソースは、必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
      */
     public function test_create_src_required()
     {
@@ -1288,11 +1288,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 写真作成
      * 
      * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
      */
     public function test_create_posted_at_default()
     {

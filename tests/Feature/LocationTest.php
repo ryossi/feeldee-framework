@@ -1226,11 +1226,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 場所作成
      * 
      * - 場所の作成は、場所を追加したいプロフィールの場所リストに追加することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
      */
     public function test_create()
     {
@@ -1262,11 +1262,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 場所作成
      * 
      * - 緯度は必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
      */
     public function test_create_latitude_required()
     {
@@ -1284,11 +1284,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 場所作成
      * 
      * - 経度は必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
      */
     public function test_create_longitude_required()
     {
@@ -1306,11 +1306,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 場所作成
      * 
      * - 縮尺は必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
      */
     public function test_create_zoom_required()
     {
@@ -1328,11 +1328,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * 場所作成
      * 
      * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
      */
     public function test_create_posted_at_default()
     {

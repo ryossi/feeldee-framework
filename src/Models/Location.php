@@ -101,7 +101,7 @@ class Location extends Content
     protected function latitude(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? round($value, config('feeldee.location_latitude_precision', 7)) : null,
+            get: fn($value) => $value ? round($value, config(self::CONFIG_KEY_LATITUDE_PRECISION, 7)) : null,
         );
     }
 
@@ -111,7 +111,7 @@ class Location extends Content
     protected function longitude(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ? round($value, config('feeldee.location_longitude_precision', 7)) : null,
+            get: fn($value) => $value ? round($value, config(self::CONFIG_KEY_LONGITUDE_PRECISION, 7)) : null,
         );
     }
 
