@@ -230,7 +230,7 @@ class Category extends Model
     }
 
     /**
-     * コンテンツリスト
+     * 投稿リスト
      */
     public function contents()
     {
@@ -552,7 +552,7 @@ class Category extends Model
     // ========================== ここまで整理済み ==========================
 
     /**
-     * コンテンツカウントを追加するようにクエリのスコープを設定
+     * 投稿カウントを追加するようにクエリのスコープを設定
      */
     public function scopeAddCount($query)
     {
@@ -561,8 +561,8 @@ class Category extends Model
         $categorizables = null;
         foreach ($morphMap as $type => $value) {
             $class = Relation::getMorphedModel($type);
-            $content = new $class();
-            $table = $content->getTable();
+            $post = new $class();
+            $table = $post->getTable();
             $union = DB::table($table)
                 ->selectRaw("$table.category_id, count($table.id) as count_of_contents")
                 ->where("$table.is_public", true)

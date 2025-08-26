@@ -123,7 +123,7 @@ class Profile extends Model
      */
     public function posts()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(Journal::class);
     }
 
     /**

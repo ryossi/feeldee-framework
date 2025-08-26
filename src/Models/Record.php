@@ -23,7 +23,7 @@ class Record extends Model
      *
      * @var array
      */
-    protected $fillable = ['content', 'content_id', 'value'];
+    protected $fillable = ['content', 'recordable_id', 'value'];
 
     /**
      * 配列に表示する属性
@@ -51,19 +51,19 @@ class Record extends Model
         });
 
         static::saving(function (Self $model) {
-            // レコーダ所有プロフィールがコンテンツ所有プロフィールと一致しているかチェック
+            // レコーダ所有プロフィールが投稿者プロフィールと一致しているかチェック
             if ($model->content->profile->id !== $model->recorder->profile->id) {
                 throw new ApplicationException(73007);
             }
-            // レコーダタイプとコンテンツ種別が一致しているかチェック
+            // レコーダタイプと投稿種別が一致しているかチェック
             if ($model->content::type() !== $model->recorder->type) {
                 throw new ApplicationException(73008);
             }
-            // レコード対象コンテンツにコンテンツオブジェクが直接指定されている場合
-            if (array_key_exists('content', $model->attributes)) {
-                // コンテンツIDに変換
-                $model->content_id = $model->content->id;
-                unset($model['content']);
+            // レコード対象投稿に投稿オブジェクが直接指定されている場合
+            if (array_key_exists('post', $model->attributes)) {
+                // 投稿IDに変換
+                $model->recordable_id = $model->post->id;
+                unset($model['post']);
             }
             // 設定時にレコードデータ型に従って型チェック
             $type = $model->recorder->data_type;
@@ -107,13 +107,13 @@ class Record extends Model
     }
 
     /**
-     * コンテンツ
+     * 投稿
      *
      * @return BelongsTo
      */
-    public function content(): BelongsTo
+    public function post(): BelongsTo
     {
-        return $this->belongsTo(Relation::getMorphedModel($this->recorder->type), 'content_id');
+        return $this->belongsTo(Relation::getMorphedModel($this->recorder->type), 'recordable_id');
     }
 
     protected function value(): Attribute

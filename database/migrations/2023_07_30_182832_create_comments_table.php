@@ -18,8 +18,8 @@ return new class extends Migration
             $table->foreignId('profile_id')->comment('コメント所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
             $table->dateTime('commented_at')->comment('コメント日時');
             $table->text('body')->nullable()->comment('コメント本文');
-            $table->bigInteger('commentable_id')->comment('コメント対象コンテンツID');
-            $table->string('commentable_type')->comment('コメント対象コンテンツ種別');
+            $table->bigInteger('commentable_id')->comment('コメント対象ID');
+            $table->string('commentable_type')->comment('コメント対象種別');
             $table->foreignId('commenter_profile_id')->nullable()->comment('コメント者プロフィールID')->references('id')->on('profiles')->onUpdate('CASCADE')->onDelete('SET NULL');
             $table->string('commenter_nickname')->nullable()->comment('コメント者ニックネーム');
             $table->boolean('is_public')->default(false)->comment('コメント公開フラグ');

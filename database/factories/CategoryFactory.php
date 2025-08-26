@@ -6,7 +6,7 @@ use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 
@@ -29,7 +29,7 @@ class CategoryFactory extends Factory
         return [
             'name' => $this->faker->name(),
             'type' => $this->faker->randomElement([
-                Post::type(),
+                Journal::type(),
                 Photo::type(),
                 Item::type(),
                 Location::type(),

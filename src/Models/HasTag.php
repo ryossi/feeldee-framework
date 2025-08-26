@@ -18,9 +18,9 @@ trait HasTag
             unset($model['tags']);
         });
 
-        static::deleting(function (Content $content) {
+        static::deleting(function (Post $post) {
             // タグ付け解除
-            $content->tags()->detach();
+            $post->tags()->detach();
         });
 
         static::saved(function (Self $model) {
@@ -28,7 +28,7 @@ trait HasTag
                 $model->tags()->detach();
             } else {
                 if (!empty($model->_tags) || $model->_tags->isNotEmpty()) {
-                    // ローカルコンテンツリストを
+                    // ローカル投稿リストを
                     $id = Auth::id();
                     $ids = array();
                     foreach ($model->_tags as $tag) {
@@ -41,11 +41,11 @@ trait HasTag
                             continue;
                         }
                         if ($tag->profile_id !== $model->profile_id) {
-                            // タグ所有プロフィールとコンテンツ所有プロフィールが一致しない場合
+                            // タグ所有プロフィールと投稿者プロフィールが一致しない場合
                             throw new ApplicationException(72005);
                         }
                         if ($tag->type !== $model::type()) {
-                            // タグタイプとコンテンツ種別が一致しない場合
+                            // タグタイプと投稿種別が一致しない場合
                             throw new ApplicationException(72006);
                         }
                         $ids[$tag->id] = [
@@ -62,7 +62,7 @@ trait HasTag
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      */
     public function tags()
     {

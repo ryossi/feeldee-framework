@@ -6,7 +6,7 @@ use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -34,7 +34,7 @@ class TagTest extends TestCase
         // 実行
         $tag = $profile->tags()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 評価
@@ -61,7 +61,7 @@ class TagTest extends TestCase
         $this->assertThrows(function () {
             Tag::create([
                 'name' => 'テストタグ',
-                'type' => Post::type(),
+                'type' => Journal::type(),
             ]);
         }, ApplicationException::class, 'TagProfileRequired');
     }
@@ -103,13 +103,13 @@ class TagTest extends TestCase
         // 実行
         $tag = $profile->tags()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 評価
-        $this->assertEquals(Post::type(), $tag->type, '投稿のタグタイプであること');
+        $this->assertEquals(Journal::type(), $tag->type, '投稿のタグタイプであること');
         $this->assertDatabaseHas('tags', [
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
     }
 
@@ -207,7 +207,7 @@ class TagTest extends TestCase
         // 実行
         $tag = $profile->tags()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 評価
@@ -233,7 +233,7 @@ class TagTest extends TestCase
         // 実行
         $this->assertThrows(function () use ($profile) {
             $profile->tags()->create([
-                'type' => Post::type(),
+                'type' => Journal::type(),
             ]);
         }, ApplicationException::class, 'TagNameRequired');
     }
@@ -249,13 +249,13 @@ class TagTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Post::type()]))->create();
+        $profile = Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Journal::type()]))->create();
 
         // 実行
         $this->assertThrows(function () use ($profile) {
             $profile->tags()->create([
                 'name' => 'テストタグ',
-                'type' => Post::type(),
+                'type' => Journal::type(),
             ]);
         }, ApplicationException::class, 'TagNameDuplicated');
     }
@@ -272,7 +272,7 @@ class TagTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Post::type()]))->create();
+        $profile = Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Journal::type()]))->create();
 
         // 実行
         $tag = $profile->categories()->create([
@@ -300,20 +300,20 @@ class TagTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Post::type()]))->create();
+        Profile::factory()->has(Tag::factory(1, ['name' => 'テストタグ', 'type' => Journal::type()]))->create();
         $otherProfile = Profile::factory()->create();
 
         // 実行
         $tag = $otherProfile->categories()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 評価
         $this->assertEquals('テストタグ', $tag->name, 'タグ所有プロフィールが異なる場合は、登録できること');
         $this->assertDatabaseHas('categories', [
             'name' => 'テストタグ',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'profile_id' => $otherProfile->id,
         ]);
     }
@@ -336,7 +336,7 @@ class TagTest extends TestCase
         // 実行
         $tag = $profile->tags()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'image' => $image,
         ]);
 
@@ -366,7 +366,7 @@ class TagTest extends TestCase
         // 実行
         $tag = $profile->tags()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'image' => $image,
         ]);
 
@@ -395,15 +395,15 @@ class TagTest extends TestCase
         // 実行
         $tag1 = $profile->tags()->create([
             'name' => 'タグ1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
         $tag2 = $profile->tags()->create([
             'name' => 'タグ2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
         $tag3 = $profile->tags()->create([
             'name' => 'タグ3',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 評価
@@ -435,11 +435,11 @@ class TagTest extends TestCase
         // 実行
         $tag1 = $profile->tags()->create([
             'name' => 'タグ1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
         $tag2 = $profile->tags()->create([
             'name' => 'タグ2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 実行
@@ -465,11 +465,11 @@ class TagTest extends TestCase
         // 実行
         $tag1 = $profile->tags()->create([
             'name' => 'タグ1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
         $tag2 = $profile->tags()->create([
             'name' => 'タグ2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 実行
@@ -493,11 +493,11 @@ class TagTest extends TestCase
         $profile = Profile::factory()->create();
         $tag1 = $profile->tags()->create([
             'name' => 'タグ1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
         $tag2 = $profile->tags()->create([
             'name' => 'タグ2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 実行
@@ -531,11 +531,11 @@ class TagTest extends TestCase
         $profile = Profile::factory()->create();
         $tag1 = $profile->tags()->create([
             'name' => 'タグ1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
         $tag2 = $profile->tags()->create([
             'name' => 'タグ2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 実行
@@ -556,11 +556,11 @@ class TagTest extends TestCase
     }
 
     /**
-     * コンテンツリスト
+     * 投稿リスト
      * 
-     * - タグ付けされているコンテンツのコレクションであることを確認します。
+     * - タグ付けされている投稿のコレクションであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
     public function test_contents()
     {
@@ -571,54 +571,54 @@ class TagTest extends TestCase
         // 実行
         $tag = $profile->tags()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
-            'contents' => Post::factory(3)->create(['profile_id' => $profile->id]),
+            'type' => Journal::type(),
+            'posts' => Journal::factory(3)->create(['profile_id' => $profile->id]),
         ]);
 
         // 評価
-        $this->assertEquals(3, $tag->contents->count());
-        foreach ($tag->contents as $content) {
-            $this->assertEquals($content->tags()->first()->id, $tag->id, 'タグ付けされているコンテンツのリストであること');
+        $this->assertEquals(3, $tag->posts->count());
+        foreach ($tag->posts as $post) {
+            $this->assertEquals($post->tags()->first()->id, $tag->id, 'タグ付けされている投稿のリストであること');
         }
     }
 
     /**
-     * コンテンツリスト
+     * 投稿リスト
      * 
-     * - タグ付けされているコンテンツを削除すると、コンテンツリストからも自動的に除外されることを確認します。
+     * - タグ付けされている投稿を削除すると、投稿リストからも自動的に除外されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
     public function test_contents_delete()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $content1 = Post::factory()->create(['profile_id' => $profile->id]);
-        $content2 = Post::factory()->create(['profile_id' => $profile->id]);
-        $content3 = Post::factory()->create(['profile_id' => $profile->id]);
+        $post1 = Journal::factory()->create(['profile_id' => $profile->id]);
+        $post2 = Journal::factory()->create(['profile_id' => $profile->id]);
+        $post3 = Journal::factory()->create(['profile_id' => $profile->id]);
         $tag = $profile->tags()->create([
             'name' => 'テストタグ',
-            'type' => Post::type(),
-            'contents' => [$content1, $content2, $content3],
+            'type' => Journal::type(),
+            'posts' => [$post1, $post2, $post3],
         ]);
 
         // 実行
-        $content2->delete();
+        $post2->delete();
 
         // 評価
-        $this->assertEquals(2, $tag->contents->count(), 'タグ付けされているコンテンツを削除すると、コンテンツリストからも自動的に除外されること');
-        foreach ($tag->contents as $content) {
-            $this->assertEquals($content->tags()->first()->id, $tag->id);
+        $this->assertEquals(2, $tag->posts->count(), 'タグ付けされている投稿を削除すると、投稿リストからも自動的に除外されること');
+        foreach ($tag->posts as $post) {
+            $this->assertEquals($post->tags()->first()->id, $tag->id);
         }
     }
 
     /**
-     * コンテンツリスト
+     * 投稿リスト
      * 
-     * - コンテンツリストに直接コンテンツのコレクションを指定する場合、タグ所有プロフィールがコンテンツ所有プロフィールと一致している必要があることを確認します。
+     * - 投稿リストに直接投稿のコレクションを指定する場合、タグ所有プロフィールが投稿者プロフィールと一致している必要があることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
     public function test_contents_profile_missmatch()
     {
@@ -632,18 +632,18 @@ class TagTest extends TestCase
             // 実行
             $profile->tags()->create([
                 'name' => 'テストタグ',
-                'type' => Post::type(),
-                'contents' => Post::factory(3)->create(['profile_id' => $otherProfile->id]),
+                'type' => Journal::type(),
+                'contents' => Journal::factory(3)->create(['profile_id' => $otherProfile->id]),
             ]);
-        }, ApplicationException::class, 'TagContentProfileMissmatch');
+        }, ApplicationException::class, 'TagProfileMissmatch');
     }
 
     /**
-     * コンテンツリスト
+     * 投稿リスト
      * 
-     * - コンテンツリストに直接コンテンツのコレクションを指定する場合、タグタイプがコンテンツ種別と一致している必要があることを確認します。
+     * - 投稿リストに直接投稿のコレクションを指定する場合、タグタイプが投稿種別と一致している必要があることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#コンテンツリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
     public function test_contents_type_missmatch()
     {
@@ -656,9 +656,9 @@ class TagTest extends TestCase
             // 実行
             $profile->tags()->create([
                 'name' => 'テストタグ',
-                'type' => Post::type(),
+                'type' => Journal::type(),
                 'contents' => Item::factory(1)->create(['profile_id' => $profile->id]),
             ]);
-        }, ApplicationException::class, 'TagContentTypeMissmatch');
+        }, ApplicationException::class, 'TagTypeMissmatch');
     }
 }

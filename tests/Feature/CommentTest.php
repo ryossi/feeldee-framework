@@ -8,7 +8,7 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Reply;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -29,7 +29,7 @@ class CommentTest extends TestCase
     /**
      * コメント所有者
      * 
-     * - コメントされたコンテンツ（以降、コメント対象）に紐付くプロフィールが設定されることを確認します。
+     * - コメントされた投稿（以降、コメント対象）に紐付くプロフィールが設定されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント所有者
      */
@@ -37,7 +37,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
         $post = $profile->posts->first();
 
         // コメント者準備
@@ -65,7 +65,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
         $post = $profile->posts->first();
 
         // コメント者準備
@@ -95,7 +95,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
         $post = $profile->posts->first();
 
         // コメント者準備
@@ -123,7 +123,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
         $post = $profile->posts->first();
 
         // コメント者準備
@@ -152,7 +152,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
         $post = $profile->posts->first();
 
         // コメント者準備
@@ -173,9 +173,9 @@ class CommentTest extends TestCase
     /**
      * コメント対象
      * 
-     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
-     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
-     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * - コメント対象IDには、コメント対象のIDが設定されることを確認します。
+     * - コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
@@ -183,7 +183,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory()->count(1))->create();
+        $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
         $post = $profile->posts->first();
 
         // コメント者準備
@@ -197,19 +197,19 @@ class CommentTest extends TestCase
         ]);
 
         // 評価
-        Assert::assertEquals($post->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
-        Assert::assertInstanceOf(Post::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        Assert::assertEquals($post->id, $comment->commentable->id, 'コメント対象IDには、コメント対象のIDが設定されること');
+        Assert::assertInstanceOf(Journal::class, $comment->commentable, 'コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Post::type(),
+            'commentable_type' => Journal::type(),
         ]);
     }
 
     /**
      * コメント対象
      * 
-     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
-     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
-     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * - コメント対象IDには、コメント対象のIDが設定されることを確認します。
+     * - コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
@@ -231,8 +231,8 @@ class CommentTest extends TestCase
         ]);
 
         // 評価
-        Assert::assertEquals($photo->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
-        Assert::assertInstanceOf(Photo::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        Assert::assertEquals($photo->id, $comment->commentable->id, 'コメント対象IDには、コメント対象のIDが設定されること');
+        Assert::assertInstanceOf(Photo::class, $comment->commentable, 'コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
             'commentable_type' => Photo::type()
         ]);
@@ -241,9 +241,9 @@ class CommentTest extends TestCase
     /**
      * コメント対象
      * 
-     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
-     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
-     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * - コメント対象IDには、コメント対象のIDが設定されることを確認します。
+     * - コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象ツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
@@ -265,8 +265,8 @@ class CommentTest extends TestCase
         ]);
 
         // 評価
-        Assert::assertEquals($location->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
-        Assert::assertInstanceOf(Location::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        Assert::assertEquals($location->id, $comment->commentable->id, 'コメント対象IDには、コメント対象のIDが設定されること');
+        Assert::assertInstanceOf(Location::class, $comment->commentable, 'コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
             'commentable_type' => Location::type(),
         ]);
@@ -275,9 +275,9 @@ class CommentTest extends TestCase
     /**
      * コメント対象
      * 
-     * - コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されることを確認します。
-     * - コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できることを確認します。
-     * - コメント対象コンテンツ種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
+     * - コメント対象IDには、コメント対象のIDが設定されることを確認します。
+     * - コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できることを確認します。
+     * - コメント対象種別には、コメントが可能な投稿のモデルをあらわす識別文字列が自動設定されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント対象
      */
@@ -299,8 +299,8 @@ class CommentTest extends TestCase
         ]);
 
         // 評価
-        Assert::assertEquals($item->id, $comment->commentable->id, 'コメント対象コンテンツIDには、コメント対象のコンテンツのIDが設定されること');
-        Assert::assertInstanceOf(Item::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        Assert::assertEquals($item->id, $comment->commentable->id, 'コメント対象IDには、コメント対象のIDが設定されること');
+        Assert::assertInstanceOf(Item::class, $comment->commentable, 'コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できること');
         $this->assertDatabaseHas('comments', [
             'commentable_type' => Item::type(),
         ]);
@@ -561,7 +561,7 @@ class CommentTest extends TestCase
     /**
      * コメント作成
      * 
-     * - コメントが、コンテンツ毎に付与されることを確認します。
+     * - コメントが、投稿毎に付与されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント作成
      */
@@ -580,10 +580,10 @@ class CommentTest extends TestCase
             'title' => 'コメント者プロフィールタイトル'
         ]);
         Auth::shouldReceive('user')->andReturn($user);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
 
         // 実行
-        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $post = Journal::by('feeldee')->at('2025-07-24')->first();
         $comment = $post->comments()->create([
             'commenter' => Auth::user()->profile,
             'body' => 'これはテストコメントです。',
@@ -591,14 +591,14 @@ class CommentTest extends TestCase
 
         // 評価
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Post::type(),
+            'commentable_type' => Journal::type(),
             'commentable_id' => $post->id,
             'commenter_profile_id' => Auth::user()->profile->id,
             'commenter_nickname' => null,
             'body' => 'これはテストコメントです。',
         ]);
-        $this->assertEquals($post->id, $comment->commentable->id, 'コメントが、コンテンツ毎に付与されること');
-        $this->assertInstanceOf(Post::class, $comment->commentable, 'コメント対象コンテンツ種別とコメント対象コンテンツIDを組み合わせてコメント対象を特定できること');
+        $this->assertEquals($post->id, $comment->commentable->id, 'コメントが、投稿毎に付与されること');
+        $this->assertInstanceOf(Journal::class, $comment->commentable, 'コメント対象種別とコメント対象IDを組み合わせてコメント対象を特定できること');
     }
 
     /**
@@ -623,11 +623,11 @@ class CommentTest extends TestCase
             'title' => 'コメント者プロフィールタイトル'
         ]);
         Auth::shouldReceive('user')->andReturn($user);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $commenter_nickname = 'テストニックネーム';
 
         // 実行
-        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $post = Journal::by('feeldee')->at('2025-07-24')->first();
         $comment = $post->comments()->create([
             'commenter' => Auth::user()->profile,
             'commenter_nickname' => $commenter_nickname,
@@ -636,7 +636,7 @@ class CommentTest extends TestCase
 
         // 評価
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Post::type(),
+            'commentable_type' => Journal::type(),
             'commentable_id' => $post->id,
             'commenter_profile_id' => Auth::user()->profile->id,
             'commenter_nickname' => $commenter_nickname,
@@ -656,11 +656,11 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $commenter_nickname = 'テストニックネーム';
 
         // 実行
-        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $post = Journal::by('feeldee')->at('2025-07-24')->first();
         $comment = $post->comments()->create([
             'commenter_nickname' => $commenter_nickname,
             'body' => 'これはテストコメントです。',
@@ -668,7 +668,7 @@ class CommentTest extends TestCase
 
         // 評価
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Post::type(),
+            'commentable_type' => Journal::type(),
             'commentable_id' => $post->id,
             'commenter_profile_id' => null,
             'commenter_nickname' => $commenter_nickname,
@@ -688,12 +688,12 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $commenter_nickname = 'テストニックネーム';
         $commented_at = '2025-03-27 09:30:20';
 
         // 実行
-        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $post = Journal::by('feeldee')->at('2025-07-24')->first();
         $comment = $post->comments()->create([
             'commenter_nickname' => $commenter_nickname,
             'body' => 'これはテストコメントです。',
@@ -702,7 +702,7 @@ class CommentTest extends TestCase
 
         // 評価
         $this->assertDatabaseHas('comments', [
-            'commentable_type' => Post::type(),
+            'commentable_type' => Journal::type(),
             'commentable_id' => $post->id,
             'commenter_profile_id' => null,
             'commenter_nickname' => $commenter_nickname,
@@ -765,7 +765,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $post = $profile->posts->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',
@@ -784,7 +784,7 @@ class CommentTest extends TestCase
         ]);
 
         // 実行
-        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $post = Journal::by('feeldee')->at('2025-07-24')->first();
         $comments = $post->comments;
 
         // 評価
@@ -802,7 +802,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $post = $profile->posts->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',
@@ -821,7 +821,7 @@ class CommentTest extends TestCase
         ]);
 
         // 実行
-        $post = Post::by('feeldee')->at('2025-07-24')->first();
+        $post = Journal::by('feeldee')->at('2025-07-24')->first();
         $comments = $post->comments()->orderOldest()->get();
 
         // 評価
@@ -839,7 +839,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Post::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
         $post = $profile->posts->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',

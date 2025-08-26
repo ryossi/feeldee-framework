@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * 写真をあらわすモデル
  *
  */
-class Photo extends Content
+class Photo extends Post
 {
     /**
      * 複数代入可能な属性
@@ -48,7 +48,7 @@ class Photo extends Content
     ];
 
     /**
-     * コンテンツをソートするカラム名
+     * ソートするカラム名
      * 
      * @var array
      */
@@ -82,7 +82,7 @@ class Photo extends Content
 
         static::saving(
             function (self $model) {
-                // コンテンツ投稿日時
+                // 投稿日時
                 if (empty($model->posted_at)) {
                     $model->posted_at = CarbonImmutable::now();
                 }
@@ -91,7 +91,7 @@ class Photo extends Content
     }
 
     /**
-     * コンテンツ種別
+     * 投稿種別
      * 
      * @return string
      */
@@ -107,7 +107,7 @@ class Photo extends Content
      */
     public function posts(): BelongsToMany
     {
-        return $this->belongsToMany(Post::class, 'posted_photos');
+        return $this->belongsToMany(Journal::class, 'posted_photos');
     }
 
     /**

@@ -7,7 +7,7 @@ use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Recorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -35,7 +35,7 @@ class RecordTest extends TestCase
         // 実行
         $recorder = $profile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
 
@@ -63,7 +63,7 @@ class RecordTest extends TestCase
         $this->assertThrows(function () {
             Recorder::create([
                 'name' => 'テストレコード',
-                'type' => Post::type(),
+                'type' => Journal::type(),
                 'data_type' => 'int',
             ]);
         }, ApplicationException::class, 'RecordRecorderProfileRequired');
@@ -107,14 +107,14 @@ class RecordTest extends TestCase
         // 実行
         $recorder = $profile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
 
         // 評価
-        $this->assertEquals(Post::type(), $recorder->type, '投稿のレコーダタイプであること');
+        $this->assertEquals(Journal::type(), $recorder->type, '投稿のレコーダタイプであること');
         $this->assertDatabaseHas('recorders', [
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
     }
 
@@ -259,13 +259,13 @@ class RecordTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Post::type()]))->create();
+        $profile = Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Journal::type()]))->create();
 
         // 実行
         $this->assertThrows(function () use ($profile) {
             $profile->recorders()->create([
                 'name' => 'テストレコード',
-                'type' => Post::type(),
+                'type' => Journal::type(),
                 'data_type' => 'int',
             ]);
         }, ApplicationException::class, 'RecordRecorderNameDuplicated');
@@ -283,7 +283,7 @@ class RecordTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Post::type()]))->create();
+        $profile = Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Journal::type()]))->create();
 
         // 実行
         $recorder = $profile->recorders()->create([
@@ -312,13 +312,13 @@ class RecordTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Post::type()]))->create();
+        Profile::factory()->has(Recorder::factory(1, ['name' => 'テストレコード', 'type' => Journal::type()]))->create();
         $otherProfile = Profile::factory()->create();
 
         // 実行
         $recorder = $otherProfile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
 
@@ -326,7 +326,7 @@ class RecordTest extends TestCase
         $this->assertEquals('テストレコード', $recorder->name, 'レコーダ所有プロフィールが異なる場合は、登録できること');
         $this->assertDatabaseHas('recorders', [
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'profile_id' => $otherProfile->id,
         ]);
     }
@@ -349,7 +349,7 @@ class RecordTest extends TestCase
         // 実行
         $recorder = $profile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
             'image' => $image,
         ]);
@@ -380,7 +380,7 @@ class RecordTest extends TestCase
         // 実行
         $recorder = $profile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
             'image' => $image,
         ]);
@@ -409,7 +409,7 @@ class RecordTest extends TestCase
         // 実行
         $recorder = $profile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
 
@@ -437,7 +437,7 @@ class RecordTest extends TestCase
         $this->assertThrows(function () use ($profile) {
             $profile->recorders()->create([
                 'name' => 'テストレコード',
-                'type' => Post::type(),
+                'type' => Journal::type(),
             ]);
         }, ApplicationException::class, 'RecordDataTypeRequired');
     }
@@ -458,7 +458,7 @@ class RecordTest extends TestCase
         // 実行
         $recorder = $profile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
             'unit' => 'km',
         ]);
@@ -486,7 +486,7 @@ class RecordTest extends TestCase
         // 実行
         $recorder = $profile->recorders()->create([
             'name' => 'テストレコード',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
             'description' => 'テストレコードの説明',
         ]);
@@ -515,17 +515,17 @@ class RecordTest extends TestCase
         // 実行
         $recorder1 = $profile->recorders()->create([
             'name' => 'テストレコード1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
         $recorder2 = $profile->recorders()->create([
             'name' => 'テストレコード2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
         $recorder3 = $profile->recorders()->create([
             'name' => 'テストレコード3',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
 
@@ -558,12 +558,12 @@ class RecordTest extends TestCase
         // 実行
         $recorder1 = $profile->recorders()->create([
             'name' => 'テストレコード1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
         $recorder2 = $profile->recorders()->create([
             'name' => 'テストレコード2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
 
@@ -590,12 +590,12 @@ class RecordTest extends TestCase
         // 実行
         $recorder1 = $profile->recorders()->create([
             'name' => 'テストレコード1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
         $recorder2 = $profile->recorders()->create([
             'name' => 'テストレコード2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
 
@@ -620,12 +620,12 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder1 = $profile->recorders()->create([
             'name' => 'テストレコード1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
         $recorder2 = $profile->recorders()->create([
             'name' => 'テストレコード2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
 
@@ -660,12 +660,12 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder1 = $profile->recorders()->create([
             'name' => 'テストレコード1',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
         $recorder2 = $profile->recorders()->create([
             'name' => 'テストレコード2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
 
@@ -700,10 +700,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $posts = Post::factory()->count(3)->create([
+        $posts = Journal::factory()->count(3)->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -722,7 +722,7 @@ class RecordTest extends TestCase
     /**
      * レコードリスト
      * 
-     * - レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
      */
@@ -734,26 +734,26 @@ class RecordTest extends TestCase
         $otherProfile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $otherProfile->id,
         ]);
 
         // 評価
         $this->assertThrows(function () use ($recorder, $post) {
             $recorder->records()->create([
-                'content_id' => $post->id,
+                'recordable_id' => $post->id,
                 'value' => 1,
             ]);
-        }, ApplicationException::class, 'RecordContentProfileMissmatch');
+        }, ApplicationException::class, 'RecordProfileMissmatch');
     }
 
     /**
      * レコードリスト
      * 
-     * - レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * - レコーダタイプが投稿種別と一致していることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
      */
@@ -767,7 +767,7 @@ class RecordTest extends TestCase
             'type' => Item::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -777,13 +777,13 @@ class RecordTest extends TestCase
                 'content' => $post,
                 'value' => 1,
             ]);
-        }, ApplicationException::class, 'RecordContentTypeMissmatch');
+        }, ApplicationException::class, 'RecordTypeMissmatch');
     }
 
     /**
      * レコードリスト
      * 
-     * - レコードに紐付くコンテンツを削除すると、レコードリストからも自動的に除外されることを確認します。
+     * - レコードに紐付く投稿を削除すると、レコードリストからも自動的に除外されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
      */
@@ -794,10 +794,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $recorder->records()->create([
@@ -809,7 +809,7 @@ class RecordTest extends TestCase
         $recorder->delete();
 
         // 評価
-        $this->assertEmpty($post->records, 'レコードに紐付くコンテンツを削除すると、レコードリストからも自動的に除外されること');
+        $this->assertEmpty($post->records, 'レコードに紐付く投稿を削除すると、レコードリストからも自動的に除外されること');
     }
 
     /**
@@ -826,10 +826,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -837,10 +837,10 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, 1);
 
         // 評価
-        $this->assertEquals($post->id, $record->content_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで作成できること');
+        $this->assertEquals($post->id, $record->recordable_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで作成できること');
         $this->assertDatabaseHas('records', [
             'id' => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => 1,
         ]);
@@ -860,10 +860,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $record = $recorder->records()->create([
@@ -875,10 +875,10 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, 2);
 
         // 評価
-        $this->assertEquals($post->id, $record->content_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで編集できること');
+        $this->assertEquals($post->id, $record->recordable_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで編集できること');
         $this->assertDatabaseHas('records', [
             'id' => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => 2,
         ]);
@@ -898,10 +898,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $record = $recorder->records()->create([
@@ -918,24 +918,24 @@ class RecordTest extends TestCase
     }
 
     /**
-     * レコード対象コンテンツ
+     * レコード対象投稿
      * 
-     * - レコーダによって記録されたレコードに紐付くコンテンツであることを確認します。
-     * - コンテンツオブジェクトを指定することができることを確認します。
+     * - レコーダによって記録されたレコードに紐付く投稿であることを確認します。
+     * - 投稿オブジェクトを指定することができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード対象コンテンツ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード対象投稿
      */
-    public function test_record_content()
+    public function test_record_post()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -946,49 +946,49 @@ class RecordTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals($post->id, $record->content->id, 'コンテンツオブジェクトを指定することができること');
-        // レコーダによって記録されたレコードに紐付くコンテンツであること
+        $this->assertEquals($post->id, $record->content->id, '投稿オブジェクトを指定することができること');
+        // レコーダによって記録されたレコードに紐付く投稿であること
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id
         ]);
     }
 
     /**
-     * レコード対象コンテンツ
+     * レコード対象投稿
      * 
-     * - レコーダによって記録されたレコードに紐付くコンテンツであることを確認します。
-     * - コンテンツIDを指定することができることを確認します。
+     * - レコーダによって記録されたレコードに紐付く投稿であることを確認します。
+     * - 投稿IDを指定することができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード対象コンテンツ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコード対象投稿
      */
-    public function test_record_content_id()
+    public function test_record_post_id()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
         // 実行
         $record = $recorder->records()->create([
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'value' => 1,
         ]);
 
         // 評価
-        $this->assertEquals($post->id, $record->content_id, 'コンテンツIDを指定することができること');
-        // レコーダによって記録されたレコードに紐付くコンテンツであること
+        $this->assertEquals($post->id, $record->recordable_id, '投稿IDを指定することができること');
+        // レコーダによって記録されたレコードに紐付く投稿であること
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id
         ]);
     }
@@ -996,7 +996,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - stringのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1009,10 +1009,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = 'テストレコード';
@@ -1021,11 +1021,11 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, $expected);
 
         // 評価
-        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertTrue(is_string($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1046,10 +1046,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'string',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1062,7 +1062,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - intのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1075,10 +1075,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = 1;
@@ -1087,11 +1087,11 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, $expected);
 
         // 評価
-        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertTrue(is_int($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1112,10 +1112,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1128,7 +1128,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - integerのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1141,10 +1141,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'integer',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = 1;
@@ -1153,11 +1153,11 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, $expected);
 
         // 評価
-        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertTrue(is_int($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1178,10 +1178,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'integer',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1194,7 +1194,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - floatのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1207,10 +1207,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'float',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = 1.5;
@@ -1219,11 +1219,11 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, $expected);
 
         // 評価
-        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertTrue(is_float($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1244,10 +1244,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'float',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1260,7 +1260,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - doubleのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1273,10 +1273,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'double',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = 1.56868757577576765868686878;
@@ -1285,11 +1285,11 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, $expected);
 
         // 評価
-        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertTrue(is_double($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1310,10 +1310,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'double',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1326,7 +1326,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - boolのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1339,10 +1339,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'bool',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = true;
@@ -1351,11 +1351,11 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, $expected);
 
         // 評価
-        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertTrue(is_bool($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => 1
         ]);
@@ -1376,10 +1376,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'bool',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1392,7 +1392,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - booleanのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1405,10 +1405,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'boolean',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = false;
@@ -1417,11 +1417,11 @@ class RecordTest extends TestCase
         $record = $recorder->record($post, $expected);
 
         // 評価
-        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value, 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertTrue(is_bool($record->value), '取得時にレコードデータ型に従って型変換が実行されること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => 0
         ]);
@@ -1442,10 +1442,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'boolean',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1458,7 +1458,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - dateのレコードデータ型がサポートされていることを確認します。
      * - 時刻は省略されることを確認します。
@@ -1472,10 +1472,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'date',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = '2023-10-01';
@@ -1485,10 +1485,10 @@ class RecordTest extends TestCase
 
         // 評価 
         $this->assertInstanceOf(Carbon::class, $record->value, '取得時にレコードデータ型に従って型変換が実行されること');
-        $this->assertEquals($expected, $record->value->format('Y-m-d'), 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value->format('Y-m-d'), 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1509,10 +1509,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'date',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 
@@ -1525,7 +1525,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - datetimeのレコードデータ型がサポートされていることを確認します。
      * 
@@ -1538,10 +1538,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'datetime',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = '2023-10-01 12:32:13';
@@ -1551,10 +1551,10 @@ class RecordTest extends TestCase
 
         // 評価
         $this->assertInstanceOf(Carbon::class, $record->value, '取得時にレコードデータ型に従って型変換が実行されること');
-        $this->assertEquals($expected, $record->value->format('Y-m-d H:i:s'), 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value->format('Y-m-d H:i:s'), 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1563,7 +1563,7 @@ class RecordTest extends TestCase
     /**
      * レコード値
      * 
-     * - レコーダによってレコード対象コンテンツ毎に記録された値であることを確認します。
+     * - レコーダによってレコード対象投稿毎に記録された値であることを確認します。
      * - 取得時にレコードデータ型に従って型変換が実行されることを確認します。
      * - datetimeのレコードデータ型がサポートされていることを確認します。
      * - 時刻が省略された場合は、00:00:00が補完されることを確認します。
@@ -1577,10 +1577,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'datetime',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
         $expected = '2023-10-01 00:00:00';
@@ -1590,10 +1590,10 @@ class RecordTest extends TestCase
 
         // 評価
         $this->assertInstanceOf(Carbon::class, $record->value, '取得時にレコードデータ型に従って型変換が実行されること');
-        $this->assertEquals($expected, $record->value->format('Y-m-d H:i:s'), 'レコーダによってレコード対象コンテンツ毎に記録された値であること');
+        $this->assertEquals($expected, $record->value->format('Y-m-d H:i:s'), 'レコーダによってレコード対象投稿毎に記録された値であること');
         $this->assertDatabaseHas('records', [
             "id" => $record->id,
-            'content_id' => $post->id,
+            'recordable_id' => $post->id,
             'recorder_id' => $recorder->id,
             'value' => $expected
         ]);
@@ -1614,10 +1614,10 @@ class RecordTest extends TestCase
         $profile = Profile::factory()->create();
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'datetime',
         ]);
-        $post = Post::factory()->create([
+        $post = Journal::factory()->create([
             'profile_id' => $profile->id,
         ]);
 

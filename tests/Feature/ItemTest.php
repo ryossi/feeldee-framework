@@ -4,11 +4,10 @@ namespace Tests\Feature;
 
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
-use Feeldee\Framework\Contracts\HssProfile;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
 use Feeldee\Framework\Models\Recorder;
@@ -24,11 +23,11 @@ class ItemTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * コンテンツ種別
+     * 投稿種別
      * 
-     * - アイテムのコンテンツ種別は、"item"であることを確認します。
+     * - アイテムの投稿種別は、"item"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ種別
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿種別
      */
     public function test_type()
     {
@@ -42,15 +41,15 @@ class ItemTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('item', $item->type(), 'アイテムのコンテンツ種別は、"item"であること');
+        $this->assertEquals('item', $item->type(), 'アイテムの投稿種別は、"item"であること');
     }
 
     /**
-     * コンテンツ所有プロフィール
+     * 投稿者プロフィール
      * 
      * - アイテムを作成したユーザのプロフィールであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ所有プロフィール
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿者プロフィール
      */
     public function test_profile()
     {
@@ -71,11 +70,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツタイトル
+     * 投稿タイトル
      * 
      * - 登録したアイテムに付けるタイトルであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタイトル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タイトル
      */
     public function test_title()
     {
@@ -94,12 +93,12 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツタイトル
+     * 投稿タイトル
      * 
      * - 登録時に必ず指定する必要があることを確認します。
      * - 例外コード:50001のメッセージであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタイトル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タイトル
      */
     public function test_title_required()
     {
@@ -114,12 +113,12 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - アイテムの説明またはメモ書きなどであることを確認します。
      * - HTMLが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿内容
      */
     public function test_value_html()
     {
@@ -143,12 +142,12 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - アイテムの説明またはメモ書きなどであることを確認します。
      * - テキストが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿内容
      */
     public function test_value_text()
     {
@@ -172,12 +171,12 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツテキスト
+     * 投稿内容テキスト
      * 
-     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - コンテンツ内容の登録時に、自動変換されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツテキスト
+     * - 投稿内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 投稿内容の登録時に、自動変換されることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿内容テキスト
      */
     public function test_text_create()
     {
@@ -194,20 +193,20 @@ class ItemTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($expected, $item->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
-        // コンテンツ内容の登録時に、自動変換されること
+        $this->assertEquals($expected, $item->text, '投稿内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 投稿内容の登録時に、自動変換されること
         $this->assertDatabaseHas('items', [
             'text' => $expected,
         ]);
     }
 
     /**
-     * コンテンツテキスト
+     * 投稿内容テキスト
      * 
-     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - コンテンツ内容の編集時に、自動変換されることを確認します。
+     * - 投稿内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 投稿内容の編集時に、自動変換されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツテキスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿内容テキスト
      */
     public function test_text_update()
     {
@@ -224,19 +223,19 @@ class ItemTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($expected, $item->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
-        // コンテンツ内容の編集時に、自動変換されること
+        $this->assertEquals($expected, $item->text, '投稿内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 投稿内容の編集時に、自動変換されること
         $this->assertDatabaseHas('items', [
             'text' => $expected,
         ]);
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - デフォルトは、非公開であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿公開フラグ
      */
     public function test_is_public_default()
     {
@@ -254,11 +253,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - 公開できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿公開フラグ
      */
     public function test_is_public_doPublic()
     {
@@ -278,11 +277,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - 非公開にできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿公開フラグ
      */
     public function test_is_public_doPrivate()
     {
@@ -302,11 +301,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
      * - デフォルトは、"自分"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿公開レベル
      */
     public function test_public_level_default()
     {
@@ -328,11 +327,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
-     * - コンテンツ公開レベルを指定できることを確認します。
+     * - 投稿公開レベルを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿公開レベル
      */
     public function test_public_level()
     {
@@ -347,7 +346,7 @@ class ItemTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals(PublicLevel::Private, $item->public_level, 'コンテンツ公開レベルを指定できること');
+        $this->assertEquals(PublicLevel::Private, $item->public_level, '投稿公開レベルを指定できること');
         $this->assertDatabaseHas('items', [
             'id' => $item->id,
             'public_level' => PublicLevel::Private,
@@ -355,11 +354,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
-     * - コンテンツ公開レベルを変更できることを確認します。
+     * - 投稿公開レベルを変更できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿公開レベル
      */
     public function test_public_level_update()
     {
@@ -376,7 +375,7 @@ class ItemTest extends TestCase
         $item->save();
 
         // 評価
-        $this->assertEquals(PublicLevel::Private, $item->public_level, 'コンテンツ公開レベルを変更できること');
+        $this->assertEquals(PublicLevel::Private, $item->public_level, '投稿公開レベルを変更できること');
         $this->assertDatabaseHas('items', [
             'id' => $item->id,
             'public_level' => PublicLevel::Private,
@@ -384,13 +383,13 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - カテゴリを指定できることを確認します。
-     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、投稿者プロフィールと一致していることを確認します。
      * - 指定したカテゴリが、アイテムのカテゴリであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿カテゴリ
      */
     public function test_category()
     {
@@ -417,13 +416,13 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - カテゴリIDを指定できることを確認します。
-     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、投稿者プロフィールと一致していることを確認します。
      * - 指定したカテゴリが、アイテムのカテゴリであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿カテゴリ
      */
     public function test_category_id()
     {
@@ -450,11 +449,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - カテゴリ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - カテゴリ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿カテゴリ
      */
     public function test_category_profile_missmatch()
     {
@@ -473,15 +472,15 @@ class ItemTest extends TestCase
                 'title' => 'テストアイテム',
                 'category' => $category,
             ]);
-        }, ApplicationException::class, 'CategoryContentProfileMissmatch');
+        }, ApplicationException::class, 'CategoryProfileMissmatch');
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - コンテンツ種別と同じカテゴリタイプであることを確認します。
+     * - 投稿種別と同じカテゴリタイプであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿カテゴリ
      */
     public function test_category_type_missmatch()
     {
@@ -490,7 +489,7 @@ class ItemTest extends TestCase
         $profile = Profile::factory()->create();
         $category = Category::factory([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ])->create();
 
         // 実行
@@ -499,15 +498,15 @@ class ItemTest extends TestCase
                 'title' => 'テストアイテム',
                 'category' => $category,
             ]);
-        }, ApplicationException::class, 'CategoryContentTypeMissmatch');
+        }, ApplicationException::class, 'CategoryTypeMissmatch');
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
+     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿カテゴリ
      */
     public function test_category_name()
     {
@@ -527,7 +526,7 @@ class ItemTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals($category->id, $item->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
+        $this->assertEquals($category->id, $item->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
         $this->assertDatabaseHas('items', [
             'id' => $item->id,
             'category_id' => $category->id,
@@ -535,11 +534,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - 一致するカテゴリが存在しない場合は無視されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿カテゴリ
      */
     public function test_category_name_nomatch()
     {
@@ -567,11 +566,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿カテゴリ
      */
     public function test_category_delete()
     {
@@ -598,11 +597,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
      * - タグ付けできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タグリスト
      */
     public function test_tags()
     {
@@ -636,11 +635,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
      * - タグIDを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タグリスト
      */
     public function test_tags_id()
     {
@@ -674,11 +673,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - タグ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タグリスト
      */
     public function test_tags_profile_missmatch()
     {
@@ -701,15 +700,15 @@ class ItemTest extends TestCase
                 'title' => 'テストアイテム',
                 'tags' => [$tag1->id, $tag2->id],
             ]);
-        }, ApplicationException::class, 'TagContentProfileMissmatch');
+        }, ApplicationException::class, 'TagProfileMissmatch');
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグタイプがコンテンツ種別と一致することを確認します。
+     * - タグタイプが投稿種別と一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タグリスト
      */
     public function test_tags_type_missmatch()
     {
@@ -722,7 +721,7 @@ class ItemTest extends TestCase
         ]);
         $tag2 = $profile->tags()->create([
             'name' => 'タグ2',
-            'type' => Post::type(),
+            'type' => Journal::type(),
         ]);
 
         // 実行
@@ -731,15 +730,15 @@ class ItemTest extends TestCase
                 'title' => 'テストアイテム',
                 'tags' => [$tag1->id, $tag2->id],
             ]);
-        }, ApplicationException::class, 'TagContentTypeMissmatch');
+        }, ApplicationException::class, 'TagTypeMissmatch');
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
+     * - タグ名を指定した場合は、タグ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タグリスト
      */
     public function test_tags_name()
     {
@@ -762,7 +761,7 @@ class ItemTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals(2, $Item->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
+        $this->assertEquals(2, $Item->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
         foreach ($Item->tags as $tag) {
             $this->assertDatabaseHas('taggables', [
                 'tag_id' => $tag->id,
@@ -773,11 +772,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツタグリス
+     * 投稿タグリスト
      * 
      * - 一致するタグが存在しない場合は無視されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タグリスト
      */
     public function test_tags_name_nomatch()
     {
@@ -811,11 +810,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - 対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されることを確認します。
+     * - 対応するタグが削除された場合は、投稿タグリストから自動的に除外されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タグリスト
      */
     public function test_tags_delete()
     {
@@ -839,7 +838,7 @@ class ItemTest extends TestCase
         $tag1->delete();
 
         // 評価
-        $this->assertEquals(1, $Item->tags->count(), '対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されること');
+        $this->assertEquals(1, $Item->tags->count(), '対応するタグが削除された場合は、投稿タグリストから自動的に除外されること');
         foreach ($Item->tags as $tag) {
             $this->assertDatabaseHas('taggables', [
                 'tag_id' => $tag->id,
@@ -850,14 +849,14 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
      * - レコーダによって記録されたアイテムのレコードリストであることを確認します。
      * - レコーダの指定は、レコーダそのものを指定することができることを確認します。
      * - レコーダの指定は、レコーダIDを指定することができることを確認します。
      * - レコーダの指定は、レコーダ名を指定することができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿レコードリスト
      */
     public function test_content_records()
     {
@@ -905,11 +904,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - レコーダを指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿レコードリスト
      */
     public function test_content_records_recorder_profile()
     {
@@ -933,11 +932,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * - レコーダを指定する場合は、レコーダタイプが投稿種別と一致していることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿レコードリスト
      */
     public function test_content_records_recorder_type()
     {
@@ -949,7 +948,7 @@ class ItemTest extends TestCase
         ]);
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
             'name' => 'テストレコーダ1',
         ]);
@@ -961,11 +960,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダIDを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - レコーダIDを指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿レコードリスト
      */
     public function test_content_records_recorder_id_profile()
     {
@@ -989,11 +988,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダIDを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * - レコーダIDを指定する場合は、レコーダタイプが投稿種別と一致していることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿レコードリスト
      */
     public function test_content_records_recorder_id_type()
     {
@@ -1005,7 +1004,7 @@ class ItemTest extends TestCase
         ]);
         $recorder = Recorder::factory()->create([
             'profile_id' => $profile->id,
-            'type' => Post::type(),
+            'type' => Journal::type(),
             'data_type' => 'int',
             'name' => 'テストレコーダ1',
         ]);
@@ -1017,11 +1016,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - 対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されることを確認します。
+     * - 対応するレコーダが削除された場合は、投稿レコードリストからも自動的に除外されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿レコードリスト
      */
     public function test_content_records_recorder_delete()
     {
@@ -1043,16 +1042,16 @@ class ItemTest extends TestCase
         $recorder->delete();
 
         // 評価
-        $this->assertEquals(0, $item->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
+        $this->assertEquals(0, $item->records->count(), '対応するレコーダが削除された場合は、投稿レコードリストからも自動的に除外されること');
         $this->assertDatabaseEmpty('records');
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 取得時にHTMLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿内容
      */
     public function test_content_value_html_cast_hook_get()
     {
@@ -1063,7 +1062,7 @@ class ItemTest extends TestCase
         ]);
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $value = '<p>テストコンテンツ</p>';
+        $value = '<p>テスト投稿</p>';
         $item = Item::factory()->create([
             'profile_id' => $profile->id,
             'value' => $value,
@@ -1081,11 +1080,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 設定時にHTMLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿内容
      */
     public function test_content_value_html_cast_hook_set()
     {
@@ -1096,7 +1095,7 @@ class ItemTest extends TestCase
         ]);
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $value = '<p>テストコンテンツ</p>';
+        $value = '<p>テスト投稿</p>';
 
         // 実行
         $profile->items()->create([
@@ -1172,11 +1171,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * アイテム作成
+     * 新規作成
      * 
      * - アイテムの作成は、アイテムを追加したいプロフィールのアイテムリストに追加することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテム作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
      */
     public function test_create_item()
     {
@@ -1205,11 +1204,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * アイテム作成
+     * 新規作成
      * 
-     * - コンテンツタイトルは、必須であることを確認します。
+     * - 投稿タイトルは、必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテム作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
      */
     public function test_create_item_title_required()
     {
@@ -1226,11 +1225,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * アイテム作成
+     * 新規作成
      * 
-     * - コンテンツアイテム日時を省略した場合は、システム日付が設定されることを確認します。
+     * - 投稿日時を省略した場合は、システム日付が設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテム作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
      */
     public function test_create_item_posted_at_default()
     {

@@ -9,7 +9,7 @@ use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
 use Feeldee\Framework\Models\Recorder;
@@ -26,11 +26,11 @@ class PhotoTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * コンテンツ種別
+     * 投稿種別
      * 
-     * - 写真のコンテンツ種別は、"photo"であることを確認します。
+     * - 写真の投稿種別は、"photo"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ種別
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿種別
      */
     public function test_type()
     {
@@ -45,15 +45,15 @@ class PhotoTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('photo', $photo->type(), '写真のコンテンツ種別は、"photo"であること');
+        $this->assertEquals('photo', $photo->type(), '写真の投稿種別は、"photo"であること');
     }
 
     /**
-     * コンテンツ所有プロフィール
+     * 投稿者プロフィール
      * 
      * - 写真を作成したユーザのプロフィールあることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#ココンテンツ所有プロフィール
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コ投稿者プロフィール
      */
     public function test_profile()
     {
@@ -75,11 +75,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツタイトル
+     * 投稿タイトル
      * 
      * - 登録した写真に付けるタイトルであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタイトル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タイトル
      */
     public function test_title()
     {
@@ -100,12 +100,12 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 写真の説明またはメモ書きなどであることを確認します。
      * - HTMLが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿内容
      */
     public function test_value_html()
     {
@@ -130,12 +130,12 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 写真の説明またはメモ書きなどであることを確認します。
      * - テキストが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿内容
      */
     public function test_value_text()
     {
@@ -160,12 +160,12 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツテキスト
+     * 投稿内容テキスト
      * 
-     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - コンテンツ内容の登録時に、自動変換されることを確認します。
+     * - 投稿内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 投稿内容の登録時に、自動変換されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツテキスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿内容テキスト
      */
     public function test_text_create()
     {
@@ -183,20 +183,20 @@ class PhotoTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($expected, $photo->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
-        // コンテンツ内容の登録時に、自動変換されること
+        $this->assertEquals($expected, $photo->text, '投稿内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 投稿内容の登録時に、自動変換されること
         $this->assertDatabaseHas('photos', [
             'text' => $expected,
         ]);
     }
 
     /**
-     * コンテンツテキスト
+     * 投稿内容テキスト
      * 
-     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - コンテンツ内容の編集時に、自動変換されることを確認します。
+     * - 投稿内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 投稿内容の編集時に、自動変換されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツテキスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿内容テキスト
      */
     public function test_text_update()
     {
@@ -213,19 +213,19 @@ class PhotoTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($expected, $photo->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
-        // コンテンツ内容の編集時に、自動変換されること
+        $this->assertEquals($expected, $photo->text, '投稿内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 投稿内容の編集時に、自動変換されること
         $this->assertDatabaseHas('photos', [
             'text' => $expected,
         ]);
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - デフォルトは、非公開であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿公開フラグ
      */
     public function test_is_public_default()
     {
@@ -244,11 +244,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - 公開できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿公開フラグ
      */
     public function test_is_public_doPublic()
     {
@@ -268,11 +268,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - 非公開にできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿公開フラグ
      */
     public function test_is_public_doPrivate()
     {
@@ -292,11 +292,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
      * - デフォルトは、"自分"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿公開レベル
      */
     public function test_public_level_default()
     {
@@ -319,11 +319,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
-     * - コンテンツ公開レベルを指定できることを確認します。
+     * - 投稿公開レベルを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿公開レベル
      */
     public function test_public_level()
     {
@@ -339,7 +339,7 @@ class PhotoTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals(PublicLevel::Member, $photo->public_level, 'コンテンツ公開レベルを指定できること');
+        $this->assertEquals(PublicLevel::Member, $photo->public_level, '投稿公開レベルを指定できること');
         $this->assertDatabaseHas('photos', [
             'id' => $photo->id,
             'public_level' => PublicLevel::Member,
@@ -347,11 +347,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
-     * - コンテンツ公開レベルを変更できることを確認します。
+     * - 投稿公開レベルを変更できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿公開レベル
      */
     public function test_public_level_update()
     {
@@ -367,7 +367,7 @@ class PhotoTest extends TestCase
         $photo->save();
 
         // 評価
-        $this->assertEquals(PublicLevel::Member, $photo->public_level, 'コンテンツ公開レベルを変更できること');
+        $this->assertEquals(PublicLevel::Member, $photo->public_level, '投稿公開レベルを変更できること');
         $this->assertDatabaseHas('photos', [
             'id' => $photo->id,
             'public_level' => PublicLevel::Member,
@@ -375,13 +375,13 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - カテゴリを指定できることを確認します。
-     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、投稿者プロフィールと一致していることを確認します。
      * - 指定したカテゴリが、写真のカテゴリであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿カテゴリ
      */
     public function test_category()
     {
@@ -409,13 +409,13 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - カテゴリIDを指定できることを確認します。
-     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、投稿者プロフィールと一致していることを確認します。
      * - 指定したカテゴリが、写真のカテゴリであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿カテゴリ
      */
     public function test_category_id()
     {
@@ -443,11 +443,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - カテゴリ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - カテゴリ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿カテゴリ
      */
     public function test_category_profile_missmatch()
     {
@@ -467,15 +467,15 @@ class PhotoTest extends TestCase
                 'posted_at' => now(),
                 'category_id' => $category->id,
             ]);
-        }, ApplicationException::class, 'CategoryContentProfileMissmatch');
+        }, ApplicationException::class, 'CategoryProfileMissmatch');
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - コンテンツ種別と同じカテゴリタイプであることを確認します。
+     * - 投稿種別と同じカテゴリタイプであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿カテゴリ
      */
     public function test_category_type_missmatch()
     {
@@ -494,15 +494,15 @@ class PhotoTest extends TestCase
                 'posted_at' => now(),
                 'category' => $category,
             ]);
-        }, ApplicationException::class, 'CategoryContentTypeMissmatch');
+        }, ApplicationException::class, 'CategoryTypeMissmatch');
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
+     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿カテゴリ
      */
     public function test_category_name()
     {
@@ -523,7 +523,7 @@ class PhotoTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals($category->id, $photo->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
+        $this->assertEquals($category->id, $photo->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
         $this->assertDatabaseHas('photos', [
             'id' => $photo->id,
             'category_id' => $category->id,
@@ -531,11 +531,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - 一致するカテゴリが存在しない場合は無視されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿カテゴリ
      */
     public function test_category_name_nomatch()
     {
@@ -565,11 +565,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿カテゴリ
      */
     public function test_category_delete()
     {
@@ -596,11 +596,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
      * - タグ付けできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タグリスト
      */
     public function test_tags()
     {
@@ -636,11 +636,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
      * - タグIDを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タグリスト
      */
     public function test_tags_id()
     {
@@ -676,11 +676,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - タグ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タグリスト
      */
     public function test_tags_profile_missmatch()
     {
@@ -705,15 +705,15 @@ class PhotoTest extends TestCase
                 'posted_at' => now(),
                 'tags' => [$tag1->id, $tag2->id],
             ]);
-        }, ApplicationException::class, 'TagContentProfileMissmatch');
+        }, ApplicationException::class, 'TagProfileMissmatch');
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグタイプがコンテンツ種別と一致することを確認します。
+     * - タグタイプが投稿種別と一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タグリスト
      */
     public function test_tags_type_missmatch()
     {
@@ -737,15 +737,15 @@ class PhotoTest extends TestCase
                 'posted_at' => now(),
                 'tags' => [$tag1->id, $tag2->id],
             ]);
-        }, ApplicationException::class, 'TagContentTypeMissmatch');
+        }, ApplicationException::class, 'TagTypeMissmatch');
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
+     * - タグ名を指定した場合は、タグ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タグリスト
      */
     public function test_tags_name()
     {
@@ -770,7 +770,7 @@ class PhotoTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals(2, $photo->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
+        $this->assertEquals(2, $photo->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
         foreach ($photo->tags as $tag) {
             $this->assertDatabaseHas('taggables', [
                 'tag_id' => $tag->id,
@@ -781,11 +781,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツタグリス
+     * 投稿タグリス
      * 
      * - 一致するタグが存在しない場合は無視されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タグリスト
      */
     public function test_tags_name_nomatch()
     {
@@ -821,11 +821,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - 対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されることを確認します。
+     * - 対応するタグが削除された場合は、投稿タグリストから自動的に除外されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タグリスト
      */
     public function test_tags_delete()
     {
@@ -851,7 +851,7 @@ class PhotoTest extends TestCase
         $tag1->delete();
 
         // 評価
-        $this->assertEquals(1, $photo->tags->count(), '対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されること');
+        $this->assertEquals(1, $photo->tags->count(), '対応するタグが削除された場合は、投稿タグリストから自動的に除外されること');
         foreach ($photo->tags as $tag) {
             $this->assertDatabaseHas('taggables', [
                 'tag_id' => $tag->id,
@@ -872,7 +872,7 @@ class PhotoTest extends TestCase
     public function test_posts()
     {
         // 準備
-        Post::observe(PostPhotoShareObserver::class);
+        Journal::observe(PostPhotoShareObserver::class);
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
         $value = 'これは写真リストのテストです。<br>
@@ -908,14 +908,14 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
      * - レコーダによって記録された写真のレコードリストであることを確認します。
      * - レコーダの指定は、レコーダそのものを指定することができることを確認します。
      * - レコーダの指定は、レコーダIDを指定することができることを確認します。
      * - レコーダの指定は、レコーダ名を指定することができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿レコードリスト
      */
     public function test_content_records()
     {
@@ -963,11 +963,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - レコーダを指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿レコードリスト
      */
     public function test_content_records_recorder_profile()
     {
@@ -991,11 +991,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * - レコーダを指定する場合は、レコーダタイプが投稿種別と一致していることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿レコードリスト
      */
     public function test_content_records_recorder_type()
     {
@@ -1019,11 +1019,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダIDを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - レコーダIDを指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿レコードリスト
      */
     public function test_content_records_recorder_id_profile()
     {
@@ -1047,11 +1047,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダIDを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * - レコーダIDを指定する場合は、レコーダタイプが投稿種別と一致していることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿レコードリスト
      */
     public function test_content_records_recorder_id_type()
     {
@@ -1075,11 +1075,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - 対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されることを確認します。
+     * - 対応するレコーダが削除された場合は、投稿レコードリストからも自動的に除外されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿レコードリスト
      */
     public function test_content_records_recorder_delete()
     {
@@ -1101,16 +1101,16 @@ class PhotoTest extends TestCase
         $recorder->delete();
 
         // 評価
-        $this->assertEquals(0, $photo->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
+        $this->assertEquals(0, $photo->records->count(), '対応するレコーダが削除された場合は、投稿レコードリストからも自動的に除外されること');
         $this->assertDatabaseEmpty('records');
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 取得時にHTMLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿内容
      */
     public function test_content_value_html_cast_hook_get()
     {
@@ -1121,7 +1121,7 @@ class PhotoTest extends TestCase
         ]);
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $value = '<p>テストコンテンツ</p>';
+        $value = '<p>テスト投稿</p>';
         $photo = Photo::factory()->create([
             'profile_id' => $profile->id,
             'value' => $value,
@@ -1139,11 +1139,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 設定時にHTMLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿内容
      */
     public function test_content_value_html_cast_hook_set()
     {
@@ -1154,7 +1154,7 @@ class PhotoTest extends TestCase
         ]);
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $value = '<p>テストコンテンツ</p>';
+        $value = '<p>テスト投稿</p>';
 
         // 実行
         $profile->photos()->create([
@@ -1290,7 +1290,7 @@ class PhotoTest extends TestCase
     /**
      * 写真作成
      * 
-     * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
+     * - 投稿日時を省略した場合は、システム日時が設定されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
      */

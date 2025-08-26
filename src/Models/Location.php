@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * 場所をあらわすモデル
  * 
  */
-class Location extends Content
+class Location extends Post
 {
     /**
      * 緯度の精度コンフィグレーションキー
@@ -25,7 +25,7 @@ class Location extends Content
     public const CONFIG_KEY_LONGITUDE_PRECISION = 'feeldee.location_longitude_precision';
 
     /**
-     * コンテンツ種別
+     * 投稿種別
      * 
      * @return string
      */
@@ -87,7 +87,7 @@ class Location extends Content
     {
         static::saving(
             function (self $model) {
-                // コンテンツ投稿日時
+                // 投稿日時
                 if (empty($model->posted_at)) {
                     $model->posted_at = CarbonImmutable::now();
                 }
@@ -200,6 +200,6 @@ class Location extends Content
      */
     public function posts(): BelongsToMany
     {
-        return $this->belongsToMany(Post::class, 'timelines', 'location_id', 'post_id');
+        return $this->belongsToMany(Journal::class, 'timelines', 'location_id', 'post_id');
     }
 }

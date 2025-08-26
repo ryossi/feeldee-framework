@@ -10,10 +10,10 @@ use Intervention\Image\Facades\Image;
 /**
  * アイテムをあらわすモデル
  */
-class Item extends Content
+class Item extends Post
 {
     /**
-     * コンテンツ種別
+     * 投稿種別
      * 
      * @return string
      */
@@ -85,7 +85,7 @@ class Item extends Content
 
         static::saving(
             function (self $model) {
-                // コンテンツ投稿日時
+                // 投稿日時
                 if (empty($model->posted_at)) {
                     $model->posted_at = CarbonImmutable::now();
                 }

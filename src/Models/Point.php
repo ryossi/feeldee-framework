@@ -25,7 +25,7 @@ class Point extends Model
     protected $visible = ['id', 'title', 'point_datetime', 'date', 'time', 'memo', 'latitude', 'longitude', 'point_type', 'image_src'];
 
     /**
-     * コンテンツを所有するプロフィール
+     * 投稿者プロフィール
      *
      * @return Attribute
      */
@@ -44,7 +44,7 @@ class Point extends Model
      */
     public function post()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(Journal::class);
     }
 
     /**

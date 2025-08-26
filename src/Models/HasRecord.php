@@ -8,9 +8,9 @@ trait HasRecord
 {
     public static function bootHasRecord()
     {
-        static::deleting(function (Content $content) {
+        static::deleting(function (Post $post) {
             // レコード削除
-            $content->records()->delete();
+            $post->records()->delete();
         });
     }
 
@@ -19,7 +19,7 @@ trait HasRecord
      */
     public function records()
     {
-        return $this->hasMany(Record::class, 'content_id');
+        return $this->hasMany(Record::class, 'recordable_id');
     }
 
     /**
@@ -27,7 +27,7 @@ trait HasRecord
      * 
      * レコーダそのものの他に、レコーダIDでもレコーダ名でも指定可能です。
      * 
-     * レコーダまたはレコーダIDを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致し、かつレコーダタイプがコンテンツ種別と一致している必要があります。
+     * レコーダまたはレコーダIDを指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致し、かつレコーダタイプが投稿種別と一致している必要があります。
      * 
      * このメソッドは、レコードが存在しない場合は新規作成し、レコードが存在する場合はレコード値のみを更新します。
      * 
@@ -37,8 +37,8 @@ trait HasRecord
      * @param mixed $value　レコード値
      * @return Record|null レコードまたは削除の場合null
      * @throws ApplicationException レコーダIDに一致するレコーダが見つからない場合、73009エラーをスローします。
-     * @throws ApplicationException レコーダ所有プロフィールがコンテンツ所有プロフィールと一致していない場合、73007エラーをスローします。
-     * @throws ApplicationException レコーダタイプとコンテンツ種別が一致していない場合、73008エラーをスローします。
+     * @throws ApplicationException レコーダ所有プロフィールが投稿者プロフィールと一致していない場合、73007エラーをスローします。
+     * @throws ApplicationException レコーダタイプと投稿種別が一致していない場合、73008エラーをスローします。
      * @throws ApplicationException レコーダ名に一致するレコーダが見つからない場合、73010エラーをスローします。
      */
     public function record(Recorder|int|string $recorder, mixed $value): Record|null
@@ -61,11 +61,11 @@ trait HasRecord
             if ($recorder instanceof Recorder) {
                 // レコーダが指定された場合
                 if ($recorder->profile->id !== $this->profile->id) {
-                    // レコーダ所有プロフィールがコンテンツ所有プロフィールと一致していない場合
+                    // レコーダ所有プロフィールが投稿者プロフィールと一致していない場合
                     throw new ApplicationException(73007);
                 }
                 if ($recorder->type !== $this->type()) {
-                    // レコーダタイプとコンテンツ種別が一致していない場合
+                    // レコーダタイプと投稿種別が一致していない場合
                     throw new ApplicationException(73008);
                 }
             }

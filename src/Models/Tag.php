@@ -112,28 +112,28 @@ class Tag extends Model
 
         static::saving(function (Self $model) {
             if ($model->type) {
-                // コンテンツリストに直接コレクションが設定されている場合には、
-                // ローカルコンテンツリストに一時的に保存
-                $model->_contents = $model->contents;
-                unset($model['contents']);
+                // 投稿リストに直接コレクションが設定されている場合には、
+                // ローカル投稿リストに一時的に保存
+                $model->_posts = $model->posts;
+                unset($model['posts']);
             }
         });
 
         static::saved(function (Self $model) {
             if (!empty($model->_contents) || $model->_contents->isNotEmpty()) {
-                // ローカルコンテンツリストを
+                // ローカル投稿リストを
                 $id = Auth::id();
                 $ids = array();
-                foreach ($model->_contents as $content) {
-                    if ($model->profile_id !== $content->profile_id) {
-                        // タグ所有プロフィールとコンテンツ所有プロフィールが一致しない場合
+                foreach ($model->_contents as $post) {
+                    if ($model->profile_id !== $post->profile_id) {
+                        // タグ所有プロフィールと投稿者プロフィールが一致しない場合
                         throw new ApplicationException(72005);
                     }
-                    if ($model->type !== $content::type()) {
-                        // タグタイプとコンテンツ種別が一致しない場合
+                    if ($model->type !== $post::type()) {
+                        // タグタイプと投稿種別が一致しない場合
                         throw new ApplicationException(72006);
                     }
-                    $ids[$content->id] = [
+                    $ids[$post->id] = [
                         'taggable_type' => $model->type,
                         'created_by' => $id,
                         'updated_by' => $id
@@ -156,7 +156,7 @@ class Tag extends Model
     }
 
     /**
-     * コンテンツリスト
+     * 投稿リスト
      */
     public function contents()
     {
@@ -246,7 +246,7 @@ class Tag extends Model
     // ========================== ここまで整理済み ==========================
 
     /**
-     * このタグから該当のコンテンツを除去します。
+     * このタグから該当の投稿を除去します。
      * 
      * @param ?array $ids ID配列
      */
@@ -255,13 +255,13 @@ class Tag extends Model
         if (!is_array($ids)) return;
 
         $eliminates = $this->contents()->whereIn('id', $ids)->get();
-        foreach ($eliminates as $content) {
-            $content->delete();
+        foreach ($eliminates as $post) {
+            $post->delete();
         }
     }
 
     /**
-     * コンテンツカウントを追加するようにクエリのスコープを設定
+     * 投稿カウントを追加するようにクエリのスコープを設定
      */
     public function scopeAddCount($query)
     {
@@ -270,8 +270,8 @@ class Tag extends Model
         $taggables = null;
         foreach ($morphMap as $type => $value) {
             $class = Relation::getMorphedModel($type);
-            $content = new $class();
-            $table = $content->getTable();
+            $post = new $class();
+            $table = $post->getTable();
             $union = DB::table($table)->join('taggables', 'taggables.taggable_id', '=', "$table.id")
                 ->join($tagTableName, "$tagTableName.id", '=', 'taggables.tag_id')
                 ->selectRaw('taggables.tag_id, count(taggables.tag_id) as count_of_contents')

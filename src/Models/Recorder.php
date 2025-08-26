@@ -193,24 +193,24 @@ class Recorder extends Model
     }
 
     /**
-     * コンテンツを指定してレコードを記録します。
+     * 投稿を指定してレコードを記録します。
      * 
      * このメソッドは、レコードが存在しない場合は新規作成し、レコードが存在する場合はレコード値のみを更新します。
      * 
      * また、レコード値がnullまたは空文字列の場合は、レコードを削除します。
      * 
-     * @param Content $content コンテンツ
+     * @param Post $post 投稿
      * @param mixed $value　レコード値
      * @return Record|null レコードまたは削除の場合null
      */
-    public function record(Content $content, mixed $value): Record|null
+    public function record(Post $post, mixed $value): Record|null
     {
-        $record = $this->records()->where('content_id', $content->id)->first();
+        $record = $this->records()->where('recordable_id', $post->id)->first();
         if ($record === null) {
             if ($value !== null && $value !== "") {
                 // 値が空でない場合のみレコード追加
                 $record = $this->records()->create([
-                    'content' => $content,
+                    'post' => $post,
                     'value' => $value
                 ]);
             }
