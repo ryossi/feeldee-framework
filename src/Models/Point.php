@@ -77,7 +77,7 @@ class Point extends Model
      */
     public function scopePublic($query, ?PublicLevel $minPublicLevel = null)
     {
-        $query->join('posts', 'posts.id', 'points.post_id')->where('is_public', true);
+        $query->join('journals', 'journals.id', 'points.journal_id')->where('is_public', true);
         if ($minPublicLevel) {
             $query->where('public_level', '>=', $minPublicLevel);
         }

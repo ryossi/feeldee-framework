@@ -101,11 +101,11 @@ class Photo extends Post
     }
 
     /**
-     * 投稿リスト
+     * 関連記事リスト
      * 
      * @return BelongsToMany
      */
-    public function posts(): BelongsToMany
+    public function relatedJournals(): BelongsToMany
     {
         return $this->belongsToMany(Journal::class, 'posted_photos');
     }
@@ -189,7 +189,7 @@ class Photo extends Post
     public static function preparePhotoGalleryData(Profile $profile, int $pageSize, PublicLevel $minPublicLevel = PublicLevel::Private): array
     {
         $date_list = self::leftJoin('posted_photos', 'posted_photos.photo_id', 'photos.id')
-            ->leftJoin('posts', 'posts.id', 'posted_photos.post_id')
+            ->leftJoin('journals', 'journals.id', 'posted_photos.journal_id')
             ->select(
                 DB::raw('ifnull(posts.post_date, photos.regist_datetime) as date')
             )
@@ -203,7 +203,7 @@ class Photo extends Post
             return [$date_list, array()];
         }
         $photo_list = Photo::leftJoin('posted_photos', 'posted_photos.photo_id', 'photos.id')
-            ->leftJoin('posts', 'posts.id', 'posted_photos.post_id')
+            ->leftJoin('journals', 'journals.id', 'posted_photos.journal_id')
             ->select(
                 DB::raw('ifnull(posts.post_date, photos.regist_datetime) as date'),
                 'photos.id',

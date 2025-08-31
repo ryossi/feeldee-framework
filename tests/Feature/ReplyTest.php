@@ -34,7 +34,7 @@ class ReplyTest extends TestCase
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         Auth::shouldReceive('user')->andReturn(null);
@@ -60,7 +60,7 @@ class ReplyTest extends TestCase
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
         $replied_at = '2025-03-30 10:34:10';
 
         // 返信者準備
@@ -88,7 +88,7 @@ class ReplyTest extends TestCase
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         Auth::shouldReceive('user')->andReturn(null);
@@ -114,7 +114,7 @@ class ReplyTest extends TestCase
         // 返信準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
         $body = 'テスト返信本文';
 
         // 返信者準備
@@ -142,7 +142,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
         $body = '<b>テスト返信本文</b>';
 
         // 返信者準備
@@ -170,7 +170,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         $user = User::create([
@@ -208,7 +208,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         Auth::shouldReceive('user')->andReturn(null);
@@ -237,7 +237,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(99);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         $user = User::create([
@@ -275,7 +275,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(99);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         $user = User::create([
@@ -311,7 +311,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         Auth::shouldReceive('user')->andReturn(null);
@@ -334,7 +334,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         Auth::shouldReceive('user')->andReturn(null);
@@ -361,7 +361,7 @@ class ReplyTest extends TestCase
         // 返信対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory(1)->has(Comment::factory(1)))->create();
-        $comment = $profile->posts->first()->comments->first();
+        $comment = $profile->journals->first()->comments->first();
 
         // 返信者準備
         Auth::shouldReceive('user')->andReturn(null);
@@ -390,7 +390,7 @@ class ReplyTest extends TestCase
         $profile = Profile::factory()->has(Journal::factory(1)
             ->has(Comment::factory(1, ['is_public' => true])
                 ->has(Reply::factory(1, ['is_public' => true]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
+        $reply = $profile->journals->first()->comments->first()->replies->first();
 
         // 評価
         Assert::assertTrue($reply->is_public, '公開であること');
@@ -411,7 +411,7 @@ class ReplyTest extends TestCase
         $profile = Profile::factory()->has(Journal::factory(1)
             ->has(Comment::factory(1, ['is_public' => true])
                 ->has(Reply::factory(1, ['is_public' => false]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
+        $reply = $profile->journals->first()->comments->first()->replies->first();
 
         // 評価
         Assert::assertFalse($reply->is_public, '非公開であること');
@@ -432,7 +432,7 @@ class ReplyTest extends TestCase
         $profile = Profile::factory()->has(Journal::factory(1)
             ->has(Comment::factory(1, ['is_public' => false])
                 ->has(Reply::factory(1, ['is_public' => true]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
+        $reply = $profile->journals->first()->comments->first()->replies->first();
 
         // 評価
         Assert::assertFalse($reply->is_public, '非公開であること');
@@ -453,7 +453,7 @@ class ReplyTest extends TestCase
         $profile = Profile::factory()->has(Journal::factory(1)
             ->has(Comment::factory(1, ['is_public' => false])
                 ->has(Reply::factory(1, ['is_public' => false]))))->create();
-        $reply = $profile->posts->first()->comments->first()->replies->first();
+        $reply = $profile->journals->first()->comments->first()->replies->first();
 
         // 評価
         Assert::assertFalse($reply->is_public, '非公開であること');

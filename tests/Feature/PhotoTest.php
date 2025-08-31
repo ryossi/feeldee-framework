@@ -882,29 +882,29 @@ class PhotoTest extends TestCase
                 ';
 
         // 実行
-        $postA = $profile->posts()->create([
+        $journalA = $profile->journals()->create([
             'posted_at' => Carbon::parse('2025-04-22'),
             'title' => '投稿A',
             'value' => $value,
         ]);
-        $postB = $profile->posts()->create([
+        $journalB = $profile->journals()->create([
             'posted_at' => Carbon::parse('2025-04-23'),
             'title' => '投稿B',
         ]);
-        $postB->value = '
+        $journalB->value = '
                 これは写真リストのテストです。<br>
                 1枚目の写真:<img src="http://photo.test/img/2.png" /><br>
                 2枚目の写真:<img src="http://photo.test/img/3.png" /><br>
                 3枚目の写真:<img src="http://photo.test/img/4.png" /><br>
                 ';
-        $postB->save();
+        $journalB->save();
         $photo1 = $profile->photos()->ofSrc('http://photo.test/img/1.png')->first();
         $photo1->delete();
 
         // 評価
         $photo2 = $profile->photos()->ofSrc('http://photo.test/img/2.png')->first();
-        $this->assertEquals(2, $photo2->posts->count(), '記事内容に写真が使用されている投稿のコレクションであること');
-        $this->assertEquals($value, $postA->value, '写真を削除しても、関連する投稿の記事内容には影響はないこと');
+        $this->assertEquals(2, $photo2->relatedJournals->count(), '投稿内容に写真が使用されている記録のコレクションであること');
+        $this->assertEquals($value, $journalA->value, '写真を削除しても、関連する投稿の記事内容には影響はないこと');
     }
 
     /**

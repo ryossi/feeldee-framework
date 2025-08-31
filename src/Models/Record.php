@@ -23,21 +23,21 @@ class Record extends Model
      *
      * @var array
      */
-    protected $fillable = ['content', 'recordable_id', 'value'];
+    protected $fillable = ['post', 'recordable_id', 'value'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['recorder', 'content', 'value'];
+    protected $visible = ['recorder', 'post', 'value'];
 
     /**
      * 配列に追加する属性
      * 
      * @var array
      */
-    protected $appends = ['recorder', 'content'];
+    protected $appends = ['recorder', 'post'];
 
     /**
      * モデルの「起動」メソッド
@@ -52,11 +52,11 @@ class Record extends Model
 
         static::saving(function (Self $model) {
             // レコーダ所有プロフィールが投稿者プロフィールと一致しているかチェック
-            if ($model->content->profile->id !== $model->recorder->profile->id) {
+            if ($model->post->profile->id !== $model->recorder->profile->id) {
                 throw new ApplicationException(73007);
             }
             // レコーダタイプと投稿種別が一致しているかチェック
-            if ($model->content::type() !== $model->recorder->type) {
+            if ($model->post::type() !== $model->recorder->type) {
                 throw new ApplicationException(73008);
             }
             // レコード対象投稿に投稿オブジェクが直接指定されている場合

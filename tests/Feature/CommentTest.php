@@ -38,7 +38,7 @@ class CommentTest extends TestCase
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
 
         // コメント者準備
         Auth::shouldReceive('id')->andReturnNull();
@@ -66,7 +66,7 @@ class CommentTest extends TestCase
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
 
         // コメント者準備
         Auth::shouldReceive('id')->andReturnNull();
@@ -96,7 +96,7 @@ class CommentTest extends TestCase
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
 
         // コメント者準備
         Auth::shouldReceive('id')->andReturnNull();
@@ -124,7 +124,7 @@ class CommentTest extends TestCase
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
 
         // コメント者準備
         Auth::shouldReceive('id')->andReturnNull();
@@ -153,7 +153,7 @@ class CommentTest extends TestCase
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
 
         // コメント者準備
         Auth::shouldReceive('id')->andReturnNull();
@@ -184,7 +184,7 @@ class CommentTest extends TestCase
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->has(Journal::factory()->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
 
         // コメント者準備
         Auth::shouldReceive('id')->andReturnNull();
@@ -766,7 +766,7 @@ class CommentTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',
             'commenter_nickname' => 'ユーザ1',
@@ -803,7 +803,7 @@ class CommentTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',
             'commenter_nickname' => 'ユーザ1',
@@ -840,7 +840,7 @@ class CommentTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
-        $post = $profile->posts->first();
+        $post = $profile->journals->first();
         $comment1 = $post->comments()->create([
             'body' => '最初のコメント',
             'commenter_nickname' => 'ユーザ1',

@@ -710,7 +710,7 @@ class RecordTest extends TestCase
         // 実行
         foreach ($posts as $i => $post) {
             $recorder->records()->create([
-                'content' => $post,
+                'post' => $post,
                 'value' => $i,
             ]);
         }
@@ -774,7 +774,7 @@ class RecordTest extends TestCase
         // 評価
         $this->assertThrows(function () use ($recorder, $post) {
             $recorder->records()->create([
-                'content' => $post,
+                'post' => $post,
                 'value' => 1,
             ]);
         }, ApplicationException::class, 'RecordTypeMissmatch');
@@ -801,7 +801,7 @@ class RecordTest extends TestCase
             'profile_id' => $profile->id,
         ]);
         $recorder->records()->create([
-            'content' => $post,
+            'post' => $post,
             'value' => 1,
         ]);
 
@@ -867,7 +867,7 @@ class RecordTest extends TestCase
             'profile_id' => $profile->id,
         ]);
         $record = $recorder->records()->create([
-            'content' => $post,
+            'post' => $post,
             'value' => 1,
         ]);
 
@@ -905,7 +905,7 @@ class RecordTest extends TestCase
             'profile_id' => $profile->id,
         ]);
         $record = $recorder->records()->create([
-            'content' => $post,
+            'post' => $post,
             'value' => 1,
         ]);
 
@@ -941,12 +941,12 @@ class RecordTest extends TestCase
 
         // 実行
         $record = $recorder->records()->create([
-            'content' => $post,
+            'post' => $post,
             'value' => 1,
         ]);
 
         // 評価
-        $this->assertEquals($post->id, $record->content->id, '投稿オブジェクトを指定することができること');
+        $this->assertEquals($post->id, $record->post->id, '投稿オブジェクトを指定することができること');
         // レコーダによって記録されたレコードに紐付く投稿であること
         $this->assertDatabaseHas('records', [
             "id" => $record->id,

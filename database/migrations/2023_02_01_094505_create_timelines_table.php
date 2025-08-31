@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('timelines', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('post_id')->comment('投稿ID')->constrained('posts')->cascadeOnDelete();
+            $table->foreignId('journal_id')->comment('記録ID')->constrained('journals')->cascadeOnDelete();
             $table->foreignId('location_id')->comment('場所ID')->constrained('locations')->cascadeOnDelete();
             $table->dateTime('start_datetime')->nullable()->comment('開始日時');
             $table->dateTime('end_datetime')->nullable()->comment('終了日時');

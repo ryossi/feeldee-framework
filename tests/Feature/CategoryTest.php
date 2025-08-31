@@ -1411,7 +1411,7 @@ class CategoryTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#投稿リスト
      */
-    public function test_contents()
+    public function test_posts()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);

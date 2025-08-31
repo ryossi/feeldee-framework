@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('points', function (Blueprint $table) {
             $table->id();
             $table->foreignId('profile_id')->comment('プロフィールID')->constrained('profiles')->cascadeOnDelete();
-            $table->foreignId('post_id')->nullable()->comment('投稿ID')->constrained('posts')->cascadeOnDelete();
+            $table->foreignId('journal_id')->nullable()->comment('記録ID')->constrained('journals')->cascadeOnDelete();
             $table->string('title')->comment('タイトル');
             $table->dateTime('point_datetime')->nullable()->comment('ポイント日時');
             $table->text('memo')->nullable()->comment('メモ');

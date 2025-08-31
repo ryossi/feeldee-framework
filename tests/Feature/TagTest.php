@@ -562,7 +562,7 @@ class TagTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
-    public function test_contents()
+    public function test_posts()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -589,7 +589,7 @@ class TagTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
-    public function test_contents_delete()
+    public function test_posts_delete()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -620,7 +620,7 @@ class TagTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
-    public function test_contents_profile_missmatch()
+    public function test_posts_profile_missmatch()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -633,7 +633,7 @@ class TagTest extends TestCase
             $profile->tags()->create([
                 'name' => 'テストタグ',
                 'type' => Journal::type(),
-                'contents' => Journal::factory(3)->create(['profile_id' => $otherProfile->id]),
+                'posts' => Journal::factory(3)->create(['profile_id' => $otherProfile->id]),
             ]);
         }, ApplicationException::class, 'TagProfileMissmatch');
     }
@@ -645,7 +645,7 @@ class TagTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
      */
-    public function test_contents_type_missmatch()
+    public function test_posts_type_missmatch()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -657,7 +657,7 @@ class TagTest extends TestCase
             $profile->tags()->create([
                 'name' => 'テストタグ',
                 'type' => Journal::type(),
-                'contents' => Item::factory(1)->create(['profile_id' => $profile->id]),
+                'posts' => Item::factory(1)->create(['profile_id' => $profile->id]),
             ]);
         }, ApplicationException::class, 'TagTypeMissmatch');
     }

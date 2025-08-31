@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('item_groups', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('post_id')->comment('投稿ID')->constrained('posts')->cascadeOnDelete();
+            $table->foreignId('journal_id')->comment('記録ID')->constrained('journals')->cascadeOnDelete();
             $table->string('name')->nullable()->comment('アイテムグループ名');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
