@@ -119,11 +119,11 @@ class Profile extends Model
     }
 
     /**
-     * 投稿リスト
+     * 記録リスト
      */
-    public function posts()
+    public function journals()
     {
-        return $this->hasMany(Post::class);
+        return $this->hasMany(Journal::class);
     }
 
     /**

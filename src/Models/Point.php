@@ -25,7 +25,7 @@ class Point extends Model
     protected $visible = ['id', 'title', 'point_datetime', 'date', 'time', 'memo', 'latitude', 'longitude', 'point_type', 'image_src'];
 
     /**
-     * コンテンツを所有するプロフィール
+     * 投稿者プロフィール
      *
      * @return Attribute
      */
@@ -44,7 +44,7 @@ class Point extends Model
      */
     public function post()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(Journal::class);
     }
 
     /**
@@ -77,7 +77,7 @@ class Point extends Model
      */
     public function scopePublic($query, ?PublicLevel $minPublicLevel = null)
     {
-        $query->join('posts', 'posts.id', 'points.post_id')->where('is_public', true);
+        $query->join('journals', 'journals.id', 'points.journal_id')->where('is_public', true);
         if ($minPublicLevel) {
             $query->where('public_level', '>=', $minPublicLevel);
         }

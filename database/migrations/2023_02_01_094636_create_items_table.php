@@ -16,14 +16,14 @@ return new class extends Migration
     {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('profile_id')->comment('コンテンツ所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
-            $table->string('title')->comment('コンテンツタイトル');
-            $table->mediumText('value')->nullable()->comment('コンテンツ内容');
-            $table->mediumText('text')->nullable()->comment('コンテンツテキスト');
-            $table->boolean('is_public')->default(false)->comment('コンテンツ公開フラグ');
-            $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('コンテンツ公開レベル');
-            $table->foreignId('category_id')->nullable()->comment('コンテンツカテゴリーID')->constrained('categories')->onDelete('set null');
-            $table->dateTime('posted_at')->comment('コンテンツ投稿日時');
+            $table->foreignId('profile_id')->comment('投稿者プロフィールID')->constrained('profiles')->cascadeOnDelete();
+            $table->string('title')->comment('投稿タイトル');
+            $table->mediumText('value')->nullable()->comment('投稿内容');
+            $table->mediumText('text')->nullable()->comment('投稿内容テキスト');
+            $table->boolean('is_public')->default(false)->comment('投稿公開フラグ');
+            $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('投稿公開レベル');
+            $table->foreignId('category_id')->nullable()->comment('投稿カテゴリーID')->constrained('categories')->onDelete('set null');
+            $table->dateTime('posted_at')->comment('投稿日時');
             $table->integer('order_number')->default('0')->comment('表示順');
             $table->mediumText('image')->nullable()->comment('アイテムイメージ');
             $table->bigInteger('created_by')->comment('登録者');

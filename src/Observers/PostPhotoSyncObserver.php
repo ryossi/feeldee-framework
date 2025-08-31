@@ -2,12 +2,12 @@
 
 namespace Feeldee\Framework\Observers;
 
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use PHPHtmlParser\Dom;
 
 class PostPhotoSyncObserver
 {
-    protected function sync(Post $model): void
+    protected function sync(Journal $model): void
     {
         // 投稿の記事内容から写真を登録
         $value = $model->value;
@@ -37,12 +37,12 @@ class PostPhotoSyncObserver
     }
 
     /**
-     * Handle the Post "updated" event.
+     * Handle the Journal "updated" event.
      *
-     * @param  \Feeldee\Framework\Models\Post  $model
+     * @param  \Feeldee\Framework\Models\Journal  $model
      * @return void
      */
-    public function saved(Post $model)
+    public function saved(Journal $model)
     {
         // 写真リスト同期
         $this->sync($model);
@@ -52,12 +52,12 @@ class PostPhotoSyncObserver
     }
 
     /**
-     * Handle the Post "deleting" event.
+     * Handle the Journal "deleting" event.
      *
-     * @param  \Feeldee\Framework\Models\Post  $model
+     * @param  \Feeldee\Framework\Models\Journal  $model
      * @return void
      */
-    public function deleting(Post $model)
+    public function deleting(Journal $model)
     {
         // 投稿写真リスト削除
         $model->photos()->delete();

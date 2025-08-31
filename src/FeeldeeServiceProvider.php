@@ -5,7 +5,7 @@ namespace Feeldee\Framework;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Illuminate\Foundation\Console\AboutCommand;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -65,7 +65,7 @@ class FeeldeeServiceProvider extends ServiceProvider
 
         // カスタムポリモーフィックタイプ
         Relation::enforceMorphMap([
-            Post::type() => 'Feeldee\Framework\Models\Post',
+            Journal::type() => 'Feeldee\Framework\Models\Journal',
             Photo::type() => 'Feeldee\Framework\Models\Photo',
             Location::type() => 'Feeldee\Framework\Models\Location',
             Item::type() => 'Feeldee\Framework\Models\Item',

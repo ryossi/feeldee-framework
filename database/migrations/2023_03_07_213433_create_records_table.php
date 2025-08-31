@@ -16,12 +16,12 @@ return new class extends Migration
         Schema::create('records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('recorder_id')->comment('レコーダID')->constrained('recorders')->cascadeOnDelete();
-            $table->foreignId('content_id')->comment('レコード対象コンテンツID');
+            $table->foreignId('recordable_id')->comment('レコード対象ID');
             $table->string('value')->comment('レコード値');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();
-            $table->unique(['recorder_id', 'content_id'], 'uk_record');
+            $table->unique(['recorder_id', 'recordable_id'], 'uk_record');
         });
     }
 

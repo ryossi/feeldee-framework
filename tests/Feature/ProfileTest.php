@@ -7,7 +7,7 @@ use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Recorder;
 use Feeldee\Framework\Models\Tag;
@@ -321,7 +321,7 @@ class ProfileTest extends TestCase
     /**
      * プロフィール説明
      * 
-     * - プロフィールの紹介文やコンテンツの説明を記載できることを確認します。
+     * - プロフィールの紹介文や投稿内容の概要を記載できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#プロフィール説明
      */
@@ -340,7 +340,7 @@ class ProfileTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals($description, $profile->description, 'プロフィールの紹介文やコンテンツの説明を記載できること');
+        $this->assertEquals($description, $profile->description, 'プロフィールの紹介文や投稿内容の概要を記載できること');
         $this->assertDatabaseHas('profiles', [
             'id' => $profile->id,
             'description' => $description,
@@ -408,22 +408,22 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * 投稿リスト
+     * 記録リスト
      * 
-     * - プロフィールに紐付けられた投稿のコレクションであることを確認します。
+     * - プロフィールに紐付けられた記録のコレクションであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#投稿リスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#記録リスト
      */
-    public function test_posts()
+    public function test_journals()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Post::factory(2))->create();
+        $profile = Profile::factory()->has(Journal::factory(2))->create();
 
         // 評価
-        $this->assertEquals(2, $profile->posts->count());
-        foreach ($profile->posts as $post) {
-            $this->assertEquals($post->profile->id, $profile->id, 'プロフィールに紐付けられた投稿のコレクションであること');
+        $this->assertEquals(2, $profile->journals->count());
+        foreach ($profile->journals as $journal) {
+            $this->assertEquals($journal->profile->id, $profile->id, 'プロフィールに紐付けられた記録のコレクションであること');
         }
     }
 

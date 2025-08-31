@@ -14,22 +14,17 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('photos', function (Blueprint $table) {
+        Schema::create('journals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('profile_id')->comment('投稿者プロフィールID')->constrained('profiles')->cascadeOnDelete();
-            $table->string('title')->nullable()->comment('投稿タイトル');
+            $table->string('title')->comment('投稿タイトル');
             $table->mediumText('value')->nullable()->comment('投稿内容');
             $table->mediumText('text')->nullable()->comment('投稿内容テキスト');
             $table->boolean('is_public')->default(false)->comment('投稿公開フラグ');
             $table->integer('public_level', false, true)->default(PublicLevel::Private->value)->comment('投稿公開レベル');
             $table->foreignId('category_id')->nullable()->comment('投稿カテゴリーID')->constrained('categories')->onDelete('set null');
             $table->dateTime('posted_at')->comment('投稿日時');
-            $table->string('photo_type', 255)->comment('写真タイプ');
-            $table->string('src', 767)->comment('写真ソース');
-            $table->integer('width')->nullable()->comment('写真イメージ幅');
-            $table->integer('height')->nullable()->comment('写真イメージ高さ');
-            $table->decimal('latitude', 9, 7, true)->nullable()->comment('撮影緯度');
-            $table->decimal('longitude', 10, 7, true)->nullable()->comment('撮影経度');
+            $table->mediumText('thumbnail')->nullable()->comment('サムネイル');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();
@@ -43,6 +38,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('photos');
+        Schema::dropIfExists('journals');
     }
 };

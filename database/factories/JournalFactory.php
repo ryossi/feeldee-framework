@@ -3,16 +3,16 @@
 namespace Feeldee\Framework\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Feeldee\Framework\Models\Post;
+use Feeldee\Framework\Models\Journal;
 
-class PostFactory extends Factory
+class JournalFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
      * @var class-string<\Illuminate\Database\Eloquent\Model>
      */
-    protected $model = Post::class;
+    protected $model = Journal::class;
 
     /**
      * Define the model's default state.

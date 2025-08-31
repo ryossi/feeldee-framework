@@ -23,11 +23,11 @@ class LocationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * コンテンツ種別
+     * 投稿種別
      * 
-     * - 場所のコンテンツ種別は、"location"であることを確認します。
+     * - 場所の投稿種別は、"location"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ種別
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿種別
      */
     public function test_type()
     {
@@ -44,15 +44,15 @@ class LocationTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('location', $location->type(), '場所のコンテンツ種別は、"location"であること');
+        $this->assertEquals('location', $location->type(), '場所の投稿種別は、"location"であること');
     }
 
     /**
-     * コンテンツ所有プロフィール
+     * 投稿者プロフィール
      * 
      * - 場所を作成したユーザのプロフィールであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ所有プロフィール
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿者プロフィール
      */
     public function test_profile()
     {
@@ -76,11 +76,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタイトル
+     * 投稿タイトル
      * 
      * - 登録した場所に付けるタイトルであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタイトル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タイトル
      */
     public function test_title()
     {
@@ -102,12 +102,12 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 場所の説明またはメモ書きなどであることを確認します。
      * - HTMLが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿内容
      */
     public function test_value_html()
     {
@@ -134,12 +134,12 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 場所の説明またはメモ書きなどであることを確認します。
      * - テキストが使用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿内容
      */
     public function test_value_text()
     {
@@ -166,12 +166,12 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツテキスト
+     * 投稿内容テキスト
      * 
-     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - コンテンツ内容の登録時に、自動変換されることを確認します。
+     * - 投稿内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 投稿内容の登録時に、自動変換されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツテキスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿内容テキスト
      */
     public function test_text_create()
     {
@@ -191,20 +191,20 @@ class LocationTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($expected, $location->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
-        // コンテンツ内容の登録時に、自動変換されること
+        $this->assertEquals($expected, $location->text, '投稿内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 投稿内容の登録時に、自動変換されること
         $this->assertDatabaseHas('locations', [
             'text' => $expected,
         ]);
     }
 
     /**
-     * コンテンツテキスト
+     * 投稿内容テキスト
      * 
-     * - コンテンツ内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
-     * - コンテンツ内容の編集時に、自動変換されることを確認します。
+     * - 投稿内容から、HTMLタグのみを排除したテキスト表現であることを確認します。
+     * - 投稿内容の編集時に、自動変換されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツテキスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿内容テキスト
      */
     public function test_text_update()
     {
@@ -221,19 +221,19 @@ class LocationTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($expected, $location->text, 'コンテンツ内容から、HTMLタグのみを排除したテキスト表現であること');
-        // コンテンツ内容の編集時に、自動変換されること
+        $this->assertEquals($expected, $location->text, '投稿内容から、HTMLタグのみを排除したテキスト表現であること');
+        // 投稿内容の編集時に、自動変換されること
         $this->assertDatabaseHas('locations', [
             'text' => $expected,
         ]);
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - デフォルトは、非公開であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿公開フラグ
      */
     public function test_is_public_default()
     {
@@ -254,11 +254,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - 公開できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿公開フラグ
      */
     public function test_is_public_doPublic()
     {
@@ -278,11 +278,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ公開フラグ
+     * 投稿公開フラグ
      * 
      * - 非公開にできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ公開フラグ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿公開フラグ
      */
     public function test_is_public_doPrivate()
     {
@@ -302,11 +302,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
      * - デフォルトは、"自分"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿公開レベル
      */
     public function test_public_level_default()
     {
@@ -331,11 +331,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
-     * - コンテンツ公開レベルを指定できることを確認します。
+     * - 投稿公開レベルを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿公開レベル
      */
     public function test_public_level()
     {
@@ -353,7 +353,7 @@ class LocationTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals(PublicLevel::Friend, $location->public_level, 'コンテンツ公開レベルを指定できること');
+        $this->assertEquals(PublicLevel::Friend, $location->public_level, '投稿公開レベルを指定できること');
         $this->assertDatabaseHas('locations', [
             'id' => $location->id,
             'public_level' => PublicLevel::Friend,
@@ -361,11 +361,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ公開レベル
+     * 投稿公開レベル
      * 
-     * - コンテンツ公開レベルを変更できることを確認します。
+     * - 投稿公開レベルを変更できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ公開レベル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿公開レベル
      */
     public function test_public_level_update()
     {
@@ -381,7 +381,7 @@ class LocationTest extends TestCase
         $location->save();
 
         // 評価
-        $this->assertEquals(PublicLevel::Friend, $location->public_level, 'コンテンツ公開レベルを変更できること');
+        $this->assertEquals(PublicLevel::Friend, $location->public_level, '投稿公開レベルを変更できること');
         $this->assertDatabaseHas('locations', [
             'id' => $location->id,
             'public_level' => PublicLevel::Friend,
@@ -389,13 +389,13 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - カテゴリを指定できることを確認します。
-     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、投稿者プロフィールと一致していることを確認します。
      * - 指定したカテゴリが、場所のカテゴリであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿カテゴリ
      */
     public function test_category()
     {
@@ -425,13 +425,13 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - カテゴリIDを指定できることを確認します。
-     * - 指定したカテゴリのカテゴリ所有プロフィールが、コンテンツ所有プロフィールと一致していることを確認します。
+     * - 指定したカテゴリのカテゴリ所有プロフィールが、投稿者プロフィールと一致していることを確認します。
      * - 指定したカテゴリが、場所のカテゴリであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿カテゴリ
      */
     public function test_category_id()
     {
@@ -461,11 +461,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - カテゴリ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - カテゴリ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿カテゴリ
      */
     public function test_category_profile_missmatch()
     {
@@ -487,15 +487,15 @@ class LocationTest extends TestCase
                 'zoom' => 15,
                 'category_id' => $category->id,
             ]);
-        }, ApplicationException::class, 'CategoryContentProfileMissmatch');
+        }, ApplicationException::class, 'CategoryProfileMissmatch');
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - コンテンツ種別と同じカテゴリタイプであることを確認します。
+     * - 投稿種別と同じカテゴリタイプであることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿カテゴリ
      */
     public function test_category_type_missmatch()
     {
@@ -516,15 +516,15 @@ class LocationTest extends TestCase
                 'zoom' => 15,
                 'category' => $category,
             ]);
-        }, ApplicationException::class, 'CategoryContentTypeMissmatch');
+        }, ApplicationException::class, 'CategoryTypeMissmatch');
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
-     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
+     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿カテゴリ
      */
     public function test_category_name()
     {
@@ -547,7 +547,7 @@ class LocationTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals($category->id, $location->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
+        $this->assertEquals($category->id, $location->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
         $this->assertDatabaseHas('locations', [
             'id' => $location->id,
             'category_id' => $category->id,
@@ -555,11 +555,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - 一致するカテゴリが存在しない場合は無視されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿カテゴリ
      */
     public function test_category_name_nomatch()
     {
@@ -590,11 +590,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツカテゴリ
+     * 投稿カテゴリ
      * 
      * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツカテゴリ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿カテゴリ
      */
     public function test_category_delete()
     {
@@ -621,11 +621,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
      * - タグ付けできることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タグリスト
      */
     public function test_tags()
     {
@@ -662,11 +662,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
      * - タグIDを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タグリスト
      */
     public function test_tags_id()
     {
@@ -703,11 +703,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - タグ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タグリスト
      */
     public function test_tags_profile_missmatch()
     {
@@ -733,15 +733,15 @@ class LocationTest extends TestCase
                 'zoom' => 15,
                 'tags' => [$tag1->id, $tag2->id],
             ]);
-        }, ApplicationException::class, 'TagContentProfileMissmatch');
+        }, ApplicationException::class, 'TagProfileMissmatch');
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグタイプがコンテンツ種別と一致することを確認します。
+     * - タグタイプが投稿種別と一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タグリスト
      */
     public function test_tags_type_missmatch()
     {
@@ -766,15 +766,15 @@ class LocationTest extends TestCase
                 'zoom' => 15,
                 'tags' => [$tag1->id, $tag2->id],
             ]);
-        }, ApplicationException::class, 'TagContentTypeMissmatch');
+        }, ApplicationException::class, 'TagTypeMissmatch');
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
+     * - タグ名を指定した場合は、タグ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タグリスト
      */
     public function test_tags_name()
     {
@@ -800,7 +800,7 @@ class LocationTest extends TestCase
         ]);
 
         // 評価
-        $this->assertEquals(2, $location->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールとコンテンツ所有プロフィールが一致し、かつコンテンツ種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
+        $this->assertEquals(2, $location->tags->count(), 'タグ名を指定した場合は、タグ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのタグの中からタグ名が一致するタグのIDが設定されること');
         foreach ($location->tags as $tag) {
             $this->assertDatabaseHas('taggables', [
                 'tag_id' => $tag->id,
@@ -811,11 +811,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタグリス
+     * 投稿タグリス
      * 
      * - 一致するタグが存在しない場合は無視されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タグリスト
      */
     public function test_tags_name_nomatch()
     {
@@ -852,11 +852,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツタグリスト
+     * 投稿タグリスト
      * 
-     * - 対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されることを確認します。
+     * - 対応するタグが削除された場合は、投稿タグリストから自動的に除外されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツタグリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タグリスト
      */
     public function test_tags_delete()
     {
@@ -883,7 +883,7 @@ class LocationTest extends TestCase
         $tag1->delete();
 
         // 評価
-        $this->assertEquals(1, $location->tags->count(), '対応するタグが削除された場合は、コンテンツタグリストから自動的に除外されること');
+        $this->assertEquals(1, $location->tags->count(), '対応するタグが削除された場合は、投稿タグリストから自動的に除外されること');
         foreach ($location->tags as $tag) {
             $this->assertDatabaseHas('taggables', [
                 'tag_id' => $tag->id,
@@ -894,14 +894,14 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
      * - レコーダによって記録された場所のレコードリストであることを確認します。
      * - レコーダの指定は、レコーダそのものを指定することができることを確認します。
      * - レコーダの指定は、レコーダIDを指定することができることを確認します。
      * - レコーダの指定は、レコーダ名を指定することができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿レコードリスト
      */
     public function test_content_records()
     {
@@ -949,11 +949,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - レコーダを指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿レコードリスト
      */
     public function test_content_records_recorder_profile()
     {
@@ -977,11 +977,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * - レコーダを指定する場合は、レコーダタイプが投稿種別と一致していることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿レコードリスト
      */
     public function test_content_records_recorder_type()
     {
@@ -1005,11 +1005,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダIDを指定する場合は、レコーダ所有プロフィールがコンテンツ所有プロフィールと一致することを確認します。
+     * - レコーダIDを指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿レコードリスト
      */
     public function test_content_records_recorder_id_profile()
     {
@@ -1033,11 +1033,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - レコーダIDを指定する場合は、レコーダタイプがコンテンツ種別と一致していることを確認します。
+     * - レコーダIDを指定する場合は、レコーダタイプが投稿種別と一致していることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿レコードリスト
      */
     public function test_content_records_recorder_id_type()
     {
@@ -1061,11 +1061,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツレコードリスト
+     * 投稿レコードリスト
      * 
-     * - 対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されることを確認します。
+     * - 対応するレコーダが削除された場合は、投稿レコードリストからも自動的に除外されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツレコードリスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿レコードリスト
      */
     public function test_content_records_recorder_delete()
     {
@@ -1087,16 +1087,16 @@ class LocationTest extends TestCase
         $recorder->delete();
 
         // 評価
-        $this->assertEquals(0, $location->records->count(), '対応するレコーダが削除された場合は、コンテンツレコードリストからも自動的に除外されること');
+        $this->assertEquals(0, $location->records->count(), '対応するレコーダが削除された場合は、投稿レコードリストからも自動的に除外されること');
         $this->assertDatabaseEmpty('records');
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 取得時にHTMLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿内容
      */
     public function test_content_value_html_cast_hook_get()
     {
@@ -1107,7 +1107,7 @@ class LocationTest extends TestCase
         ]);
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $value = '<p>テストコンテンツ</p>';
+        $value = '<p>テスト投稿</p>';
         $location = Location::factory()->create([
             'profile_id' => $profile->id,
             'value' => $value,
@@ -1125,11 +1125,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コンテンツ内容
+     * 投稿内容
      * 
      * - 設定時にHTMLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#コンテンツ内容
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿内容
      */
     public function test_content_value_html_cast_hook_set()
     {
@@ -1140,7 +1140,7 @@ class LocationTest extends TestCase
         ]);
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory()->create();
-        $value = '<p>テストコンテンツ</p>';
+        $value = '<p>テスト投稿</p>';
 
         // 実行
         $profile->locations()->create([
@@ -1330,7 +1330,7 @@ class LocationTest extends TestCase
     /**
      * 場所作成
      * 
-     * - コンテンツ投稿日時を省略した場合は、システム日時が設定されることを確認します。
+     * - 投稿日時を省略した場合は、システム日時が設定されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
      */
@@ -1351,7 +1351,7 @@ class LocationTest extends TestCase
         ]);
 
         // 評価
-        $this->assertNotNull($location->posted_at, 'コンテンツ投稿日時を省略した場合は、システム日時が設定されること');
+        $this->assertNotNull($location->posted_at, '投稿日時を省略した場合は、システム日時が設定されること');
         $this->assertDatabaseHas('locations', [
             'id' => $location->id,
             'profile_id' => $profile->id,

@@ -15,9 +15,9 @@ return [
     11001 => 'ConfigTypeUndefined',                     // コンフィグタイプが定義されていない
 
     // ****************************
-    // *** 2xxxx 投稿関連        ***
+    // *** 2xxxx 記録関連        ***
     // ****************************
-    20001 => 'PostTitleRequired',                       // 記事タイトルが指定されていない 
+    20001 => 'JournalTitleRequired',                       // 記録タイトルが指定されていない
 
     // ****************************
     // *** 3xxxx 写真関連        ***
@@ -50,8 +50,8 @@ return [
     71003 => 'CategoryParentProfileMissmatch',          // カテゴリと親カテゴリでカテゴリ所有プロフィールが異なる
     71004 => 'CategoryParentTypeMissmatch',             // カテゴリと親カテゴリでカテゴリタイプが異なる
     71005 => 'CategoryDeleteHasChild',                  // カテゴリ削除において子カテゴリが存在する
-    71006 => 'CategoryContentProfileMissmatch',         // カテゴリ所有プロフィールとコンテンツ所有プロフィールが異なる
-    71007 => 'CategoryContentTypeMissmatch',            // カテゴリタイプとコンテンツ種別が異なる
+    71006 => 'CategoryProfileMissmatch',                // カテゴリ所有プロフィールと投稿者プロフィールが異なる
+    71007 => 'CategoryTypeMissmatch',                   // カテゴリタイプと投稿種別が異なる
     71008 => 'CategoryProfileRequired',                 // カテゴリ所有プロフィールが指定されていない
     71009 => 'CategoryTypeRequired',                    // カテゴリタイプが指定されていない
     71010 => 'CategoryNameRequired',                    // カテゴリ名が指定されていない
@@ -64,8 +64,8 @@ return [
     72002 => 'TagTypeRequired',                         // タグタイプが指定されていない
     72003 => 'TagNameRequired',                         // タグ名が指定されていない
     72004 => 'TagNameDuplicated',                       // タグ所有プロフィールとタグタイプの中でタグ名が重複している
-    72005 => 'TagContentProfileMissmatch',              // タグ所有プロフィールとコンテンツ所有プロフィールが異なる
-    72006 => 'TagContentTypeMissmatch',                 // タグタイプとコンテンツ種別が異なる
+    72005 => 'TagProfileMissmatch',                     // タグ所有プロフィールと投稿者プロフィールが異なる
+    72006 => 'TagTypeMissmatch',                        // タグタイプと投稿種別が異なる
 
     // ****************************
     // *** 73xxx レコード関連     ***
@@ -76,8 +76,8 @@ return [
     73004 => 'RecordValueDataTypeInvalid',              // レコードデータ型が指定されていない
     73005 => 'RecordRecorderNameDuplicated',            // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している
     73006 => 'RecordDataTypeRequired',                  // レコードデータ型が指定されていない
-    73007 => 'RecordContentProfileMissmatch',           // レコーダ所有プロフィールとコンテンツ所有プロフィールが異なる
-    73008 => 'RecordContentTypeMissmatch',              // レコーダタイプとコンテンツ種別が異なる
+    73007 => 'RecordProfileMissmatch',                  // レコーダ所有プロフィールと投稿者プロフィールが異なる
+    73008 => 'RecordTypeMissmatch',                     // レコーダタイプと投稿種別が異なる
     73009 => 'RecordRecorderIdNotFound',                // レコーダIDに一致するレコーダが見つからない
     73010 => 'RecordRecorderNameNotFound',              // レコーダ名に一致するレコーダが見つからない
 ];

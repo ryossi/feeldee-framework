@@ -14,9 +14,9 @@ return new class extends Migration
     public function up()
     {
         Schema::create('posted_photos', function (Blueprint $table) {
-            $table->foreignId('post_id')->comment('投稿ID')->constrained('posts')->cascadeOnDelete();
+            $table->foreignId('journal_id')->comment('記録ID')->constrained('journals')->cascadeOnDelete();
             $table->foreignId('photo_id')->comment('写真ID')->constrained('photos')->cascadeOnDelete();
-            $table->primary(['photo_id', 'post_id']);
+            $table->primary(['photo_id', 'journal_id']);
         });
     }
 

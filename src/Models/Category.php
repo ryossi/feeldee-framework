@@ -230,9 +230,9 @@ class Category extends Model
     }
 
     /**
-     * コンテンツリスト
+     * 投稿リスト
      */
-    public function contents()
+    public function posts()
     {
         return $this->hasMany(Relation::getMorphedModel($this->type));
     }
@@ -552,7 +552,7 @@ class Category extends Model
     // ========================== ここまで整理済み ==========================
 
     /**
-     * コンテンツカウントを追加するようにクエリのスコープを設定
+     * 投稿カウントを追加するようにクエリのスコープを設定
      */
     public function scopeAddCount($query)
     {
@@ -561,10 +561,10 @@ class Category extends Model
         $categorizables = null;
         foreach ($morphMap as $type => $value) {
             $class = Relation::getMorphedModel($type);
-            $content = new $class();
-            $table = $content->getTable();
+            $post = new $class();
+            $table = $post->getTable();
             $union = DB::table($table)
-                ->selectRaw("$table.category_id, count($table.id) as count_of_contents")
+                ->selectRaw("$table.category_id, count($table.id) as count_of_posts")
                 ->where("$table.is_public", true)
                 ->whereNotNull("$table.category_id")
                 ->where(function ($query) use ($table) {
@@ -595,7 +595,7 @@ class Category extends Model
         }
         $query->leftJoinSub($categorizables, 'categorizables', function (JoinClause $join) use ($categoryTableName) {
             $join->on($categoryTableName . '.id', '=', 'categorizables.category_id');
-        })->select(["$categoryTableName.*", 'count_of_contents']);
+        })->select(["$categoryTableName.*", 'count_of_posts']);
     }
 
     /**

@@ -224,7 +224,7 @@ class Comment extends Model
      * コメント対象種別を条件に含むようにクエリのスコープを設定
      * 
      * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $commentableType コメント対象コンテンツ種別
+     * @param string $commentableType コメント対象種別
      */
     public function scopeOfCommentableType($query, string $commentableType)
     {
@@ -242,8 +242,8 @@ class Comment extends Model
         $whenPublicLevel = array();
         foreach ($morphMap as $type => $value) {
             $class = Relation::getMorphedModel($type);
-            $content = new $class();
-            $table = $content->getTable();
+            $post = new $class();
+            $table = $post->getTable();
             array_push($whenIsPublic, "when commentable_type = '$type' then (select is_public from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
             array_push($whenPublicLevel, "when commentable_type = '$type' then (select public_level from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
         }

@@ -2,481 +2,249 @@
 
 namespace Feeldee\Framework\Models;
 
-use Carbon\CarbonImmutable;
-use Feeldee\Framework\Casts\HTML;
-use Feeldee\Framework\Casts\URL;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 /**
- * 投稿をあらわすモデル
+ * 投稿をあらわすベースモデル
  */
-class Post extends Content
+abstract class Post extends Model
 {
-    /**
-     * 複数代入可能な属性
-     *
-     * @var array
-     */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'posted_at', 'title', 'value', 'thumbnail'];
+    use HasFactory, HasCategory, HasTag, HasRecord, Required, StripTags, SetUser;
 
     /**
-     * 配列に表示する属性
-     *
-     * @var array
-     */
-    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'posted_at', 'title', 'archive_month', 'count_of_items', 'thumbnail'];
-
-    /**
-     * キャストする必要のある属性
-     *
-     * @var array
-     */
-    protected $casts = [
-        'is_public' => 'boolean',
-        'posted_at' => 'date',
-        'value' => HTML::class,
-        'thumbnail' => URL::class,
-    ];
-
-    /**
-     * コンテンツをソートするカラム名
-     */
-    protected $order_column = 'posted_at';
-
-    /**
-     * 必須にする属性
+     * 投稿種別
      * 
-     * @var array
+     * @return string 投稿種別
      */
-    protected $required = [
-        'title' => 20001, // 記事タイトルが指定されていない
-    ];
+    abstract public static function type();
 
     /**
-     * 文字列から HTML および PHP タグを取り除く属性
-     * 
-     * @var array
+     * 投稿者プロフィール
+     *
+     * @return BelongsTo
      */
-    protected $strip_tags = ['value' => 'text'];
-
-    /**
-     * モデルの「起動」メソッド
-     */
-    protected static function booted(): void
+    public function profile(): BelongsTo
     {
-        static::saving(
-            function (self $model) {
-                // コンテンツ投稿日時
-                if (empty($model->posted_at)) {
-                    $model->posted_at = CarbonImmutable::today();
+        return $this->belongsTo(Profile::class);
+    }
+
+    /**
+     * 投稿公開フラグ
+     *
+     * @return bool
+     */
+    protected function getIsPublicAttribute(): bool
+    {
+        return $this->attributes['is_public'] ?? false;
+    }
+
+    /**
+     * 公開
+     * 
+     * 投稿を公開します。
+     * 
+     * @return void
+     */
+    public function doPublic(): void
+    {
+        $this->is_public = true;
+        $this->save();
+
+        $this->afterPublic();
+    }
+
+    /**
+     * 非公開
+     * 
+     * 投稿を非公開にします。
+     * 
+     * @return void
+     */
+    public function doPrivate(): void
+    {
+        $this->is_public = false;
+        $this->save();
+
+        $this->afterPrivate();
+    }
+
+    /**
+     * 投稿公開後処理
+     */
+    protected function afterPublic(): void {}
+
+
+    /**
+     * 投稿非公開後処理
+     */
+    protected function afterPrivate(): void {}
+
+    /**
+     * 投稿公開レベル
+     *
+     * @return Attribute
+     */
+    protected function publicLevel(): Attribute
+    {
+        $setter = function ($value, $attributes) {
+            $after = $value instanceof PublicLevel ? $value : PublicLevel::from($value);
+            if (array_key_exists('public_level', $attributes)) {
+                $before = $attributes['public_level'] instanceof PublicLevel ? $attributes['public_level'] : PublicLevel::from($attributes['public_level']);
+                if ($before !== $after) {
+                    $this->changePublicLevel($before, $after);
                 }
             }
+            return [
+                'public_level' => $after
+            ];
+        };
+
+        return Attribute::make(
+            get: fn($value) => !is_null($value) ? ($value instanceof PublicLevel ? $value : PublicLevel::from($value)) : PublicLevel::Private,
+            set: fn($value, $attributes) => $setter($value, $attributes)
         );
     }
 
     /**
-     * コンテンツ種別
+     * 公開レベルが変更された場合の処理を記述します。
      * 
-     * @return string
+     * @param ?PublicLevel $before 変更前
+     * @param PublicLevel $after 変更後
      */
-    public static function type()
+    protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void {}
+
+    /**
+     * コメントリスト
+     */
+    public function comments()
     {
-        return 'post';
+        return $this->morphMany(Comment::class, 'commentable');
     }
 
     /**
-     * 写真リスト
-     * 
-     * @return BelongsToMany
+     * 投稿者プロフィールのニックネームで絞り込むためのローカルスコープ
      */
-    public function photos(): BelongsToMany
+    public function scopeBy(Builder $query, $nickname): void
     {
-        return $this->belongsToMany(Photo::class, 'posted_photos');
-    }
-
-    /**
-     * 投稿日で絞り込むためのローカルスコープ
-     * 
-     */
-    public function scopeAt(Builder $query, $date): void
-    {
-        // 時刻が指定されていない場合は、00:00:00を付与
-        if (is_string($date) && !str_contains($date, ' ')) {
-            $date .= ' 00:00:00';
-        } elseif ($date instanceof CarbonImmutable) {
-            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
-            $date = $date->format('Y-m-d H:i:s');
-        }
-        $query->where('posted_at', $date);
+        $query->whereHas('profile', fn($q) => $q->where('nickname', $nickname));
     }
 
     // ========================== ここまで整理ずみ ==========================
 
     /**
-     * システム日時現在からの投稿日の〇〇前
-     */
-    protected function ago(): Attribute
-    {
-        $ago = function ($value, $attributes) {
-            $post_date = strtotime($attributes['post_date']);
-            $today = strtotime(CarbonImmutable::now());
-            $seconds = $today - $post_date;
-            $hours = floor($seconds / 60 / 60);
-            if ($hours < config('feeldee.post.ago.boundary.hour')) {
-                return $hours . config('feeldee.post.ago.label.hour');
-            }
-            $days = floor($hours / 24);
-            if ($days < config('feeldee.post.ago.boundary.day')) {
-                return $days . config('feeldee.post.ago.label.day');
-            }
-            $weeks = floor($days / 7);
-            if ($weeks < config('feeldee.post.ago.boundary.week')) {
-                return $weeks . config('feeldee.post.ago.label.week');
-            }
-            $months = floor($weeks / 4);
-            if ($months < config('feeldee.post.ago.boundary.month')) {
-                return $months . config('feeldee.post.ago.label.month');
-            }
-            $years = floor($months / 12);
-            if ($years < config('feeldee.post.ago.boundary.year')) {
-                return $years . config('feeldee.post.ago.label.year');
-            }
-            return null;
-        };
-
-        return Attribute::make(
-            get: fn($value, $attributes) => $ago($value, $attributes),
-        );
-    }
-
-    /**
-     * この投稿に関連するアイテムグループリスト
-     */
-    public function itemGroups()
-    {
-        return $this->hasMany(ItemGroup::class);
-    }
-
-    /**
-     * JsonArrayからアイテムグループを作成します。
-     * カテゴリー名に一致するアイテムカテゴリーが存在しない場合、新規作成します。
-     * アイテム名に一致するアイテムが存在しない場合、新規作成します。
-     * JsonArrayの構造
-     * [
-     *     'name' => 'アイテムグループ名', 
-     *     'items' => [
-     *         [
-     *             'category_name' => 'アイテムカテゴリー名',
-     *             'name' => 'アイテム名'
-     *         ]
-     *     ]
-     * ]
+     * 省略テキストを取得します。
      * 
-     * @param mixed $value アイテムグループのJsonArray
+     * @param int $width 文字数
+     * @param string $trim_marker 省略文字 
+     * @param ?string $encoding エンコード
      */
-    public function createItemGroups(mixed $value): void
+    public function textTruncate(int $width, string $trim_marker, ?string $encoding)
     {
-        $itemGroup = $this->itemGroups()->create($value);
-        if (array_key_exists('items', $value)) {
-            foreach ($value['items'] as $itemValue) {
-
-                $category = null;
-                if (array_key_exists('category_name', $itemValue) && !empty($itemValue['category_name'])) {
-                    // アイテムカテゴリー存在チェック
-                    $category_name = $itemValue['category_name'];
-                    $category = $this->profile->categories()->ofType(Item::type())->ofName($category_name)->first();
-                    if ($category === null) {
-                        // アイテムカテゴリー新規作成
-                        $category = Category::add($this->profile, Item::type(), $category_name);
-                    }
-                }
-
-                // アイテム存在チェック
-                $item_title = $itemValue['title'];
-                $item = $this->profile->items()->ofTitle($item_title)->ofCategory($category)->first();
-                if ($item === null) {
-                    // アイテム新規作成
-                    $item = Item::create([
-                        'profile' => $this->profile,
-                        'title' => $item_title
-                    ]);
-                    // カテゴリー分け
-                    $item->categorizedByName($category_name);
-                    $item->save();
-                }
-
-                // アイテム追加
-                $itemGroup->items()->save($item);
-            }
-        }
+        return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
     }
 
     /**
-     * JsonArrayからアイテムグループリストを作成します。
+     * 投稿が閲覧可能か判定します。
+     * 投稿が閲覧可能かどうかは、投稿の公開レベルが閲覧者の最小公開レベル以上かどうかで決定されます。
      * 
-     * @param mixed $values アイテムグループリストのJsonArray
+     * 投稿が未公開・・・閲覧不可
+     * 投稿が公開済み、かつ公開レベルが「自分」・・・閲覧者が自分自身の場合のみ閲覧可能
+     * 投稿が公開済み、かつ公開レベルが「友達」・・・閲覧者が投稿を所有するプロフィールの友達リストに含まれる場合のみ閲覧可能
+     * 投稿が公開済み、かつ公開レベルが「会員」・・・閲覧者が特定できている（null以外）場合のみ閲覧可能
+     * 投稿が公開済み、かつ公開レベルが「全員」・・・閲覧者が未特定（null）の場合でも閲覧可能
+     *
+     * @param ?Profile 閲覧者（未特定の場合null）
+     * @return bool 閲覧可能な場合true、閲覧不可の場合false
      */
-    public function createManyItemGroups(mixed $values): void
+    public function isView(?Profile $viewer): bool
     {
-        // 新しいアイイテムグループ追加
-        foreach ($values as $value) {
-            $this->createItemGroups($value);
+        if (!$this->isPublic()) {
+            // 投稿が未公開の場合、閲覧不可
+            return false;
         }
+
+        // 公開レベルと最小公開レベルを比較
+        return $this->public_level->value >= $this->profile->minPublicLevel($viewer)->value;
     }
 
     /**
-     * この投稿に関連するタイムラインリスト
+     * タイトルを条件に含むようにクエリのスコープを設定
      */
-    public function timelines()
+    public function scopeOfTitle($query, ?string $title, SqlLikeBuilder $like = SqlLikeBuilder::All)
     {
-        return $this->hasMany(Timeline::class);
+        $like->build($query, 'title', $title);
     }
 
     /**
-     * JsonArrayからタイムラインを作成します。
-     * JsonArrayの構造
-     * [
-     *     [
-     *         'start_time' => '開始時刻',
-     *         'end_time' => '終了時刻',
-     *         'location' => [
-     *             'id' => '場所ID'
-     *         ]
-     *     ],
-     *     ...
-     * ]
-     * 配列の要素は、タイムライン順に指定します。
-     * 
-     * @param mixed $values タイムラインリストのJsonArray
+     * 投稿をタイトル順に並び替えるクエリのスコープを設定
      */
-    public function createManyTimelines(mixed $values): void
+    public function scopeOrderTitle($query, string $direction = 'asc')
     {
-        // 投稿日をタイムラインの基準日とする
-        $date_time = $this->post_date;
-
-        foreach ($values as $value) {
-
-            $start_datetime = null;
-            $end_datetime = null;
-
-            if (array_key_exists('start_time', $value) &&  !empty($value['start_time'])) {
-                // 開始日時
-                $start_datetime = date('Y-m-d', strtotime($date_time)) . ' ' . date('H:i', strtotime($value['start_time']));
-                if ($start_datetime < $date_time) {
-                    // 開始日時が直前より過去になる場合、日付を1日進める
-                    $start_datetime = date('Y-m-d H:i', strtotime($start_datetime . ' 1 day'));
-                }
-                $date_time = $start_datetime;
-            }
-
-            if (array_key_exists('end_time', $value) &&  !empty(strtotime($value['end_time']))) {
-                // 終了日時
-                $end_datetime = date('Y-m-d', strtotime($date_time)) . ' ' . date('H:i', strtotime(($value['end_time'])));
-                if ($end_datetime < $date_time) {
-                    // 終了日時が直前より過去になる場合、日付を1日進める
-                    $end_datetime = date('Y-m-d H:i', strtotime($end_datetime . ' 1 day'));
-                }
-                $date_time = $end_datetime;
-            }
-
-            // タイムライン作成
-            $this->timelines()->create([
-                'location_id' => $value['location']['id'],
-                'start_datetime' => $start_datetime,
-                'end_datetime' => $end_datetime,
-            ]);
-        }
+        return $query->orderBy('title', $direction);
     }
 
     /**
-     * この投稿に関連するポイントリスト
+     * 公開済み、かつ公開レベルに応じて公開範囲を制御するようにクエリのスコープを設定
      */
-    public function points()
+    public function scopePublic($query)
     {
-        return $this->hasMany(Point::class);
-    }
-
-    /**
-     * JsonArrayからポイントを作成します。
-     * JsonArrayの構造
-     * [
-     *     [
-     *         'title' => 'タイトル',
-     *         'time' => '時刻',
-     *         'memo' => 'メモ',
-     *         'latitude' => '緯度',
-     *         'longitude' => '経度',
-     *         'point_type' => 'ポイントタイプ',
-     *         'image_src' => 'イメージソース'
-     *     ],
-     *     ...
-     * ]
-     * 
-     * @param mixed $values ポイントリストのJsonArray
-     */
-    public function createManyPoints(mixed $values): void
-    {
-        // 投稿日をタイムラインの基準日とする
-        $date_time = $this->post_date;
-
-        foreach ($values as $value) {
-
-            $point_datetime = null;
-
-            if (array_key_exists('time', $value) &&  !empty($value['time'])) {
-                // ポイント日時
-                $point_datetime = date('Y-m-d', strtotime($date_time)) . ' ' . date('H:i', strtotime($value['time']));
-            }
-
-            // ポイント作成
-            $this->points()->create([
-                'title' => $value['title'],
-                'point_datetime' => $point_datetime,
-                'memo' => $value['memo'],
-                'latitude' => $value['latitude'],
-                'longitude' => $value['longitude'],
-                'point_type' => $value['point_type'],
-                'image_src' => $value['image_src'],
-            ]);
-        }
-    }
-
-    /**
-     * プロフィールごとのアーカイブリストを取得します。
-     * 
-     * @param Profile $profile プロフィール
-     * @param PublicLevel $minPublicLevel 最小公開レベル（デフォルトは自分）
-     * @return Illuminate\Contracts\Database\Eloquent\Builder
-     */
-    public static function findArchiveList(Profile $profile, PublicLevel $minPublicLevel = PublicLevel::Private): Builder
-    {
-        return self::where('profile_id', $profile->id)
-            ->selectRaw('DATE_FORMAT(post_date, \'%Y-%m\') as archive_month, COUNT(id) as count_of_items')
-            ->where('is_public', true)
-            ->where('public_level', '>=', $minPublicLevel)
-            ->groupByRaw('DATE_FORMAT(post_date, \'%Y-%m\')')
-            ->having('count_of_items', '>', 0)
-            ->orderBy('archive_month', 'desc');
-    }
-
-    protected function afterPublic(): void
-    {
-        // 投稿に添付されている写真リストも全て公開
-        foreach ($this->photos as $photo) {
-            $photo->doPublic();
-        }
-    }
-
-    protected function afterPrivate(): void
-    {
-        // 投稿に添付されている写真リストも全て非公開
-        foreach ($this->photos as $photo) {
-            $photo->doPrivate();
-        }
-    }
-
-    protected function changePublicLevel(PublicLevel $before, PublicLevel $after): void
-    {
-        // 投稿に添付されている写真リストの公開レベルも全て揃える
-        foreach ($this->photos as $photo) {
-            $photo->publicLevel = $after;
-            $photo->save();
-        }
-    }
-
-    /**
-     * 東西の経度と南北の緯度の矩形に囲まれた公開済みの場所に関連のある投稿のみを含むようにクエリのスコープを設定
-     * 最小公開レベルが指定されている場合は、最小公開レベル以上の場所のみを検索するようにクエリのスコープを設定
-     * 
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param float $east 東経
-     * @param float $west 西経
-     * @param float $south 南緯
-     * @param float $north 北緯
-     * @param ?PublicLevel $minPublicLevel 最小公開レベル
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    public function scopeRectangle($query, float $east, float $west, float $south, float $north, ?PublicLevel $minPublicLevel = null)
-    {
-        $query->join('timelines', 'timelines.post_id', 'posts.id')
-            ->join('locations', 'timelines.location_id', 'locations.id')
-            ->where('locations.latitude', '<=', $north)
-            ->where('locations.latitude', '>=', $south)
-            ->where('locations.longitude', '<=', $east)
-            ->where('locations.longitude', '>=', $west)
-            ->where('locations.is_public', true)
-            ->select('posts.*')->distinct();
-        if ($minPublicLevel) {
-            $query->where('locations.public_level', '>=', $minPublicLevel);
-        }
-
+        $table = (new $this)->getTable();
+        $query->where($table . '.is_public', true);
+        $query->where(function (Builder $query) use ($table) {
+            // 公開レベル「全員」
+            $query->orWhere($table . '.public_level', PublicLevel::Public);
+            // 公開レベル「会員」
+            $query->orWhere(function (Builder $query) use ($table) {
+                $query->where($table . '.public_level', PublicLevel::Member)
+                    ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
+            });
+            // 公開レベル「友達」
+            // TODO::友達機能未実装
+            $query->orWhere(function (Builder $query) use ($table) {
+                $query->where($table . '.public_level', PublicLevel::Friend)
+                    ->where($table . '.profile_id', Auth::user()?->profile->id);
+            });
+            // 公開レベル「自分」
+            $query->orWhere(function (Builder $query) use ($table) {
+                $query->where($table . '.public_level', PublicLevel::Private)
+                    ->where($table . '.profile_id', Auth::user()?->profile->id);
+            });
+        });
         return $query;
     }
 
+    protected $order_column = null;
+
     /**
-     * キーワードでタイトルと本文を検索するクエリのスコープを設定
-     * キーワードはタイトルまたは本文と部分一致で検索されます。
-     * キーワードには、区切り文字で区切って複数指定することができます。
-     * 複数のキーワードを指定した場合、区切り文字で区切られたそれぞれのキーワードはAND条件で連結されます。
-     * 
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param ?string $keyrowd キーワード
-     * @param string $separator 区切り文字
-     * @return \Illuminate\Database\Eloquent\Builder
+     * 投稿を最新のものから並び替えるクエリのスコープを設定
      */
-    public function scopeSearchKeyword($query, ?string $keyword = null, string $separator = ' ')
+    public function scopeOrderLatest($query)
     {
-        if ($keyword) {
-            $keywords = explode($separator, $keyword);
-            foreach ($keywords as $keyword) {
-                $query->where(
-                    function ($query) use ($keyword) {
-                        $query->where('title', 'like', "%$keyword%")->orWhere('text', 'like', "%$keyword%");
-                    }
-                );
-            }
+        return $query->latest($this->order_column);
+    }
+
+    /**
+     * 投稿を古いものから並び替えるクエリのスコープを設定
+     */
+    public function scopeOrderOldest($query)
+    {
+        return $query->oldest($this->order_column);
+    }
+
+    /**
+     * 最新(desc|latest)または古いもの(asc|oldest)を指定して投稿を並び替えるクエリのスコープを設定
+     */
+    public function scopeOrderDirection($query, string $direction = 'asc')
+    {
+        if ($direction == 'desc' || $direction == 'latest') {
+            $query->latest($this->order_column);
+        } else if ($direction == 'asc' || $direction == 'oldest') {
+            $query->oldest($this->order_column);
         }
-
-        return $query;
-    }
-
-    /**
-     * 投稿日の範囲を条件に指定して投稿リスト検索するクエリのスコープを設定
-     */
-    public static function scopeBetween($query, mixed $from = null, mixed $to = null)
-    {
-        if (!is_null($from)) {
-            $query->whereDate('post_date', '>=', $from);
-        }
-        if (!is_null($to)) {
-            $query->whereDate('post_date', '<=', $to);
-        }
-        return $query;
-    }
-
-    /**
-     * 投稿日を条件に含むようにクエリのスコープを設定
-     */
-    public static function scopeOfDate($query, mixed $post_date): void
-    {
-        $query->whereDate('post_date', $post_date);
-    }
-
-    /**
-     * 指定日より前の投稿のみを含むようにクエリのスコープを設定
-     */
-    public static function scopeBefore($query, mixed $date): void
-    {
-        $query->whereDate('post_date', '<', $date);
-    }
-
-    /**
-     * 指定日より後の投稿のみを含むようにクエリのスコープを設定
-     */
-    public static function scopeAfter($query, mixed $date): void
-    {
-        $query->whereDate('post_date', '>', $date);
     }
 }

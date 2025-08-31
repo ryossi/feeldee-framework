@@ -24,7 +24,7 @@ class ItemGroup extends Model
      */
     public function post()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(Journal::class);
     }
 
     /**
@@ -47,7 +47,7 @@ class ItemGroup extends Model
     public static function findNameList(Profile $profile, mixed $term = null, SqlLikeBuilder $like = SqlLikeBuilder::Prefix): Collection
     {
         $itemGroupTbleName = with(new static)->getTable();
-        $postTableName = with(new Post())->getTable();
+        $postTableName = with(new Journal())->getTable();
         $sql = self::join($postTableName, $postTableName . '.id', '=', $itemGroupTbleName . '.post_id')
             ->where($postTableName . '.profile_id', $profile->id)
             ->select($itemGroupTbleName . '.name')

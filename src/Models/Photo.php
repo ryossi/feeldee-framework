@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
  * 写真をあらわすモデル
  *
  */
-class Photo extends Content
+class Photo extends Post
 {
     /**
      * 複数代入可能な属性
@@ -48,7 +48,7 @@ class Photo extends Content
     ];
 
     /**
-     * コンテンツをソートするカラム名
+     * ソートするカラム名
      * 
      * @var array
      */
@@ -82,7 +82,7 @@ class Photo extends Content
 
         static::saving(
             function (self $model) {
-                // コンテンツ投稿日時
+                // 投稿日時
                 if (empty($model->posted_at)) {
                     $model->posted_at = CarbonImmutable::now();
                 }
@@ -91,7 +91,7 @@ class Photo extends Content
     }
 
     /**
-     * コンテンツ種別
+     * 投稿種別
      * 
      * @return string
      */
@@ -101,13 +101,13 @@ class Photo extends Content
     }
 
     /**
-     * 投稿リスト
+     * 関連記事リスト
      * 
      * @return BelongsToMany
      */
-    public function posts(): BelongsToMany
+    public function relatedJournals(): BelongsToMany
     {
-        return $this->belongsToMany(Post::class, 'posted_photos');
+        return $this->belongsToMany(Journal::class, 'posted_photos');
     }
 
     /**
@@ -189,7 +189,7 @@ class Photo extends Content
     public static function preparePhotoGalleryData(Profile $profile, int $pageSize, PublicLevel $minPublicLevel = PublicLevel::Private): array
     {
         $date_list = self::leftJoin('posted_photos', 'posted_photos.photo_id', 'photos.id')
-            ->leftJoin('posts', 'posts.id', 'posted_photos.post_id')
+            ->leftJoin('journals', 'journals.id', 'posted_photos.journal_id')
             ->select(
                 DB::raw('ifnull(posts.post_date, photos.regist_datetime) as date')
             )
@@ -203,7 +203,7 @@ class Photo extends Content
             return [$date_list, array()];
         }
         $photo_list = Photo::leftJoin('posted_photos', 'posted_photos.photo_id', 'photos.id')
-            ->leftJoin('posts', 'posts.id', 'posted_photos.post_id')
+            ->leftJoin('journals', 'journals.id', 'posted_photos.journal_id')
             ->select(
                 DB::raw('ifnull(posts.post_date, photos.regist_datetime) as date'),
                 'photos.id',
