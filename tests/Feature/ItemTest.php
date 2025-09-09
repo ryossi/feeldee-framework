@@ -1112,13 +1112,13 @@ class ItemTest extends TestCase
     }
 
     /**
-     * アイテムイメージ
+     * 投稿サムネイル
      * 
      * - 取得時にURLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムイメージ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿サムネイル
      */
-    public function test_item_image_url_cast_hook_get()
+    public function test_item_thumbnail_url_cast_hook_get()
     {
         // 準備
         Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
@@ -1129,24 +1129,24 @@ class ItemTest extends TestCase
         $image = 'https://example.com/image.jpg';
         $item = Item::factory()->create([
             'profile_id' => $profile->id,
-            'image' => $image,
+            'thumbnail' => $image,
         ]);
 
         // 実行
-        $expected = $item->image;
+        $expected = $item->thumbnail;
 
         // 評価
-        $this->assertEquals(CustomUrlHook::PREFIX . $image, $expected, '取得時にURLキャストフックが利用できることを確認します。');
+        $this->assertEquals(CustomUrlHook::PREFIX . $image, $expected, '取得時にURLキャストフックが利用できること');
     }
 
     /**
-     * アイテムイメージ
+     * 投稿サムネイル
      * 
      * - 設定時にURLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムイメージ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿サムネイル
      */
-    public function test_item_image_url_cast_hook_set()
+    public function test_item_thumbnail_url_cast_hook_set()
     {
         // 準備
         Config::set(URL::CONFIG_KEY_URL_CAST_HOOKS, [
@@ -1159,14 +1159,14 @@ class ItemTest extends TestCase
         // 実行
         $profile->items()->create([
             'title' => 'テストアイテム',
-            'image' => CustomUrlHook::PREFIX . $image,
+            'thumbnail' => CustomUrlHook::PREFIX . $image,
         ]);
 
         // 評価
         // 設定時にURLキャストフックが利用できること
         $this->assertDatabaseHas('items', [
             'profile_id' => $profile->id,
-            'image' => $image,
+            'thumbnail' => $image,
         ]);
     }
 

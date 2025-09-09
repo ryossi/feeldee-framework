@@ -44,6 +44,7 @@ class Photo extends Post
     protected $casts = [
         'posted_at' => 'datetime',
         'value' => HTML::class,
+        'thumbnail' => URL::class,
         'src' => URL::class
     ];
 

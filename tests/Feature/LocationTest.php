@@ -1160,11 +1160,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所サムネイル
+     * 投稿サムネイル
      * 
      * - 取得時にURLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所サムネイル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿サムネイル
      */
     public function test_thumbnail_url_cast_hook_get()
     {
@@ -1184,7 +1184,7 @@ class LocationTest extends TestCase
         $expected = $location->thumbnail;
 
         // 評価
-        $this->assertEquals(CustomUrlHook::PREFIX . $thumbnail, $expected, '取得時にURLキャストフックが利用できることを確認します。');
+        $this->assertEquals(CustomUrlHook::PREFIX . $thumbnail, $expected, '取得時にURLキャストフックが利用できること');
         $this->assertDatabaseHas('locations', [
             'profile_id' => $profile->id,
             'thumbnail' => $thumbnail,
@@ -1192,11 +1192,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所サムネイル
+     * 投稿サムネイル
      * 
      * - 設定時にURLキャストフックが利用できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所サムネイル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿サムネイル
      */
     public function test_thumbnail_url_cast_hook_set()
     {
