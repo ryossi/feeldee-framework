@@ -27,9 +27,9 @@ class JournalTest extends TestCase
 
     /**
      * 投稿種別
-     * 
-     * - 投稿の投稿種別は、"post"であることを確認します。
-     * 
+     *
+     * - 記録の投稿種別は、"journal"であることを確認します。
+     *
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿種別
      */
     public function test_type()
@@ -45,7 +45,7 @@ class JournalTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('post', $post->type(), '投稿の投稿種別は、"post"であること');
+        $this->assertEquals('journal', $post->type(), '記録の投稿種別は、"journal"であること');
     }
 
     /**

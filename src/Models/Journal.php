@@ -83,7 +83,7 @@ class Journal extends Post
      */
     public static function type()
     {
-        return 'post';
+        return 'journal';
     }
 
     /**
