@@ -27,14 +27,14 @@ class Item extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'image'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性
      *
      * @var array
      */
-    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'category_name', 'image', 'text'];
+    protected $visible = ['id', 'profile', 'is_public', 'public_level', 'category', 'title', 'category_name', 'thumbnail', 'text'];
 
     /**
      * 配列に追加する属性
@@ -50,7 +50,7 @@ class Item extends Post
      */
     protected $casts = [
         'value' => HTML::class,
-        'image' => URL::class,
+        'thumbnail' => URL::class,
     ];
 
     /**
