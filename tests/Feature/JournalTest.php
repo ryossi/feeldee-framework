@@ -880,12 +880,12 @@ class JournalTest extends TestCase
     }
 
     /**
-     * 記事サムネイル
+     * 投稿サムネイル
      * 
-     * - 投稿記事のサムネイルイメージであることを確認します。
+     * - 記録の投稿サムネイルイメージであることを確認します。
      * - URL形式で保存できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事サムネイル
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿サムネイル
      */
     public function test_thumbnail_url()
     {
@@ -902,7 +902,7 @@ class JournalTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($thumbnail, $post->thumbnail, '投稿記事のサムネイル画像であること');
+        $this->assertEquals($thumbnail, $post->thumbnail, '記録の投稿サムネイルイメージであること');
         // URL形式で保存できること
         $this->assertDatabaseHas('journals', [
             'thumbnail' => $thumbnail,
@@ -910,12 +910,12 @@ class JournalTest extends TestCase
     }
 
     /**
-     * 記事サムネイル
-     * 
-     * - 投稿記事のサムネイルイメージであることを確認します。
+     * 投稿サムネイル
+     *
+     * - 記録の投稿サムネイルイメージであることを確認します。
      * - Base64形式で保存できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#記事サムネイル
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿サムネイル
      */
     public function test_thumbnail_base64()
     {
@@ -932,7 +932,7 @@ class JournalTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals($thumbnail, $post->thumbnail, '投稿記事のサムネイル画像であること');
+        $this->assertEquals($thumbnail, $post->thumbnail, '記録の投稿サムネイルイメージであること');
         // Base64形式で保存できること
         $this->assertDatabaseHas('journals', [
             'thumbnail' => $thumbnail,
