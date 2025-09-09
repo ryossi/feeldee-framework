@@ -65,7 +65,7 @@ class Profile extends Model
 
     protected static function bootedNickname(Self $model)
     {
-        if (Profile::ofNickname($model->nickname)->first()?->id !== $model->id) {
+        if (Profile::of($model->nickname)->first()?->id !== $model->id) {
             // ニックネームが重複している場合
             throw new ApplicationException(Profile::ERROR_CODE_NICKNAME_DUPLICATED, ['nickname' => $model->nickname]);
         }
@@ -166,22 +166,6 @@ class Profile extends Model
         return $this->hasMany(Config::class);
     }
 
-    /**
-     * ユーザIDを条件に含むようにクエリスコープを設定
-     */
-    public function scopeOfUserId($query, int $userId)
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * ニックネームを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfNickname($query, ?string $nickname)
-    {
-        return $query->where('nickname', $nickname);
-    }
-
     private $configCache = [];
 
     /**
@@ -240,11 +224,43 @@ class Profile extends Model
         return parent::__get($key);
     }
 
+
     /**
-     * コンフィグ値によるプロフィール絞り込みのスコープを設定
+     * ユーザIDによるプロフィール絞り込み
+     * 
+     * ユーザIDを指定してプロフィールを特定します。
      * 
      * @param Builder $query クエリビルダ
-     * @param string $type コンフィグのタイプ
+     * @param mixed $userId ユーザID
+     * @return void
+     */
+    public function scopeCreatedBy($query, mixed $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * ニックネームによるプロフィール絞り込み
+     * 
+     * ニックネームを指定してプロフィールを特定します。
+     * 
+     * @param Builder $query クエリビルダ
+     * @param string|null $nickname ニックネーム
+     * @return void
+     */
+    public function scopeOf($query, string|null $nickname)
+    {
+        return $query->where('nickname', $nickname);
+    }
+
+    /**
+     * コンフィグ設定状況によるプロフィールの絞り込み
+     * 
+     * 指定したコンフィグタイプに一致するコンフィグのキーが、指定した値と一致する設定となっているプロフィールを絞り込みます。
+     * 
+     * @param Builder $query クエリビルダ
+     * @param string $type コンフィグタイプ
+     * @param string $key コンフィグのキー
      * @param mixed $value コンフィグの値
      * @return void
      */

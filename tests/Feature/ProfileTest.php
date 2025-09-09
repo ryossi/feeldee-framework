@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Category;
+use Feeldee\Framework\Models\Config;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
@@ -41,7 +42,7 @@ class ProfileTest extends TestCase
         Profile::factory()->create(['user_id' => 300, 'nickname' => 'プロフィール300']);
 
         // 実行
-        $profile = Profile::ofUserId($expected->user_id)->first();
+        $profile = Profile::createdBy($expected->user_id)->first();
 
         // 評価
         $this->assertEquals($expected->nickname, $profile->nickname, 'プロフィールの所有者を特定するための数値型の外部情報であること');
@@ -106,7 +107,7 @@ class ProfileTest extends TestCase
         Profile::factory()->create(['user_id' => 300, 'nickname' => 'プロフィール300']);
 
         // 実行
-        $profile = Profile::ofNickname($expected->nickname)->first();
+        $profile = Profile::of($expected->nickname)->first();
 
         // 評価
         $this->assertEquals($expected->nickname, $profile->nickname, 'プロフィールを一意に識別するための名前であること');
@@ -122,23 +123,25 @@ class ProfileTest extends TestCase
     public function test_nickname_one_user_any_profile()
     {
         // 準備
-        $userId = 1;
-        Auth::shouldReceive('id')->andReturn($userId);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        $this->actingAs($user);
 
         // 実行
-        Profile::create([
-            'user_id' => $userId,
+        $user->profiles()->create([
             'nickname' => 'テストプロフィール1',
             'title' => 'ニックネームテスト1'
         ]);
-        Profile::create([
-            'user_id' => $userId,
+        $user->profiles()->create([
             'nickname' => 'テストプロフィール2',
             'title' => 'ニックネームテスト2'
         ]);
 
         // 評価
-        $this->assertEquals(2, Profile::ofUserId($userId)->count(), 'ユーザが、いくつもプロフィールを作成することができること');
+        $this->assertEquals(2, $user->profiles()->count(), 'ユーザが、いくつもプロフィールを作成することができること');
     }
 
     /**
@@ -695,5 +698,64 @@ class ProfileTest extends TestCase
             $this->assertEquals($user->id, $profile->user_id, 'ユーザEloquentモデルが削除された場合には、関連付けされた全てのプロフィールは削除されないこと');
         }
         $this->assertDatabaseCount('users', 0);
+    }
+
+    /**
+     * ニックネームによるプロフィール絞り込み
+     * 
+     * - ニックネームを指定してプロフィールを特定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィール絞り込み
+     */
+    public function test_nickname_filter()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $expected = Profile::factory()->create(['nickname' => 'Feeldee']);
+        Profile::factory()->create(['nickname' => 'xyz']);
+        Profile::factory()->create(['nickname' => 'jdofajod']);
+
+        // 実行
+        $profile = Profile::of('Feeldee')->first();
+
+        // 評価
+        $this->assertEquals($expected->id, $profile->id, 'ニックネームを指定してプロフィールを特定できること');
+    }
+
+    /**
+     * コンフィグ設定状況によるプロフィールの絞り込み
+     * 
+     * - コンフィグ値でのプロフィールの絞り込みができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ設定状況によるプロフィールの絞り込み
+     */
+    public function test_config_value_filter()
+    {
+        // 準備
+        config([Config::CONFIG_KEY_VALUE_OBJECTS => [
+            'custom_config' => \Tests\ValueObjects\Configs\CustomConfig::class,
+        ]]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile1 = Profile::factory()->create();
+        $profile2 = Profile::factory()->create();
+
+        // プロフィール1にカスタムコンフィグを設定
+        $profile1->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('filter_value', 'value2'),
+        ]);
+
+        // プロフィール2にカスタムコンフィグを設定
+        $profile2->configs()->create([
+            'type' => 'custom_config',
+            'value' => new \Tests\ValueObjects\Configs\CustomConfig('value1', 'value2'),
+        ]);
+
+        // 実行
+        $filteredProfiles = Profile::whereConfigContains('custom_config', 'value1', 'filter_value')->get();
+
+        // 評価
+        $this->assertCount(1, $filteredProfiles, 'コンフィグ値でのプロフィールの絞り込みができること');
+        $this->assertEquals($profile1->id, $filteredProfiles->first()->id, '正しいプロフィールが取得されること');
     }
 }
