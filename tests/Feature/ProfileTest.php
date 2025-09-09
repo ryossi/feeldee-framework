@@ -30,28 +30,6 @@ class ProfileTest extends TestCase
      * ユーザID
      * 
      * - プロフィールの所有者を特定するための数値型の外部情報であることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザID
-     */
-    public function test_user_id()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()->create(['user_id' => 100, 'nickname' => 'プロフィール100']);
-        $expected = Profile::factory()->create(['user_id' => 200, 'nickname' => 'プロフィール200']);
-        Profile::factory()->create(['user_id' => 300, 'nickname' => 'プロフィール300']);
-
-        // 実行
-        $profile = Profile::createdBy($expected->user_id)->first();
-
-        // 評価
-        $this->assertEquals($expected->nickname, $profile->nickname, 'プロフィールの所有者を特定するための数値型の外部情報であること');
-    }
-
-    /**
-     * ユーザID
-     * 
-     * - プロフィールの所有者を特定するための数値型の外部情報であることを確認します。
      * - Laravel標準の認証システムのAuth::id()の値を設定できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザID
@@ -701,11 +679,33 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * ニックネームによるプロフィール絞り込み
+     * ユーザIDローカルスコープ
+     * 
+     * - ユーザIDを指定してプロフィールを特定することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザIDローカルスコープ
+     */
+    public function test_user_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->create(['user_id' => 100, 'nickname' => 'プロフィール100']);
+        $expected = Profile::factory()->create(['user_id' => 200, 'nickname' => 'プロフィール200']);
+        Profile::factory()->create(['user_id' => 300, 'nickname' => 'プロフィール300']);
+
+        // 実行
+        $profile = Profile::createdBy($expected->user_id)->first();
+
+        // 評価
+        $this->assertEquals($expected->nickname, $profile->nickname, 'プロフィールの所有者を特定するための数値型の外部情報であること');
+    }
+
+    /**
+     * ニックネームローカルスコープ
      * 
      * - ニックネームを指定してプロフィールを特定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィール絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームローカルスコープ
      */
     public function test_nickname_filter()
     {
@@ -723,11 +723,11 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * コンフィグ設定状況によるプロフィールの絞り込み
+     * コンフィグ設定状況ローカルコープ
      * 
      * - コンフィグ値でのプロフィールの絞り込みができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ設定状況によるプロフィールの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ設定状況ローカルコープ
      */
     public function test_config_value_filter()
     {

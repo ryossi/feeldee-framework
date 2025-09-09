@@ -226,8 +226,6 @@ class Profile extends Model
 
 
     /**
-     * ユーザIDによるプロフィール絞り込み
-     * 
      * ユーザIDを指定してプロフィールを特定します。
      * 
      * @param Builder $query クエリビルダ
@@ -240,8 +238,6 @@ class Profile extends Model
     }
 
     /**
-     * ニックネームによるプロフィール絞り込み
-     * 
      * ニックネームを指定してプロフィールを特定します。
      * 
      * @param Builder $query クエリビルダ
@@ -254,8 +250,6 @@ class Profile extends Model
     }
 
     /**
-     * コンフィグ設定状況によるプロフィールの絞り込み
-     * 
      * 指定したコンフィグタイプに一致するコンフィグのキーが、指定した値と一致する設定となっているプロフィールを絞り込みます。
      * 
      * @param Builder $query クエリビルダ
