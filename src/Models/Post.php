@@ -221,25 +221,35 @@ abstract class Post extends Model
     protected $order_column = null;
 
     /**
-     * 投稿を最新のものから並び替えるクエリのスコープを設定
+     * 投稿コレクションを最新のものから並び替えます。
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return void
      */
-    public function scopeOrderLatest($query)
+    public function scopeOrderLatest($query): void
     {
-        return $query->latest($this->order_column);
+        $query->latest($this->order_column);
     }
 
     /**
-     * 投稿を古いものから並び替えるクエリのスコープを設定
+     * 投稿コレクションを古いものから並び替えます。
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @return void
      */
-    public function scopeOrderOldest($query)
+    public function scopeOrderOldest($query): void
     {
-        return $query->oldest($this->order_column);
+        $query->oldest($this->order_column);
     }
 
     /**
-     * 最新(desc|latest)または古いもの(asc|oldest)を指定して投稿を並び替えるクエリのスコープを設定
+     * 投稿コレクションを文字列を直接指定してソートします。
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $direction 最新(latest|desc)または古いもの(oldest|asc)
+     * @return void
      */
-    public function scopeOrderDirection($query, string $direction = 'asc')
+    public function scopeOrderDirection($query, string $direction = 'asc'): void
     {
         if ($direction == 'desc' || $direction == 'latest') {
             $query->latest($this->order_column);

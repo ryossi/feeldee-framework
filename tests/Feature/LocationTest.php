@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Auth;
+use Carbon\Carbon;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
@@ -1434,5 +1435,167 @@ class LocationTest extends TestCase
             'longitude' => $longitude,
             'zoom' => $zoom,
         ]);
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新のものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_latest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $locationA = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $locationB = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $locationC = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $locations = Profile::of('Feeldee')->first()->locations()->orderLatest()->get();
+
+        // 評価
+        $this->assertEquals(3, $locations->count(), '投稿コレクションを最新のものから並び替えできること');
+        $this->assertEquals($locationB->id, $locations[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($locationA->id, $locations[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($locationC->id, $locations[2]->id, '一番古い投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     * 
+     * - 投稿コレクションを古いものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $locationA = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $locationB = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $locationC = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $locations = Location::by('Feeldee')->orderOldest()->get();
+
+        // 評価
+        $this->assertEquals(3, $locations->count(), '投稿コレクションを古いものから並び替えできること');
+        $this->assertEquals($locationC->id, $locations[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($locationA->id, $locations[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($locationB->id, $locations[2]->id, '最新の投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新(latest)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_string_latest_and_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $locationA = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $locationB = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $locationC = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $locationsLatest = Location::by('Feeldee')->orderDirection('latest')->get();
+        $locationsOldest = Location::by('Feeldee')->orderDirection('oldest')->get();
+
+        // 評価
+        $this->assertEquals(3, $locationsLatest->count(), '投稿コレクションを最新(latest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($locationB->id, $locationsLatest[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($locationA->id, $locationsLatest[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($locationC->id, $locationsLatest[2]->id, '一番古い投稿が最後に来ること');
+
+        $this->assertEquals(3, $locationsOldest->count(), '投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($locationC->id, $locationsOldest[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($locationA->id, $locationsOldest[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($locationB->id, $locationsOldest[2]->id, '最新の投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新(desc)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿コレクションを古い(asc)文字列を直接指定してソートすることもできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_string_desc_and_asc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $locationA = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $locationB = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $locationC = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $locationsLatest = Profile::of('Feeldee')->first()->locations()->orderDirection('desc')->get();
+        $locationsOldest = Profile::of('Feeldee')->first()->locations()->orderDirection('asc')->get();
+
+        // 評価
+        $this->assertEquals(3, $locationsLatest->count(), '投稿コレクションを最新(desc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($locationB->id, $locationsLatest[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($locationA->id, $locationsLatest[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($locationC->id, $locationsLatest[2]->id, '一番古い投稿が最後に来ること');
+
+        $this->assertEquals(3, $locationsOldest->count(), '投稿コレクションを古い(asc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($locationC->id, $locationsOldest[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($locationA->id, $locationsOldest[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($locationB->id, $locationsOldest[2]->id, '最新の投稿が最後に来ること');
     }
 }

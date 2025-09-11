@@ -63,6 +63,13 @@ class Location extends Post
     ];
 
     /**
+     * ソートするカラム名
+     * 
+     * @var array
+     */
+    protected $order_column = 'posted_at';
+
+    /**
      * 必須にする属性
      * 
      * @var array

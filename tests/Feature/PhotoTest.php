@@ -1314,4 +1314,166 @@ class PhotoTest extends TestCase
             'posted_at' => $photo->posted_at->format('Y-m-d H:i:s'), // システム日時が設定されていること
         ]);
     }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新のものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_latest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $photos = Profile::of('Feeldee')->first()->photos()->orderLatest()->get();
+
+        // 評価
+        $this->assertEquals(3, $photos->count(), '投稿コレクションを最新のものから並び替えできること');
+        $this->assertEquals($postB->id, $photos[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($postA->id, $photos[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($postC->id, $photos[2]->id, '一番古い投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     * 
+     * - 投稿コレクションを古いものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $photos = Photo::by('Feeldee')->orderOldest()->get();
+
+        // 評価
+        $this->assertEquals(3, $photos->count(), '投稿コレクションを古いものから並び替えできること');
+        $this->assertEquals($postC->id, $photos[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($postA->id, $photos[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($postB->id, $photos[2]->id, '最新の投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新(latest)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_string_latest_and_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $photosLatest = Photo::by('Feeldee')->orderDirection('latest')->get();
+        $photosOldest = Photo::by('Feeldee')->orderDirection('oldest')->get();
+
+        // 評価
+        $this->assertEquals(3, $photosLatest->count(), '投稿コレクションを最新(latest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postB->id, $photosLatest[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($postA->id, $photosLatest[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($postC->id, $photosLatest[2]->id, '一番古い投稿が最後に来ること');
+
+        $this->assertEquals(3, $photosOldest->count(), '投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postC->id, $photosOldest[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($postA->id, $photosOldest[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($postB->id, $photosOldest[2]->id, '最新の投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新(desc)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿コレクションを古い(asc)文字列を直接指定してソートすることもできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_string_desc_and_asc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $photosLatest = Profile::of('Feeldee')->first()->photos()->orderDirection('desc')->get();
+        $photosOldest = Profile::of('Feeldee')->first()->photos()->orderDirection('asc')->get();
+
+        // 評価
+        $this->assertEquals(3, $photosLatest->count(), '投稿コレクションを最新(desc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postB->id, $photosLatest[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($postA->id, $photosLatest[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($postC->id, $photosLatest[2]->id, '一番古い投稿が最後に来ること');
+
+        $this->assertEquals(3, $photosOldest->count(), '投稿コレクションを古い(asc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postC->id, $photosOldest[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($postA->id, $photosOldest[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($postB->id, $photosOldest[2]->id, '最新の投稿が最後に来ること');
+    }
 }

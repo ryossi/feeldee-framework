@@ -1553,4 +1553,166 @@ class JournalTest extends TestCase
         $this->assertEquals(1, $profile->photos()->ofSrc('http://photo.test/img/2.png')->first()->relatedJournals->count(), '投稿を削除した場合は、写真リストからは削除されること');
         $this->assertEquals(4, $profile->photos->count(), '登録した写真そのものは、削除した投稿とは紐付かない写真として残ること');
     }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新のものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_latest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $journals = Profile::of('Feeldee')->first()->journals()->orderLatest()->get();
+
+        // 評価
+        $this->assertEquals(3, $journals->count(), '投稿コレクションを最新のものから並び替えできること');
+        $this->assertEquals($postB->id, $journals[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($postA->id, $journals[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($postC->id, $journals[2]->id, '一番古い投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     * 
+     * - 投稿コレクションを古いものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $journals = Journal::by('Feeldee')->orderOldest()->get();
+
+        // 評価
+        $this->assertEquals(3, $journals->count(), '投稿コレクションを古いものから並び替えできること');
+        $this->assertEquals($postC->id, $journals[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($postA->id, $journals[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($postB->id, $journals[2]->id, '最新の投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新(latest)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_string_latest_and_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $journalsLatest = Journal::by('Feeldee')->orderDirection('latest')->get();
+        $journalsOldest = Journal::by('Feeldee')->orderDirection('oldest')->get();
+
+        // 評価
+        $this->assertEquals(3, $journalsLatest->count(), '投稿コレクションを最新(latest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postB->id, $journalsLatest[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($postA->id, $journalsLatest[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($postC->id, $journalsLatest[2]->id, '一番古い投稿が最後に来ること');
+
+        $this->assertEquals(3, $journalsOldest->count(), '投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postC->id, $journalsOldest[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($postA->id, $journalsOldest[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($postB->id, $journalsOldest[2]->id, '最新の投稿が最後に来ること');
+    }
+
+    /**
+     * コレクションソートローカルスコープ
+     *
+     * - 投稿コレクションを最新(desc)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿コレクションを古い(asc)文字列を直接指定してソートすることもできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     */
+    public function test_collection_sort_string_desc_and_asc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $journalsLatest = Profile::of('Feeldee')->first()->journals()->orderDirection('desc')->get();
+        $journalsOldest = Profile::of('Feeldee')->first()->journals()->orderDirection('asc')->get();
+
+        // 評価
+        $this->assertEquals(3, $journalsLatest->count(), '投稿コレクションを最新(desc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postB->id, $journalsLatest[0]->id, '最新の投稿が最初に来ること');
+        $this->assertEquals($postA->id, $journalsLatest[1]->id, '次に新しい投稿が次に来ること');
+        $this->assertEquals($postC->id, $journalsLatest[2]->id, '一番古い投稿が最後に来ること');
+
+        $this->assertEquals(3, $journalsOldest->count(), '投稿コレクションを古い(asc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals($postC->id, $journalsOldest[0]->id, '一番古い投稿が最初に来ること');
+        $this->assertEquals($postA->id, $journalsOldest[1]->id, '次に古い投稿が次に来ること');
+        $this->assertEquals($postB->id, $journalsOldest[2]->id, '最新の投稿が最後に来ること');
+    }
 }
