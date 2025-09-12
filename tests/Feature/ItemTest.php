@@ -1257,11 +1257,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * コレクションソートローカルスコープ
+     * 投稿リストの並び順
      *
-     * - 投稿コレクションを最新のものから並び替えできることを確認します。
+     * - 投稿リストを最新のものから並び替えできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_latest()
     {
@@ -1287,18 +1287,18 @@ class ItemTest extends TestCase
         $items = Profile::of('Feeldee')->first()->items()->orderLatest()->get();
 
         // 評価
-        $this->assertEquals(3, $items->count(), '投稿コレクションを最新のものから並び替えできること');
+        $this->assertEquals(3, $items->count(), '投稿リストを最新のものから並び替えできること');
         $this->assertEquals($itemB->id, $items[0]->id, '最新の投稿が最初に来ること');
         $this->assertEquals($itemA->id, $items[1]->id, '次に新しい投稿が次に来ること');
         $this->assertEquals($itemC->id, $items[2]->id, '一番古い投稿が最後に来ること');
     }
 
     /**
-     * コレクションソートローカルスコープ
-     * 
-     * - 投稿コレクションを古いものから並び替えできることを確認します。
+     * 投稿リストの並び順
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * - 投稿リストを古いものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_oldest()
     {
@@ -1324,19 +1324,19 @@ class ItemTest extends TestCase
         $items = Item::by('Feeldee')->orderOldest()->get();
 
         // 評価
-        $this->assertEquals(3, $items->count(), '投稿コレクションを古いものから並び替えできること');
+        $this->assertEquals(3, $items->count(), '投稿リストを古いものから並び替えできること');
         $this->assertEquals($itemC->id, $items[0]->id, '一番古い投稿が最初に来ること');
         $this->assertEquals($itemA->id, $items[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($itemB->id, $items[2]->id, '最新の投稿が最後に来ること');
     }
 
     /**
-     * コレクションソートローカルスコープ
+     * 投稿リストの並び順
      *
-     * - 投稿コレクションを最新(latest)文字列を直接指定してソートすることもできることを確認します。
-     * - 投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを最新(latest)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_string_latest_and_oldest()
     {
@@ -1363,24 +1363,24 @@ class ItemTest extends TestCase
         $itemsOldest = Item::by('Feeldee')->orderDirection('oldest')->get();
 
         // 評価
-        $this->assertEquals(3, $itemsLatest->count(), '投稿コレクションを最新(latest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $itemsLatest->count(), '投稿リストを最新(latest)文字列を直接指定してソートすることもできること');
         $this->assertEquals($itemB->id, $itemsLatest[0]->id, '最新の投稿が最初に来ること');
         $this->assertEquals($itemA->id, $itemsLatest[1]->id, '次に新しい投稿が次に来ること');
         $this->assertEquals($itemC->id, $itemsLatest[2]->id, '一番古い投稿が最後に来ること');
 
-        $this->assertEquals(3, $itemsOldest->count(), '投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $itemsOldest->count(), '投稿リストを古い(oldest)文字列を直接指定してソートすることもできること');
         $this->assertEquals($itemC->id, $itemsOldest[0]->id, '一番古い投稿が最初に来ること');
         $this->assertEquals($itemA->id, $itemsOldest[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($itemB->id, $itemsOldest[2]->id, '最新の投稿が最後に来ること');
     }
 
     /**
-     * コレクションソートローカルスコープ
+     * 投稿リストの並び順
      *
-     * - 投稿コレクションを最新(desc)文字列を直接指定してソートすることもできることを確認します。
-     * - 投稿コレクションを古い(asc)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを最新(desc)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを古い(asc)文字列を直接指定してソートすることもできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_string_desc_and_asc()
     {
@@ -1407,14 +1407,54 @@ class ItemTest extends TestCase
         $itemsOldest = Profile::of('Feeldee')->first()->items()->orderDirection('asc')->get();
 
         // 評価
-        $this->assertEquals(3, $itemsLatest->count(), '投稿コレクションを最新(desc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $itemsLatest->count(), '投稿リストを最新(desc)文字列を直接指定してソートすることもできること');
         $this->assertEquals($itemB->id, $itemsLatest[0]->id, '最新の投稿が最初に来ること');
         $this->assertEquals($itemA->id, $itemsLatest[1]->id, '次に新しい投稿が次に来ること');
         $this->assertEquals($itemC->id, $itemsLatest[2]->id, '一番古い投稿が最後に来ること');
 
-        $this->assertEquals(3, $itemsOldest->count(), '投稿コレクションを古い(asc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $itemsOldest->count(), '投稿リストを古い(asc)文字列を直接指定してソートすることもできること');
         $this->assertEquals($itemC->id, $itemsOldest[0]->id, '一番古い投稿が最初に来ること');
         $this->assertEquals($itemA->id, $itemsOldest[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($itemB->id, $itemsOldest[2]->id, '最新の投稿が最後に来ること');
+    }
+
+    /**
+     * アイテムリストの並び順
+     * 
+     * - アイテムリストのデフォルトの並び順は、表示順であることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムリストの並び順
+     */
+    public function test_collection_sort_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $itemA = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+            'order_number' => 1,
+        ]);
+        $itemB = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+            'order_number' => 2,
+        ]);
+        $itemC = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+            'order_number' => 3,
+        ]);
+
+        // 実行
+        $items = Profile::of('Feeldee')->first()->items;
+
+        // 評価
+        $this->assertEquals(3, $items->count(), 'アイテムリストのデフォルトの並び順は、表示順であること');
+        $this->assertEquals($itemA->id, $items[0]->id, '表示順が最初に来ること');
+        $this->assertEquals($itemB->id, $items[1]->id, '次に表示順が次に来ること');
+        $this->assertEquals($itemC->id, $items[2]->id, '一番古い表示順が最後に来ること');
     }
 }

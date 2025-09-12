@@ -1438,11 +1438,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * コレクションソートローカルスコープ
+     * 投稿リストの並び順
      *
-     * - 投稿コレクションを最新のものから並び替えできることを確認します。
+     * - 投稿リストを最新のものから並び替えできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_latest()
     {
@@ -1468,18 +1468,18 @@ class LocationTest extends TestCase
         $locations = Profile::of('Feeldee')->first()->locations()->orderLatest()->get();
 
         // 評価
-        $this->assertEquals(3, $locations->count(), '投稿コレクションを最新のものから並び替えできること');
+        $this->assertEquals(3, $locations->count(), '投稿リストを最新のものから並び替えできること');
         $this->assertEquals($locationB->id, $locations[0]->id, '最新の投稿が最初に来ること');
         $this->assertEquals($locationA->id, $locations[1]->id, '次に新しい投稿が次に来ること');
         $this->assertEquals($locationC->id, $locations[2]->id, '一番古い投稿が最後に来ること');
     }
 
     /**
-     * コレクションソートローカルスコープ
-     * 
-     * - 投稿コレクションを古いものから並び替えできることを確認します。
+     * 投稿リストの並び順
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * - 投稿リストを古いものから並び替えできることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_oldest()
     {
@@ -1505,19 +1505,19 @@ class LocationTest extends TestCase
         $locations = Location::by('Feeldee')->orderOldest()->get();
 
         // 評価
-        $this->assertEquals(3, $locations->count(), '投稿コレクションを古いものから並び替えできること');
+        $this->assertEquals(3, $locations->count(), '投稿リストを古いものから並び替えできること');
         $this->assertEquals($locationC->id, $locations[0]->id, '一番古い投稿が最初に来ること');
         $this->assertEquals($locationA->id, $locations[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($locationB->id, $locations[2]->id, '最新の投稿が最後に来ること');
     }
 
     /**
-     * コレクションソートローカルスコープ
+     * 投稿リストの並び順
      *
-     * - 投稿コレクションを最新(latest)文字列を直接指定してソートすることもできることを確認します。
-     * - 投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを最新(latest)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_string_latest_and_oldest()
     {
@@ -1544,24 +1544,24 @@ class LocationTest extends TestCase
         $locationsOldest = Location::by('Feeldee')->orderDirection('oldest')->get();
 
         // 評価
-        $this->assertEquals(3, $locationsLatest->count(), '投稿コレクションを最新(latest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $locationsLatest->count(), '投稿リストを最新(latest)文字列を直接指定してソートすることもできること');
         $this->assertEquals($locationB->id, $locationsLatest[0]->id, '最新の投稿が最初に来ること');
         $this->assertEquals($locationA->id, $locationsLatest[1]->id, '次に新しい投稿が次に来ること');
         $this->assertEquals($locationC->id, $locationsLatest[2]->id, '一番古い投稿が最後に来ること');
 
-        $this->assertEquals(3, $locationsOldest->count(), '投稿コレクションを古い(oldest)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $locationsOldest->count(), '投稿リストを古い(oldest)文字列を直接指定してソートすることもできること');
         $this->assertEquals($locationC->id, $locationsOldest[0]->id, '一番古い投稿が最初に来ること');
         $this->assertEquals($locationA->id, $locationsOldest[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($locationB->id, $locationsOldest[2]->id, '最新の投稿が最後に来ること');
     }
 
     /**
-     * コレクションソートローカルスコープ
+     * 投稿リストの並び順
      *
-     * - 投稿コレクションを最新(desc)文字列を直接指定してソートすることもできることを確認します。
-     * - 投稿コレクションを古い(asc)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを最新(desc)文字列を直接指定してソートすることもできることを確認します。
+     * - 投稿リストを古い(asc)文字列を直接指定してソートすることもできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソートローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
      */
     public function test_collection_sort_string_desc_and_asc()
     {
@@ -1588,12 +1588,12 @@ class LocationTest extends TestCase
         $locationsOldest = Profile::of('Feeldee')->first()->locations()->orderDirection('asc')->get();
 
         // 評価
-        $this->assertEquals(3, $locationsLatest->count(), '投稿コレクションを最新(desc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $locationsLatest->count(), '投稿リストを最新(desc)文字列を直接指定してソートすることもできること');
         $this->assertEquals($locationB->id, $locationsLatest[0]->id, '最新の投稿が最初に来ること');
         $this->assertEquals($locationA->id, $locationsLatest[1]->id, '次に新しい投稿が次に来ること');
         $this->assertEquals($locationC->id, $locationsLatest[2]->id, '一番古い投稿が最後に来ること');
 
-        $this->assertEquals(3, $locationsOldest->count(), '投稿コレクションを古い(asc)文字列を直接指定してソートすることもできること');
+        $this->assertEquals(3, $locationsOldest->count(), '投稿リストを古い(asc)文字列を直接指定してソートすることもできること');
         $this->assertEquals($locationC->id, $locationsOldest[0]->id, '一番古い投稿が最初に来ること');
         $this->assertEquals($locationA->id, $locationsOldest[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($locationB->id, $locationsOldest[2]->id, '最新の投稿が最後に来ること');

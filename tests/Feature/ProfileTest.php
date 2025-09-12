@@ -679,11 +679,11 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * ユーザIDローカルスコープ
+     * ユーザIDによるプロフィールの特定
      * 
      * - ユーザIDを指定してプロフィールを特定することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザIDローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザIDによるプロフィールの特定
      */
     public function test_user_id()
     {
@@ -701,11 +701,11 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * ニックネームローカルスコープ
+     * ニックネームによるプロフィールの特定
      * 
      * - ニックネームを指定してプロフィールを特定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームローカルスコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィールの特定
      */
     public function test_nickname_filter()
     {
@@ -723,11 +723,11 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * コンフィグ設定状況ローカルコープ
+     * コンフィグ設定状況によるプロフィールの絞り込み
      * 
      * - コンフィグ値でのプロフィールの絞り込みができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ設定状況ローカルコープ
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#コンフィグ設定状況によるプロフィールの絞り込み
      */
     public function test_config_value_filter()
     {
