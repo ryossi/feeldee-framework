@@ -140,19 +140,31 @@ class Reply extends Model
     }
 
     /**
-     * 最新のものから並び替えるクエリのスコープを設定
+     * 最新のものから並び替えるローカルスコープ
      */
-    public function scopeOrderLatest($query)
+    public function scopeOrderLatest($query): void
     {
-        return $query->latest('replied_at');
+        $query->latest('replied_at');
     }
 
     /**
-     * 古いものから並び替えるクエリのスコープを設定
+     * 古いものから並び替えるローカルスコープ
      */
-    public function scopeOrderOldest($query)
+    public function scopeOrderOldest($query): void
     {
-        return $query->oldest('replied_at');
+        $query->oldest('replied_at');
+    }
+
+    /**
+     * 最新(latest|desc)または古いもの(oldest|asc)の文字列を直接指定してソートするローカルスコープ
+     */
+    public function scopeOrderDirection($query, string $direction = 'asc'): void
+    {
+        if ($direction == 'desc' || $direction == 'latest') {
+            $query->orderLatest();
+        } else if ($direction == 'asc' || $direction == 'oldest') {
+            $query->orderOldest();
+        }
     }
 
     /**

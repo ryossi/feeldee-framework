@@ -742,11 +742,11 @@ class ReplyTest extends TestCase
     /**
      * 返信リストの並び順
      * 
-     * - 独自のSQLにおいてソート指定することもできることを確認します。
+     * - 最新の返信から順番に取得する場合は、返信日時降順でソートできることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信リストの並び順
      */
-    public function test_replies_order_custom_sql()
+    public function test_replies_order_latest()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -770,5 +770,75 @@ class ReplyTest extends TestCase
 
         // 評価
         Assert::assertEquals([3, 2, 1], $replies->pluck('id')->toArray(), '独自のSQLにおいてソート指定することもできること');
+    }
+
+    /**
+     * 返信リストの並び順
+     * 
+     * - 最新(latest|desc)の文字列を直接指定してソートすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント# 返信リストの並び順
+     */
+    public function test_comments_order_direction_latest_or_desc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Journal::factory(1, ['posted_at' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00',
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $repliesLatest = Reply::by('test456')->orderDirection('latest')->get();
+        $repliesDesc = Reply::by('test456')->orderDirection('desc')->get();
+
+        // 評価
+        Assert::assertEquals([3, 2, 1], $repliesLatest->pluck('id')->toArray(), '最新(latest)の文字列を直接指定してソートすることができること');
+        Assert::assertEquals([3, 2, 1], $repliesDesc->pluck('id')->toArray(), '最新(desc)の文字列を直接指定してソートすることができること');
+    }
+
+    /**
+     *  返信リストの並び順
+     * 
+     * - 古いもの(oldest|asc)の文字列を直接指定してソートすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント# 返信リストの並び順
+     */
+    public function test_comments_order_direction_oldest_or_asc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Journal::factory(1, ['posted_at' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3, [
+                        'replyer_nickname' => 'test456',
+                        'replied_at' => '2025-07-24 10:00:00',
+                    ])->sequence(
+                        ['id' => 1, 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $repliesOldest = Reply::by('test456')->orderDirection('oldest')->get();
+        $repliesAsc = Reply::by('test456')->orderDirection('asc')->get();
+
+        // 評価
+        Assert::assertEquals([1, 2, 3], $repliesOldest->pluck('id')->toArray(), '古い(oldest)の文字列を直接指定してソートすることができること');
+        Assert::assertEquals([1, 2, 3], $repliesAsc->pluck('id')->toArray(), '古い(asc)の文字列を直接指定してソートすることができること');
     }
 }

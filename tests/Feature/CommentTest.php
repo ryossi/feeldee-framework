@@ -798,7 +798,7 @@ class CommentTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメントリストの並び順
      */
-    public function test_comments_order_asc()
+    public function test_comments_order_oldest()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -831,11 +831,11 @@ class CommentTest extends TestCase
     /**
      * コメントリストの並び順
      * 
-     * - 独自のSQLにおいてソート指定することも可能であることを確認します。
+     * - 最新のものから順番に並び替えたい場合は、コメント日時降順でソートできることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメントリストの並び順
      */
-    public function test_comments_order_custom_sql()
+    public function test_comments_order_latest()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -861,6 +861,82 @@ class CommentTest extends TestCase
         $comments = Comment::by('ユーザ1')->orderLatest()->get();
 
         // 評価
-        Assert::assertEquals([$comment3->id, $comment2->id, $comment1->id], $comments->pluck('id')->toArray(), '独自のSQLにおいてソート指定することも可能であること');
+        Assert::assertEquals([$comment3->id, $comment2->id, $comment1->id], $comments->pluck('id')->toArray(), '最新のものから順番に並び替えたい場合は、コメント日時降順でソートできること');
+    }
+
+    /**
+     * コメントリストの並び順
+     * 
+     * - 最新(latest|desc)の文字列を直接指定してソートすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメントリストの並び順
+     */
+    public function test_comments_order_direction_latest_or_desc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        $post = $profile->journals->first();
+        $comment1 = $post->comments()->create([
+            'body' => '最初のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 09:00:00'
+        ]);
+        $comment2 = $post->comments()->create([
+            'body' => '次のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 10:00:00'
+        ]);
+        $comment3 = $post->comments()->create([
+            'body' => '最後のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 11:00:00'
+        ]);
+
+        // 実行
+        $commentsLatest = Comment::by('ユーザ1')->orderDirection('latest')->get();
+        $commentsDesc = Comment::by('ユーザ1')->orderDirection('desc')->get();
+
+        // 評価
+        Assert::assertEquals([$comment3->id, $comment2->id, $comment1->id], $commentsLatest->pluck('id')->toArray(), '最新(latest)の文字列を直接指定してソートすることができること');
+        Assert::assertEquals([$comment3->id, $comment2->id, $comment1->id], $commentsDesc->pluck('id')->toArray(), '最新(desc)の文字列を直接指定してソートすることができること');
+    }
+
+    /**
+     * コメントリストの並び順
+     * 
+     * - 古いもの(oldest|asc)の文字列を直接指定してソートすることができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメントリストの並び順
+     */
+    public function test_comments_order_direction_oldest_or_asc()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        $post = $profile->journals->first();
+        $comment1 = $post->comments()->create([
+            'body' => '最初のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 09:00:00'
+        ]);
+        $comment2 = $post->comments()->create([
+            'body' => '次のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 10:00:00'
+        ]);
+        $comment3 = $post->comments()->create([
+            'body' => '最後のコメント',
+            'commenter_nickname' => 'ユーザ1',
+            'commented_at' => '2025-07-24 11:00:00'
+        ]);
+
+        // 実行
+        $commentsOldest = Comment::by('ユーザ1')->orderDirection('oldest')->get();
+        $commentsAsc = Comment::by('ユーザ1')->orderDirection('asc')->get();
+
+        // 評価
+        Assert::assertEquals([$comment1->id, $comment2->id, $comment3->id], $commentsOldest->pluck('id')->toArray(), '古いもの(oldest)の文字列を直接指定してソートすることができること');
+        Assert::assertEquals([$comment1->id, $comment2->id, $comment3->id], $commentsAsc->pluck('id')->toArray(), '古いもの(asc)の文字列を直接指定してソートすることができること');
     }
 }
