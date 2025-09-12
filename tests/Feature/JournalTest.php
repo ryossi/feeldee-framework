@@ -1353,6 +1353,43 @@ class JournalTest extends TestCase
     }
 
     /**
+     * 記録リストの並び順
+     * 
+     * - 記録リストのデフォルトの並び順は、投稿日時降順（最新順）であることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/記録#記録リストの並び順
+     */
+    public function test_collection_sort_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $journals = Profile::of('Feeldee')->first()->journals()->get();
+
+        // 評価
+        $this->assertEquals(3, $journals->count());
+        $this->assertEquals($postB->id, $journals[0]->id);
+        $this->assertEquals($postA->id, $journals[1]->id);
+        $this->assertEquals($postC->id, $journals[2]->id);
+    }
+
+    /**
      * 投稿写真リストの自動維持
      * 
      * - 投稿の記事内容に含まれる写真のコレクションであることを確認します。

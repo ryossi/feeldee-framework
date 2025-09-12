@@ -81,7 +81,7 @@ class Item extends Post
      */
     protected static function booted(): void
     {
-        static::addGlobalScope('order_number', function ($builder) {
+        static::addGlobalScope('defaultSort', function ($builder) {
             $builder->orderBy('order_number');
         });
 

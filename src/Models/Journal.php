@@ -66,6 +66,10 @@ class Journal extends Post
      */
     protected static function booted(): void
     {
+        static::addGlobalScope('defaultSort', function ($builder) {
+            $builder->orderByDesc('posted_at');
+        });
+
         static::saving(
             function (self $model) {
                 // 投稿日時
