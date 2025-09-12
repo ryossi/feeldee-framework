@@ -1555,11 +1555,11 @@ class JournalTest extends TestCase
     }
 
     /**
-     * 投稿リストの並び順
+     * コレクションソート
      *
-     * - 投稿リストを最新のものから並び替えできることを確認します。
+     * - 記録リストを最新のものから並び替えできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソート
      */
     public function test_collection_sort_latest()
     {
@@ -1585,18 +1585,18 @@ class JournalTest extends TestCase
         $journals = Profile::of('Feeldee')->first()->journals()->orderLatest()->get();
 
         // 評価
-        $this->assertEquals(3, $journals->count(), '投稿リストを最新のものから並び替えできること');
-        $this->assertEquals($postB->id, $journals[0]->id, '最新の投稿が最初に来ること');
-        $this->assertEquals($postA->id, $journals[1]->id, '次に新しい投稿が次に来ること');
-        $this->assertEquals($postC->id, $journals[2]->id, '一番古い投稿が最後に来ること');
+        $this->assertEquals(3, $journals->count());
+        $this->assertEquals($postB->id, $journals[0]->id);
+        $this->assertEquals($postA->id, $journals[1]->id);
+        $this->assertEquals($postC->id, $journals[2]->id);
     }
 
     /**
-     * 投稿リストの並び順
+     * コレクションソート
      * 
-     * - 投稿リストを古いものから並び替えできることを確認します。
+     * - 記録リストを古いものから並び替えできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソート
      */
     public function test_collection_sort_oldest()
     {
@@ -1622,19 +1622,19 @@ class JournalTest extends TestCase
         $journals = Journal::by('Feeldee')->orderOldest()->get();
 
         // 評価
-        $this->assertEquals(3, $journals->count(), '投稿リストを古いものから並び替えできること');
-        $this->assertEquals($postC->id, $journals[0]->id, '一番古い投稿が最初に来ること');
-        $this->assertEquals($postA->id, $journals[1]->id, '次に古い投稿が次に来ること');
-        $this->assertEquals($postB->id, $journals[2]->id, '最新の投稿が最後に来ること');
+        $this->assertEquals(3, $journals->count());
+        $this->assertEquals($postC->id, $journals[0]->id);
+        $this->assertEquals($postA->id, $journals[1]->id);
+        $this->assertEquals($postB->id, $journals[2]->id);
     }
 
     /**
-     * 投稿リストの並び順
+     * コレクションソート
      *
-     * - 投稿リストを最新(latest)文字列を直接指定してソートすることもできることを確認します。
-     * - 投稿リストを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
+     * - 記録リストを最新(latest)文字列を直接指定してソートすることもできることを確認します。
+     * - 記録リストを古い(oldest)文字列を直接指定してソートすることもできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソート
      */
     public function test_collection_sort_string_latest_and_oldest()
     {
@@ -1661,24 +1661,24 @@ class JournalTest extends TestCase
         $journalsOldest = Journal::by('Feeldee')->orderDirection('oldest')->get();
 
         // 評価
-        $this->assertEquals(3, $journalsLatest->count(), '投稿リストを最新(latest)文字列を直接指定してソートすることもできること');
-        $this->assertEquals($postB->id, $journalsLatest[0]->id, '最新の投稿が最初に来ること');
-        $this->assertEquals($postA->id, $journalsLatest[1]->id, '次に新しい投稿が次に来ること');
-        $this->assertEquals($postC->id, $journalsLatest[2]->id, '一番古い投稿が最後に来ること');
+        $this->assertEquals(3, $journalsLatest->count());
+        $this->assertEquals($postB->id, $journalsLatest[0]->id);
+        $this->assertEquals($postA->id, $journalsLatest[1]->id);
+        $this->assertEquals($postC->id, $journalsLatest[2]->id);
 
-        $this->assertEquals(3, $journalsOldest->count(), '投稿リストを古い(oldest)文字列を直接指定してソートすることもできること');
-        $this->assertEquals($postC->id, $journalsOldest[0]->id, '一番古い投稿が最初に来ること');
-        $this->assertEquals($postA->id, $journalsOldest[1]->id, '次に古い投稿が次に来ること');
-        $this->assertEquals($postB->id, $journalsOldest[2]->id, '最新の投稿が最後に来ること');
+        $this->assertEquals(3, $journalsOldest->count());
+        $this->assertEquals($postC->id, $journalsOldest[0]->id);
+        $this->assertEquals($postA->id, $journalsOldest[1]->id);
+        $this->assertEquals($postB->id, $journalsOldest[2]->id);
     }
 
     /**
-     * 投稿リストの並び順
+     * コレクションソート
      *
-     * - 投稿リストを最新(desc)文字列を直接指定してソートすることもできることを確認します。
-     * - 投稿リストを古い(asc)文字列を直接指定してソートすることもできることを確認します。
+     * - 記録リストを最新(desc)文字列を直接指定してソートすることもできることを確認します。
+     * - 記録リストを古い(asc)文字列を直接指定してソートすることもできることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿リストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#コレクションソート
      */
     public function test_collection_sort_string_desc_and_asc()
     {
@@ -1705,15 +1705,15 @@ class JournalTest extends TestCase
         $journalsOldest = Profile::of('Feeldee')->first()->journals()->orderDirection('asc')->get();
 
         // 評価
-        $this->assertEquals(3, $journalsLatest->count(), '投稿リストを最新(desc)文字列を直接指定してソートすることもできること');
-        $this->assertEquals($postB->id, $journalsLatest[0]->id, '最新の投稿が最初に来ること');
-        $this->assertEquals($postA->id, $journalsLatest[1]->id, '次に新しい投稿が次に来ること');
-        $this->assertEquals($postC->id, $journalsLatest[2]->id, '一番古い投稿が最後に来ること');
+        $this->assertEquals(3, $journalsLatest->count());
+        $this->assertEquals($postB->id, $journalsLatest[0]->id);
+        $this->assertEquals($postA->id, $journalsLatest[1]->id);
+        $this->assertEquals($postC->id, $journalsLatest[2]->id);
 
-        $this->assertEquals(3, $journalsOldest->count(), '投稿リストを古い(asc)文字列を直接指定してソートすることもできること');
-        $this->assertEquals($postC->id, $journalsOldest[0]->id, '一番古い投稿が最初に来ること');
-        $this->assertEquals($postA->id, $journalsOldest[1]->id, '次に古い投稿が次に来ること');
-        $this->assertEquals($postB->id, $journalsOldest[2]->id, '最新の投稿が最後に来ること');
+        $this->assertEquals(3, $journalsOldest->count());
+        $this->assertEquals($postC->id, $journalsOldest[0]->id);
+        $this->assertEquals($postA->id, $journalsOldest[1]->id);
+        $this->assertEquals($postB->id, $journalsOldest[2]->id);
     }
 
     /**
@@ -1738,6 +1738,6 @@ class JournalTest extends TestCase
         $journals = Journal::by('Feeldee')->get();
 
         // 評価
-        $this->assertEquals(3, $journals->count(), '記録を投稿者のニックネームで絞り込むことができること');
+        $this->assertEquals(3, $journals->count());
     }
 }
