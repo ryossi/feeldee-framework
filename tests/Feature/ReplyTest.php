@@ -841,4 +841,34 @@ class ReplyTest extends TestCase
         Assert::assertEquals([1, 2, 3], $repliesOldest->pluck('id')->toArray(), '古い(oldest)の文字列を直接指定してソートすることができること');
         Assert::assertEquals([1, 2, 3], $repliesAsc->pluck('id')->toArray(), '古い(asc)の文字列を直接指定してソートすることができること');
     }
+
+    /**
+     * 返信者による絞り込み
+     * 
+     * - 返信者のニックネームで返信を絞り込むことができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信者による絞り込み
+     */
+    public function test_filter_by_replyer_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'feeldee'])->has(
+            Journal::factory(1, ['posted_at' => '2025-07-24'])->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['id' => 1, 'replyer_nickname' => 'ユーザ1', 'replied_at' => '2025-07-24 10:00:00'],
+                        ['id' => 2, 'replyer_nickname' => 'ユーザ1', 'replied_at' => '2025-07-24 11:00:00'],
+                        ['id' => 3, 'replyer_nickname' => 'ユーザ2', 'replied_at' => '2025-07-24 12:00:00']
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::by('ユーザ1')->get();
+
+        // 評価
+        Assert::assertCount(2, $replies, '返信者のニックネームで返信を絞り込むことができること');
+    }
 }

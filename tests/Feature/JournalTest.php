@@ -1715,4 +1715,29 @@ class JournalTest extends TestCase
         $this->assertEquals($postA->id, $journalsOldest[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($postB->id, $journalsOldest[2]->id, '最新の投稿が最後に来ること');
     }
+
+    /**
+     * 投稿者による絞り込み
+     * 
+     * - 記録を投稿者のニックネームで絞り込むことができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿者による絞り込み
+     */
+    public function test_filter_by_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->has(Journal::factory()->count(3))->create();
+        Profile::factory(
+            ['nickname' => 'TestUser']
+        )->has(Journal::factory()->count(2))->create();
+
+        // 実行
+        $journals = Journal::by('Feeldee')->get();
+
+        // 評価
+        $this->assertEquals(3, $journals->count(), '記録を投稿者のニックネームで絞り込むことができること');
+    }
 }

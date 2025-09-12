@@ -126,6 +126,36 @@ abstract class Post extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    protected $order_column = null;
+
+    /**
+     * 最新のものから並び替えるローカルスコープ
+     */
+    public function scopeOrderLatest($query): void
+    {
+        $query->latest($this->order_column);
+    }
+
+    /**
+     * 古いものから並び替えるローカルスコープ
+     */
+    public function scopeOrderOldest($query): void
+    {
+        $query->oldest($this->order_column);
+    }
+
+    /**
+     * 最新(latest|desc)または古いもの(oldest|asc)の文字列を直接指定してソートするローカルスコープ
+     */
+    public function scopeOrderDirection($query, string $direction = 'asc'): void
+    {
+        if ($direction == 'desc' || $direction == 'latest') {
+            $query->latest($this->order_column);
+        } else if ($direction == 'asc' || $direction == 'oldest') {
+            $query->oldest($this->order_column);
+        }
+    }
+
     /**
      * 投稿者プロフィールのニックネームで絞り込むためのローカルスコープ
      */
@@ -216,45 +246,5 @@ abstract class Post extends Model
             });
         });
         return $query;
-    }
-
-    protected $order_column = null;
-
-    /**
-     * 投稿コレクションを最新のものから並び替えます。
-     * 
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return void
-     */
-    public function scopeOrderLatest($query): void
-    {
-        $query->latest($this->order_column);
-    }
-
-    /**
-     * 投稿コレクションを古いものから並び替えます。
-     * 
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @return void
-     */
-    public function scopeOrderOldest($query): void
-    {
-        $query->oldest($this->order_column);
-    }
-
-    /**
-     * 投稿コレクションを文字列を直接指定してソートします。
-     * 
-     * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $direction 最新(latest|desc)または古いもの(oldest|asc)
-     * @return void
-     */
-    public function scopeOrderDirection($query, string $direction = 'asc'): void
-    {
-        if ($direction == 'desc' || $direction == 'latest') {
-            $query->latest($this->order_column);
-        } else if ($direction == 'asc' || $direction == 'oldest') {
-            $query->oldest($this->order_column);
-        }
     }
 }

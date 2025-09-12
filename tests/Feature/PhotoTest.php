@@ -1476,4 +1476,29 @@ class PhotoTest extends TestCase
         $this->assertEquals($postA->id, $photosOldest[1]->id, '次に古い投稿が次に来ること');
         $this->assertEquals($postB->id, $photosOldest[2]->id, '最新の投稿が最後に来ること');
     }
+
+    /**
+     * 投稿者による絞り込み
+     * 
+     * - 写真を投稿者のニックネームで絞り込むことができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿者による絞り込み
+     */
+    public function test_filter_by_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->has(Photo::factory()->count(5))->create();
+        Profile::factory(
+            ['nickname' => 'TestUser']
+        )->has(Photo::factory()->count(8))->create();
+
+        // 実行
+        $photos = Photo::by('Feeldee')->get();
+
+        // 評価
+        $this->assertEquals(5, $photos->count(), '写真を投稿者のニックネームで絞り込むことができること');
+    }
 }

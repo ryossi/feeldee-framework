@@ -1457,4 +1457,29 @@ class ItemTest extends TestCase
         $this->assertEquals($itemB->id, $items[1]->id, '次に表示順が次に来ること');
         $this->assertEquals($itemC->id, $items[2]->id, '一番古い表示順が最後に来ること');
     }
+
+    /**
+     * 投稿者による絞り込み
+     * 
+     * - アイテムを投稿者のニックネームで絞り込むことができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿者による絞り込み
+     */
+    public function test_filter_by_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->has(Item::factory()->count(1))->create();
+        Profile::factory(
+            ['nickname' => 'TestUser']
+        )->has(Item::factory()->count(5))->create();
+
+        // 実行
+        $items = Item::by('Feeldee')->get();
+
+        // 評価
+        $this->assertEquals(1, $items->count(), 'アイテムを投稿者のニックネームで絞り込むことができること');
+    }
 }

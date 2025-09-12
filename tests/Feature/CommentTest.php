@@ -939,4 +939,37 @@ class CommentTest extends TestCase
         Assert::assertEquals([$comment1->id, $comment2->id, $comment3->id], $commentsOldest->pluck('id')->toArray(), '古いもの(oldest)の文字列を直接指定してソートすることができること');
         Assert::assertEquals([$comment1->id, $comment2->id, $comment3->id], $commentsAsc->pluck('id')->toArray(), '古いもの(asc)の文字列を直接指定してソートすることができること');
     }
+
+    /**
+     * コメント者による絞り込み
+     * 
+     * - コメント者のニックネームでコメントを絞り込むことができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者による絞り込み
+     */
+    public function test_filter_by_commenter_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'feeldee'])->has(Journal::factory(['posted_at' => '2025-07-24'])->count(1))->create();
+        $journal = $profile->journals->first();
+        $journal->comments()->create([
+            'body' => 'ユーザ1の最初のコメント',
+            'commenter_nickname' => 'ユーザ1',
+        ]);
+        $journal->comments()->create([
+            'body' => 'ユーザ1の次のコメント',
+            'commenter_nickname' => 'ユーザ1',
+        ]);
+        $journal->comments()->create([
+            'body' => 'ユーザ2の最後のコメント',
+            'commenter_nickname' => 'ユーザ2',
+        ]);
+
+        // 実行
+        $comments = Comment::by('ユーザ1')->get();
+
+        // 評価
+        Assert::assertCount(2, $comments, 'コメント者のニックネームでコメントを絞り込むことができること');
+    }
 }
