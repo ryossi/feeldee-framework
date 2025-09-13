@@ -76,6 +76,10 @@ class Photo extends Post
      */
     protected static function booted(): void
     {
+        static::addGlobalScope('defaultSort', function ($builder) {
+            $builder->orderByDesc('posted_at');
+        });
+
         static::creating(function (Self $model) {
             // 写真準備
             $model->prepare();
