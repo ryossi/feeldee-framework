@@ -429,28 +429,4 @@ class Journal extends Post
 
         return $query;
     }
-
-    /**
-     * 投稿日を条件に含むようにクエリのスコープを設定
-     */
-    public static function scopeOfDate($query, mixed $post_date): void
-    {
-        $query->whereDate('post_date', $post_date);
-    }
-
-    /**
-     * 指定日より前の投稿のみを含むようにクエリのスコープを設定
-     */
-    public static function scopeBefore($query, mixed $date): void
-    {
-        $query->whereDate('post_date', '<', $date);
-    }
-
-    /**
-     * 指定日より後の投稿のみを含むようにクエリのスコープを設定
-     */
-    public static function scopeAfter($query, mixed $date): void
-    {
-        $query->whereDate('post_date', '>', $date);
-    }
 }

@@ -413,4 +413,280 @@ class PostTest extends TestCase
         // 評価
         $this->assertEquals(2, $photos->count());
     }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時の未満で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_before()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-22 10:00:00'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-31 23:59:59'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 00:00:00'),
+        ]);
+
+        // 実行
+        $journals = Journal::before('2025-09-01 00:00:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $journals->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時の未満で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_before_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-22 10:00:00'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 09:29:59'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 09:30:00'),
+        ]);
+
+        // 実行
+        $journals = Journal::before('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(2, $journals->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時のより先で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_after()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-31 23:59:59'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 00:00:00'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 00:00:01'),
+        ]);
+
+        // 実行
+        $photos = Photo::after('2025-09-01 00:00:00')->get();
+
+        // 評価
+        $this->assertEquals(1, $photos->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時のより先で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_after_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-31 23:59:59'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 00:00:00'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 00:00:01'),
+        ]);
+
+        // 実行
+        $photos = Photo::after('2025-09-01')->get();
+
+        // 評価
+        $this->assertEquals(1, $photos->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時の以前で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_beforeEquals()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-22 10:00:00'),
+        ]);
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-31 23:59:59'),
+        ]);
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 09:30:00'),
+        ]);
+
+        // 実行
+        $locations = Location::beforeEquals('2025-09-01 09:30:00')->get();
+
+        // 評価
+        $this->assertEquals(3, $locations->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時の以前で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_beforeEquals_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-22 10:00:00'),
+        ]);
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-08-31 23:59:59'),
+        ]);
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 09:30:00'),
+        ]);
+
+        // 実行
+        $locations = Location::beforeEquals('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(3, $locations->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時の以降で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_afterEquals()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 09:59:59'),
+        ]);
+        Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 10:00:00'),
+        ]);
+        Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-02 09:30:00'),
+        ]);
+
+        // 実行
+        $items = Item::afterEquals('2025-09-01 10:00:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $items->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時の以降で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_afterEquals_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 09:59:59'),
+        ]);
+        Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 10:00:00'),
+        ]);
+        Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-02 09:30:00'),
+        ]);
+
+        // 実行
+        $items = Item::afterEquals('2025-09-01')->get();
+
+        // 評価
+        $this->assertEquals(3, $items->count());
+    }
 }

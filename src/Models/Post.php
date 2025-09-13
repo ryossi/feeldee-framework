@@ -197,8 +197,8 @@ abstract class Post extends Model
      */
     public function scopeBetween(Builder $query, $start, $end): void
     {
-        // $start, $end が文字列の場合、省略された時分秒を補完
         if (is_string($start)) {
+            // 範囲指定で時刻の一部または全部を省略した場合、範囲の開始時刻が00:00:00となるに不足部分が補われます。
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
                 $start .= ' 00:00:00';
             } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $start)) {
@@ -208,6 +208,7 @@ abstract class Post extends Model
             }
         }
         if (is_string($end)) {
+            // 範囲指定で時刻の一部または全部を省略した場合、範囲の終了時刻が23:59:59となるに不足部分が補われます。
             if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
                 $end .= ' 23:59:59';
             } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $end)) {
@@ -217,6 +218,90 @@ abstract class Post extends Model
             }
         }
         $query->whereBetween('posted_at', [$start, $end]);
+    }
+
+    /**
+     * 投稿日時の未満で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBefore(Builder $query, $datetime): void
+    {
+        if (is_string($datetime)) {
+            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
+                $datetime .= ' 00:00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
+                $datetime .= ':00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
+                $datetime .= ':00';
+            }
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+        }
+        $query->where('posted_at', '<', $datetime);
+    }
+
+    /**
+     * 投稿日時のより先で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfter(Builder $query, $datetime): void
+    {
+        if (is_string($datetime)) {
+            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
+                $datetime .= ' 00:00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
+                $datetime .= ':00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
+                $datetime .= ':00';
+            }
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+        }
+        $query->where('posted_at', '>', $datetime);
+    }
+
+    /**
+     * 投稿日時の以前で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBeforeEquals(Builder $query, $datetime): void
+    {
+        if (is_string($datetime)) {
+            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
+                $datetime .= ' 00:00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
+                $datetime .= ':00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
+                $datetime .= ':00';
+            }
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+        }
+        $query->where('posted_at', '<=', $datetime);
+    }
+
+    /**
+     * 投稿日時の以降で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfterEquals(Builder $query, $datetime): void
+    {
+        if (is_string($datetime)) {
+            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
+                $datetime .= ' 00:00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
+                $datetime .= ':00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
+                $datetime .= ':00';
+            }
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+        }
+        $query->where('posted_at', '>=', $datetime);
     }
 
     // ========================== ここまで整理ずみ ==========================
