@@ -311,4 +311,106 @@ class PostTest extends TestCase
         // 評価
         $this->assertEquals(3, $journals->count());
     }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 投稿日時の範囲を指定して取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_between()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-22 10:00:00'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-12 09:30:00'),
+        ]);
+
+        // 実行
+        $photos = Photo::between('2025-09-01 09:00:00', '2025-09-30 18:00:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $photos->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 範囲指定で時刻の全部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_between_time_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 00:00:00'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-30 23:59:59'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-12 09:30:00'),
+        ]);
+
+        // 実行
+        $photos = Photo::between('2025-09-01', '2025-09-30')->get();
+
+        // 評価
+        $this->assertEquals(3, $photos->count());
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 範囲指定で時刻の一部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_between_time_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-01 09:00:01'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-30 18:00:59'),
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-30 18:30:00'),
+        ]);
+
+        // 実行
+        $photos = Photo::between('2025-09-01 09:00', '2025-09-30 18:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $photos->count());
+    }
 }

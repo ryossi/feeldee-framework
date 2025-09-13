@@ -192,6 +192,33 @@ abstract class Post extends Model
         }
     }
 
+    /**
+     * 投稿日時の範囲を指定して取得するためのローカルスコープ
+     */
+    public function scopeBetween(Builder $query, $start, $end): void
+    {
+        // $start, $end が文字列の場合、省略された時分秒を補完
+        if (is_string($start)) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
+                $start .= ' 00:00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $start)) {
+                $start .= ':00:00';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $start)) {
+                $start .= ':00';
+            }
+        }
+        if (is_string($end)) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+                $end .= ' 23:59:59';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $end)) {
+                $end .= ':59:59';
+            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $end)) {
+                $end .= ':59';
+            }
+        }
+        $query->whereBetween('posted_at', [$start, $end]);
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**

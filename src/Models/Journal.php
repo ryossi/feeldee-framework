@@ -431,20 +431,6 @@ class Journal extends Post
     }
 
     /**
-     * 投稿日の範囲を条件に指定して投稿リスト検索するクエリのスコープを設定
-     */
-    public static function scopeBetween($query, mixed $from = null, mixed $to = null)
-    {
-        if (!is_null($from)) {
-            $query->whereDate('post_date', '>=', $from);
-        }
-        if (!is_null($to)) {
-            $query->whereDate('post_date', '<=', $to);
-        }
-        return $query;
-    }
-
-    /**
      * 投稿日を条件に含むようにクエリのスコープを設定
      */
     public static function scopeOfDate($query, mixed $post_date): void
