@@ -185,7 +185,7 @@ class PostTest extends TestCase
      *
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿者による絞り込み
      */
-    public function test_filter_by_nickname()
+    public function test_filter_by()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -211,11 +211,13 @@ class PostTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
      */
-    public function test_filter_by_posted_at()
+    public function test_filter_at()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
         Journal::factory()->create([
             'profile_id' => $profile->id,
             'title' => 'テスト投稿1',
@@ -229,13 +231,84 @@ class PostTest extends TestCase
         Journal::factory()->create([
             'profile_id' => $profile->id,
             'title' => 'テスト投稿3',
-            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+            'posted_at' => Carbon::parse('2025-09-12 09:30:00'),
         ]);
 
         // 実行
-        $journal = Journal::at('2025-04-23 10:00:00')->first();
+        $journal = Journal::by('Feeldee')->at('2025-09-12 09:30:00')->first();
 
         // 評価
-        $this->assertEquals("テスト投稿2", $journal->title);
+        $this->assertEquals("テスト投稿3", $journal->title);
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 時刻の一部を省略した場合には、指定した時刻での前方一致検索となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_at_partial_time()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'title' => 'テスト投稿1',
+            'posted_at' => Carbon::parse('2025-09-12 09:32:00'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'title' => 'テスト投稿2',
+            'posted_at' => Carbon::parse('2025-09-12 09:31:00'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'title' => 'テスト投稿3',
+            'posted_at' => Carbon::parse('2025-09-12 09:30:10'),
+        ]);
+
+        // 実行
+        $journal = Journal::by('Feeldee')->at('2025-09-12 09:30')->first();
+
+        // 評価
+        $this->assertEquals("テスト投稿3", $journal->title);
+    }
+
+    /**
+     * 投稿日時による絞り込み
+     * 
+     * - 時刻そのものを省略した場合には、指定した日付での前方一致検索となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿日時による絞り込み
+     */
+    public function test_filter_at_date_only()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-12 09:30:02'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-12 09:30:01'),
+        ]);
+        Journal::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-09-12 09:30:00'),
+        ]);
+
+        // 実行
+        $journals = Journal::by('Feeldee')->at('2025-09-12')->get();
+
+        // 評価
+        $this->assertEquals(3, $journals->count());
     }
 }

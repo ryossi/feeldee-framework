@@ -170,14 +170,26 @@ abstract class Post extends Model
      */
     public function scopeAt(Builder $query, $datetime): void
     {
-        // 時刻が指定されていない場合は、00:00:00を付与
-        if (is_string($datetime) && !str_contains($datetime, ' ')) {
-            $datetime .= ' 00:00:00';
+        if (is_string($datetime)) {
+            // "YYYY-MM-DD" の場合 → 前方一致検索
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
+                $query->where('posted_at', 'like', $datetime . '%');
+            }
+            // "YYYY-MM-DD HH" の場合 → 前方一致検索
+            elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
+                $query->where('posted_at', 'like', $datetime . '%');
+            }
+            // "YYYY-MM-DD HH:MM" の場合 → 前方一致検索
+            elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
+                $query->where('posted_at', 'like', $datetime . '%');
+            } else {
+                $query->where('posted_at', $datetime);
+            }
         } elseif ($datetime instanceof CarbonImmutable) {
             // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
             $datetime = $datetime->format('Y-m-d H:i:s');
+            $query->where('posted_at', $datetime);
         }
-        $query->where('posted_at', $datetime);
     }
 
     // ========================== ここまで整理ずみ ==========================
