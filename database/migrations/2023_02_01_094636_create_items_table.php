@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('category_id')->nullable()->comment('投稿カテゴリーID')->constrained('categories')->onDelete('set null');
             $table->dateTime('posted_at')->comment('投稿日時');
             $table->mediumText('thumbnail')->nullable()->comment('投稿サムネイル');
-            $table->integer('order_number')->default('0')->comment('表示順');
+            $table->integer('order_number')->default('0')->comment('アイテム表示順');
             $table->bigInteger('created_by')->comment('登録者');
             $table->bigInteger('updated_by')->comment('更新者');
             $table->timestamps();

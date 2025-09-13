@@ -1259,7 +1259,7 @@ class ItemTest extends TestCase
     /**
      * アイテムリストの並び順
      * 
-     * - アイテムリストのデフォルトの並び順は、表示順であることを確認します。
+     * - アイテムリストのデフォルトの並び順は、1.表示順昇順、2.投稿日時降順（最新順）であることを確認します。
      *
      * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムリストの並び順
      */
@@ -1285,15 +1285,21 @@ class ItemTest extends TestCase
             'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
             'order_number' => 3,
         ]);
+        $itemD = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+            'order_number' => 3,
+        ]);
 
         // 実行
         $items = Profile::of('Feeldee')->first()->items;
 
         // 評価
-        $this->assertEquals(3, $items->count());
+        $this->assertEquals(4, $items->count());
         $this->assertEquals($itemA->id, $items[0]->id);
         $this->assertEquals($itemB->id, $items[1]->id);
-        $this->assertEquals($itemC->id, $items[2]->id);
+        $this->assertEquals($itemD->id, $items[2]->id);
+        $this->assertEquals($itemC->id, $items[3]->id);
     }
 
     /**

@@ -27,7 +27,7 @@ class Item extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'thumbnail', 'order_number'];
 
     /**
      * 配列に表示する属性
@@ -82,12 +82,14 @@ class Item extends Post
     protected static function booted(): void
     {
         static::addGlobalScope('defaultSort', function ($builder) {
-            $builder->orderBy('order_number');
+            $builder->orderBy('order_number')->orderByDesc('posted_at');
         });
 
         static::creating(function (self $item) {
             // 表示順割り当て
-            $item->newOrderNumber();
+            if (empty($item->order_number)) {
+                $item->newOrderNumber();
+            }
         });
 
         static::saving(
@@ -100,23 +102,20 @@ class Item extends Post
         );
     }
 
-    // ========================== ここまで整理済み ==========================
-
     /**
-     * 最後に表示順を新しく割り当てます。
+     * アイテム表示順を新しく割り当てます。
      */
     protected function newOrderNumber()
     {
-        // 同一階層のカテゴリリスト取得
         $last = $this->profile->items()->get()->last();
-
-        // 表示順生成
         if ($last == null) {
             $this->order_number = 1;
         } else {
             $this->order_number = $last->order_number + 1;
         }
     }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * アイテムを入れ替えます。
