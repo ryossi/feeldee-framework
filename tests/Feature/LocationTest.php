@@ -1227,11 +1227,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所作成
+     * 新規作成
      * 
      * - 場所の作成は、場所を追加したいプロフィールの場所リストに追加することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
      */
     public function test_create()
     {
@@ -1263,11 +1263,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所作成
+     * 新規作成
      * 
      * - 緯度は必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
      */
     public function test_create_latitude_required()
     {
@@ -1285,11 +1285,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所作成
+     * 新規作成
      * 
      * - 経度は必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
      */
     public function test_create_longitude_required()
     {
@@ -1307,11 +1307,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所作成
+     * 新規作成
      * 
      * - 縮尺は必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
      */
     public function test_create_zoom_required()
     {
@@ -1329,11 +1329,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所作成
+     * 新規作成
      * 
      * - 投稿日時を省略した場合は、システム日時が設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
      */
     public function test_create_posted_at_default()
     {
@@ -1361,6 +1361,43 @@ class LocationTest extends TestCase
             'longitude' => $longitude,
             'zoom' => $zoom,
         ]);
+    }
+
+    /**
+     * 場所リストの並び順
+     *
+     * - 場所リストのデフォルトの並び順は、投稿日時降順（最新順）であることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所リストの並び順
+     */
+    public function test_collection_sort_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $locationA = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $locationB = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $locationC = Location::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-25 10:00:00'),
+        ]);
+
+        // 実行
+        $locations = Profile::of('Feeldee')->first()->locations;
+
+        // 評価
+        $this->assertEquals(3, $locations->count());
+        $this->assertEquals($locationC->id, $locations[0]->id);
+        $this->assertEquals($locationB->id, $locations[1]->id);
+        $this->assertEquals($locationA->id, $locations[2]->id);
     }
 
     /**
