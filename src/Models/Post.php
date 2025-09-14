@@ -225,6 +225,22 @@ abstract class Post extends Model
         $query->where('posted_at', '>=', FDate::format($datetime, '+00:00:00'));
     }
 
+    /**
+     * 公開されたコンテンツのみ取得するためのローカルスコープ
+     */
+    public function scopePublic($query): void
+    {
+        $query->where('is_public', true);
+    }
+
+    /**
+     * 非公開のコンテンツのみ取得するためのローカルスコープ
+     */
+    public function scopePrivate($query): void
+    {
+        $query->where('is_public', false);
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
@@ -279,33 +295,33 @@ abstract class Post extends Model
         return $query->orderBy('title', $direction);
     }
 
-    /**
-     * 公開済み、かつ公開レベルに応じて公開範囲を制御するようにクエリのスコープを設定
-     */
-    public function scopePublic($query)
-    {
-        $table = (new $this)->getTable();
-        $query->where($table . '.is_public', true);
-        $query->where(function (Builder $query) use ($table) {
-            // 公開レベル「全員」
-            $query->orWhere($table . '.public_level', PublicLevel::Public);
-            // 公開レベル「会員」
-            $query->orWhere(function (Builder $query) use ($table) {
-                $query->where($table . '.public_level', PublicLevel::Member)
-                    ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
-            });
-            // 公開レベル「友達」
-            // TODO::友達機能未実装
-            $query->orWhere(function (Builder $query) use ($table) {
-                $query->where($table . '.public_level', PublicLevel::Friend)
-                    ->where($table . '.profile_id', Auth::user()?->profile->id);
-            });
-            // 公開レベル「自分」
-            $query->orWhere(function (Builder $query) use ($table) {
-                $query->where($table . '.public_level', PublicLevel::Private)
-                    ->where($table . '.profile_id', Auth::user()?->profile->id);
-            });
-        });
-        return $query;
-    }
+    // /**
+    //  * 公開済み、かつ公開レベルに応じて公開範囲を制御するようにクエリのスコープを設定
+    //  */
+    // public function scopePublic($query)
+    // {
+    //     $table = (new $this)->getTable();
+    //     $query->where($table . '.is_public', true);
+    //     $query->where(function (Builder $query) use ($table) {
+    //         // 公開レベル「全員」
+    //         $query->orWhere($table . '.public_level', PublicLevel::Public);
+    //         // 公開レベル「会員」
+    //         $query->orWhere(function (Builder $query) use ($table) {
+    //             $query->where($table . '.public_level', PublicLevel::Member)
+    //                 ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
+    //         });
+    //         // 公開レベル「友達」
+    //         // TODO::友達機能未実装
+    //         $query->orWhere(function (Builder $query) use ($table) {
+    //             $query->where($table . '.public_level', PublicLevel::Friend)
+    //                 ->where($table . '.profile_id', Auth::user()?->profile->id);
+    //         });
+    //         // 公開レベル「自分」
+    //         $query->orWhere(function (Builder $query) use ($table) {
+    //             $query->where($table . '.public_level', PublicLevel::Private)
+    //                 ->where($table . '.profile_id', Auth::user()?->profile->id);
+    //         });
+    //     });
+    //     return $query;
+    // }
 }

@@ -688,4 +688,72 @@ class PostTest extends TestCase
         // 評価
         $this->assertEquals(3, $items->count());
     }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - 公開の投稿のみを取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#公開・非公開による絞り込み
+     */
+    public function test_filter_public()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'is_public' => true,
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'is_public' => true,
+        ]);
+        Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'is_public' => false,
+        ]);
+
+        // 実行
+        $photos = Profile::of('Feeldee')->first()->photos()->public()->get();
+
+        // 評価
+        $this->assertEquals(2, $photos->count());
+    }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - 非公開の投稿のみを取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#公開・非公開による絞り込み
+     */
+    public function test_filter_private()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'is_public' => true,
+        ]);
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'is_public' => true,
+        ]);
+        Location::factory()->create([
+            'profile_id' => $profile->id,
+            'is_public' => false,
+        ]);
+
+        // 実行
+        $locations = Location::private()->get();
+
+        // 評価
+        $this->assertEquals(1, $locations->count());
+    }
 }
