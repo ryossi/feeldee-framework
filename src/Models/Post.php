@@ -3,6 +3,7 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\CarbonImmutable;
+use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -197,27 +198,7 @@ abstract class Post extends Model
      */
     public function scopeBetween(Builder $query, $start, $end): void
     {
-        if (is_string($start)) {
-            // 範囲指定で時刻の一部または全部を省略した場合、範囲の開始時刻が00:00:00となるに不足部分が補われます。
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) {
-                $start .= ' 00:00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $start)) {
-                $start .= ':00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $start)) {
-                $start .= ':00';
-            }
-        }
-        if (is_string($end)) {
-            // 範囲指定で時刻の一部または全部を省略した場合、範囲の終了時刻が23:59:59となるに不足部分が補われます。
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
-                $end .= ' 23:59:59';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $end)) {
-                $end .= ':59:59';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $end)) {
-                $end .= ':59';
-            }
-        }
-        $query->whereBetween('posted_at', [$start, $end]);
+        $query->whereBetween('posted_at', [FDate::format($start, '+00:00:00'), FDate::format($end, '+23:59:59')]);
     }
 
     /**
@@ -225,20 +206,7 @@ abstract class Post extends Model
      */
     public function scopeBefore(Builder $query, $datetime): void
     {
-        if (is_string($datetime)) {
-            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
-                $datetime .= ' 00:00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
-                $datetime .= ':00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
-                $datetime .= ':00';
-            }
-        } elseif ($datetime instanceof CarbonImmutable) {
-            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
-            $datetime = $datetime->format('Y-m-d H:i:s');
-        }
-        $query->where('posted_at', '<', $datetime);
+        $query->where('posted_at', '<', FDate::format($datetime, '+00:00:00'));
     }
 
     /**
@@ -246,20 +214,7 @@ abstract class Post extends Model
      */
     public function scopeAfter(Builder $query, $datetime): void
     {
-        if (is_string($datetime)) {
-            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
-                $datetime .= ' 00:00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
-                $datetime .= ':00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
-                $datetime .= ':00';
-            }
-        } elseif ($datetime instanceof CarbonImmutable) {
-            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
-            $datetime = $datetime->format('Y-m-d H:i:s');
-        }
-        $query->where('posted_at', '>', $datetime);
+        $query->where('posted_at', '>', FDate::format($datetime, '+00:00:00'));
     }
 
     /**
@@ -267,20 +222,7 @@ abstract class Post extends Model
      */
     public function scopeBeforeEquals(Builder $query, $datetime): void
     {
-        if (is_string($datetime)) {
-            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
-                $datetime .= ' 00:00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
-                $datetime .= ':00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
-                $datetime .= ':00';
-            }
-        } elseif ($datetime instanceof CarbonImmutable) {
-            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
-            $datetime = $datetime->format('Y-m-d H:i:s');
-        }
-        $query->where('posted_at', '<=', $datetime);
+        $query->where('posted_at', '<=', FDate::format($datetime, '+00:00:00'));
     }
 
     /**
@@ -288,20 +230,7 @@ abstract class Post extends Model
      */
     public function scopeAfterEquals(Builder $query, $datetime): void
     {
-        if (is_string($datetime)) {
-            // 範囲指定で時刻の一部または全部を省略した場合、00:00:00となるに不足部分が補われます。
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
-                $datetime .= ' 00:00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
-                $datetime .= ':00:00';
-            } elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
-                $datetime .= ':00';
-            }
-        } elseif ($datetime instanceof CarbonImmutable) {
-            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
-            $datetime = $datetime->format('Y-m-d H:i:s');
-        }
-        $query->where('posted_at', '>=', $datetime);
+        $query->where('posted_at', '>=', FDate::format($datetime, '+00:00:00'));
     }
 
     // ========================== ここまで整理ずみ ==========================
