@@ -61,7 +61,7 @@ class Reply extends Model
                 unset($model->replyer);
             } elseif (empty($model->replyer_nickname)) {
                 // 返信者ニックネームが指定されていない場合は、例外をスロー
-                throw new ApplicationException(60002);
+                throw new ApplicationException(61001);
             }
         });
     }
