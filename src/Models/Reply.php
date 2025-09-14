@@ -5,6 +5,7 @@ namespace Feeldee\Framework\Models;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -185,13 +186,57 @@ class Reply extends Model
      */
     public function scopeAt(Builder $query, $datetime): void
     {
-        // 時刻が指定されていない場合は、00:00:00を付与
-        if (is_string($datetime) && !str_contains($datetime, ' ')) {
-            $datetime .= ' 00:00:00';
+        if (is_string($datetime)) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}(?: \d{2}(?::\d{2})?)?$/', $datetime)) {
+                // 時刻以下が省略されている場合は、前方一致検索
+                $query->where('replied_at', 'like', $datetime . '%');
+            } else {
+                $query->where('replied_at', $datetime);
+            }
         } elseif ($datetime instanceof CarbonImmutable) {
             // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
             $datetime = $datetime->format('Y-m-d H:i:s');
+            $query->where('replied_at', $datetime);
         }
-        $query->where('replied_at', $datetime);
+    }
+
+    /**
+     * 返信日時の範囲を指定して取得するためのローカルスコープ
+     */
+    public function scopeBetween(Builder $query, $start, $end): void
+    {
+        $query->whereBetween('replied_at', [FDate::format($start, '+00:00:00'), FDate::format($end, '+23:59:59')]);
+    }
+
+    /**
+     * 返信日時の未満で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBefore(Builder $query, $datetime): void
+    {
+        $query->where('replied_at', '<', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 返信日時のより先で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfter(Builder $query, $datetime): void
+    {
+        $query->where('replied_at', '>', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 返信日時の以前で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBeforeEquals(Builder $query, $datetime): void
+    {
+        $query->where('replied_at', '<=', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 返信日時の以降で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfterEquals(Builder $query, $datetime): void
+    {
+        $query->where('replied_at', '>=', FDate::format($datetime, '+00:00:00'));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Carbon\Carbon;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Profile;
@@ -870,5 +871,401 @@ class ReplyTest extends TestCase
 
         // 評価
         Assert::assertCount(2, $replies, '返信者のニックネームで返信を絞り込むことができること');
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時で返信を絞り込むことができることを確認します。
+     */
+    public function test_filter_at()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-04-22 10:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-04-23 10:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-12 09:30:00')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $reply = Reply::at('2025-09-12 09:30:00')->first();
+
+        // 評価
+        $this->assertEquals('返信3', $reply->body);
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 時刻の一部を省略した場合には、指定した時刻での前方一致検索となることを確認します。
+     */
+    public function test_filter_at_partial_time()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-04-22 10:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-04-23 10:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-12 09:30:00')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::at('2025-09-12 09:30')->get();
+
+        // 評価
+        $this->assertEquals(1, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 時刻そのものを省略した場合には、指定した日付での前方一致検索となることを確認します。
+     */
+    public function test_filter_at_date_only()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-13 10:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-12 10:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-12 09:30:00')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::at('2025-09-12')->get();
+
+        // 評価
+        $this->assertEquals(2, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時の範囲を指定して取得できることを確認します。
+     */
+    public function test_filter_between()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 09:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 10:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-30 18:00:00')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::between('2025-09-01 09:00:00', '2025-09-30 18:00:00')->get();
+
+        // 評価
+        $this->assertEquals(3, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 範囲指定で時刻の全部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     */
+    public function test_filter_between_time_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 00:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 10:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-30 23:59:59')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::between('2025-09-01', '2025-09-30')->get();
+
+        // 評価
+        $this->assertEquals(3, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 範囲指定で時刻の一部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     */
+    public function test_filter_between_time_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 09:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 18:00:59')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-01 18:01:00')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::between('2025-09-01 09:00', '2025-09-01 18:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時の未満で範囲指定することもできることを確認します。
+     */
+    public function test_filter_before()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 08:59:59')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 09:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-01 09:00:01')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::before('2025-09-01 09:00:00')->get();
+
+        // 評価
+        $this->assertEquals(1, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時の未満で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_before_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 09:29:59')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 09:30:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-01 09:30:01')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::before('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(1, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時のより先で範囲指定することもできることを確認します。
+     */
+    public function test_filter_after()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 09:29:59')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 09:30:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-01 09:30:01')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::after('2025-09-01 09:30:00')->get();
+
+        // 評価
+        $this->assertEquals(1, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時のより先で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_after_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 09:29:59')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 09:30:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-01 09:30:01')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::after('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(1, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時の以前で範囲指定することもできることを確認します。
+     */
+    public function test_filter_beforeEquals()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-04-22 10:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-04-23 10:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-12 09:30:00')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::beforeEquals('2025-09-01 09:30:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時の以前で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_beforeEquals_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-04-22 10:00:00')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-04-23 10:00:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-12 09:30:00')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::beforeEquals('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(2, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時の以降で範囲指定することもできることを確認します。
+     */
+    public function test_filter_afterEquals()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 09:29:59')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 09:30:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-01 09:30:01')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::afterEquals('2025-09-01 09:30:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $replies->count());
+    }
+
+    /**
+     * 返信日時による絞り込み
+     * 
+     * - 返信日時の以降で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_afterEquals_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(1)->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'ユーザ1', 'replied_at' => Carbon::parse('2025-09-01 09:29:59')],
+                        ['body' => '返信2', 'replyer_nickname' => 'ユーザ2', 'replied_at' => Carbon::parse('2025-09-01 09:30:00')],
+                        ['body' => '返信3', 'replyer_nickname' => 'ユーザ3', 'replied_at' => Carbon::parse('2025-09-01 09:30:01')],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::afterEquals('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(2, $replies->count());
     }
 }
