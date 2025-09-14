@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Carbon\Carbon;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Comment;
 use Feeldee\Framework\Models\Item;
@@ -947,7 +948,7 @@ class CommentTest extends TestCase
      *
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント者による絞り込み
      */
-    public function test_filter_by_commenter_nickname()
+    public function test_filter_by()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -971,5 +972,373 @@ class CommentTest extends TestCase
 
         // 評価
         Assert::assertCount(2, $comments, 'コメント者のニックネームでコメントを絞り込むことができること');
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時でコメントを絞り込むことができることを確認します。
+     */
+    public function test_filter_at()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Item::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-04-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-04-23 10:00:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-12 09:30:00')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comment = Comment::at('2025-09-12 09:30:00')->first();
+
+        // 評価
+        $this->assertEquals('コメント3', $comment->body);
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - 時刻の一部を省略した場合には、指定した時刻での前方一致検索となることを確認します。
+     */
+    public function test_filter_at_partial_time()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-09-12 09:32:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-12 09:30:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-12 09:30:10')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::at('2025-09-12 09:30')->get();
+
+        // 評価
+        $this->assertEquals(2, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - 時刻そのものを省略した場合には、指定した日付での前方一致検索となることを確認します。
+     */
+    public function test_filter_at_date_only()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-09-12 09:30:02')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-12 09:30:01')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-12 09:30:00')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::at('2025-09-12')->get();
+
+        // 評価
+        $this->assertEquals(3, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時の範囲を指定して取得できることを確認します。
+     */
+    public function test_filter_between()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-09-01 09:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-12 09:30:01')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-30 10:00:00')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::between('2025-09-01 09:00:00', '2025-09-30 18:00:00')->get();
+
+        // 評価
+        $this->assertEquals(3, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - 範囲指定で時刻の全部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     */
+    public function test_filter_between_time_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-09-01 09:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-12 09:30:01')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-30 10:00:00')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::between('2025-09-01', '2025-09-30')->get();
+
+        // 評価
+        $this->assertEquals(3, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - 範囲指定で時刻の一部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     */
+    public function test_filter_between_time_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-09-01 08:59:59')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:00:01')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 18:00:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::between('2025-09-01 09:00', '2025-09-01 18:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時の未満で範囲指定することもできることを確認します。
+     */
+    public function test_filter_before()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-09-01 08:59:59')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:00:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:00:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::before('2025-09-01 09:00:00')->get();
+
+        // 評価
+        $this->assertEquals(1, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時の未満で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_before_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-08-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:29:59')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:30:00')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::before('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(2, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時のより先で範囲指定することもできることを確認します。
+     */
+    public function test_filter_after()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-08-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:30:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:30:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::after('2025-09-01 09:30:00')->get();
+
+        // 評価
+        $this->assertEquals(1, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時のより先で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_after_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-08-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:30:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:30:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::after('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(1, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時の以前で範囲指定することもできることを確認します。
+     */
+    public function test_filter_beforeEquals()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-08-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:30:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:30:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::beforeEquals('2025-09-01 09:30:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時の以前で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_beforeEquals_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-08-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:30:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:30:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::beforeEquals('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(2, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時の以降で範囲指定することもできることを確認します。
+     */
+    public function test_filter_afterEquals()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-08-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:30:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:30:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::afterEquals('2025-09-01 09:30:00')->get();
+
+        // 評価
+        $this->assertEquals(2, $comments->count());
+    }
+
+    /**
+     * コメント日時による絞り込み
+     * 
+     * - コメント日時の以降で範囲指定することもできることを確認します。
+     * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     */
+    public function test_filter_afterEquals_partial_omitted()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory()->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['body' => 'コメント1', 'commenter_nickname' => 'ユーザ1', 'commented_at' => Carbon::parse('2025-08-22 10:00:00')],
+                    ['body' => 'コメント2', 'commenter_nickname' => 'ユーザ2', 'commented_at' => Carbon::parse('2025-09-01 09:30:00')],
+                    ['body' => 'コメント3', 'commenter_nickname' => 'ユーザ3', 'commented_at' => Carbon::parse('2025-09-01 09:30:01')],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::afterEquals('2025-09-01 09:30')->get();
+
+        // 評価
+        $this->assertEquals(2, $comments->count());
     }
 }

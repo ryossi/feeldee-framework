@@ -203,7 +203,6 @@ class PostTest extends TestCase
         $this->assertEquals(3, $journals->count());
     }
 
-
     /**
      * 投稿日時による絞り込み
      * 

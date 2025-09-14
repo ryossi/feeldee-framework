@@ -172,16 +172,8 @@ abstract class Post extends Model
     public function scopeAt(Builder $query, $datetime): void
     {
         if (is_string($datetime)) {
-            // "YYYY-MM-DD" の場合 → 前方一致検索
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $datetime)) {
-                $query->where('posted_at', 'like', $datetime . '%');
-            }
-            // "YYYY-MM-DD HH" の場合 → 前方一致検索
-            elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}$/', $datetime)) {
-                $query->where('posted_at', 'like', $datetime . '%');
-            }
-            // "YYYY-MM-DD HH:MM" の場合 → 前方一致検索
-            elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $datetime)) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}(?: \d{2}(?::\d{2})?)?$/', $datetime)) {
+                // 時刻以下が省略されている場合は、前方一致検索
                 $query->where('posted_at', 'like', $datetime . '%');
             } else {
                 $query->where('posted_at', $datetime);
