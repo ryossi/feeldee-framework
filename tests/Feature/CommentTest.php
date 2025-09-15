@@ -517,7 +517,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Item::factory()->count(1))->create();
+        $profile = Profile::factory()->has(Item::factory(['is_public' => true])->count(1))->create();
         $item = $profile->items->first();
 
         // コメント者準備
@@ -535,6 +535,31 @@ class CommentTest extends TestCase
             'is_public' => false,
         ]);
         $this->assertFalse($comment->is_public, 'コメント公開フラグは、デフォルトで非公開であること');
+    }
+
+    /**
+     * コメント公開フラグ
+     * 
+     * - メント対象の投稿公開フラグが非公開の場合は、コメント公開フラグは常に非公開であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント公開フラグ
+     */
+    public function test_is_public_when_commentable_is_private()
+    {
+        // コメント対象準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->has(Item::factory(['is_public' => false])->count(1)->has(Comment::factory(1, ['is_public' => true])))->create();
+        $comment = $profile->items->first()->comments->first();
+
+        // 実行
+        $is_public = $comment->is_public;
+
+        // 評価
+        $this->assertDatabaseHas('comments', [
+            'id' => $comment->id,
+            'is_public' => true,
+        ]);
+        $this->assertFalse($is_public);
     }
 
     /**
@@ -724,7 +749,7 @@ class CommentTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => false])))->create();
+        $profile = Profile::factory()->has(Item::factory(['is_public' => true])->count(1)->has(Comment::factory(1, ['is_public' => false])))->create();
         $comment = $profile->items->first()->comments->first();
 
         // 実行
@@ -745,7 +770,7 @@ class CommentTest extends TestCase
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Item::factory()->count(1)->has(Comment::factory(1, ['is_public' => true])))->create();
+        $profile = Profile::factory()->has(Item::factory(['is_public' => true])->count(1)->has(Comment::factory(1, ['is_public' => true])))->create();
         $comment = $profile->items->first()->comments->first();
 
         // 実行

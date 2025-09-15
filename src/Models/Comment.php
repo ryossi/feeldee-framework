@@ -11,8 +11,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * コメントをあらわすモデル
@@ -134,7 +132,7 @@ class Comment extends Model
     protected function isPublic(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ?? false,
+            get: fn($value) => $this->commentable?->is_public ? (boolval($value) ?? false) : false,
         );
     }
 
@@ -274,6 +272,22 @@ class Comment extends Model
         $query->where('commented_at', '>=', FDate::format($datetime, '+00:00:00'));
     }
 
+    /**
+     * 公開されたコメントのみ取得するためのローカルスコープ
+     */
+    public function scopePublic($query): void
+    {
+        $query->where('is_public', true);
+    }
+
+    /**
+     * 非公開のコメントのみ取得するためのローカルスコープ
+     */
+    public function scopePrivate($query): void
+    {
+        $query->where('is_public', false);
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
@@ -287,52 +301,52 @@ class Comment extends Model
         $query->where('commentable_type', $commentableType);
     }
 
-    /**
-     * 公開済みのみを含むようにクエリのスコープを設定
-     */
-    public function scopePublic($query)
-    {
-        $query->where('is_public', true);
-        $morphMap = Relation::morphMap();
-        $whenIsPublic = array();
-        $whenPublicLevel = array();
-        foreach ($morphMap as $type => $value) {
-            $class = Relation::getMorphedModel($type);
-            $post = new $class();
-            $table = $post->getTable();
-            array_push($whenIsPublic, "when commentable_type = '$type' then (select is_public from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
-            array_push($whenPublicLevel, "when commentable_type = '$type' then (select public_level from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
-        }
-        $query->where(function ($query) use ($whenIsPublic) {
-            $query->selectRaw('case ' . implode(' ', $whenIsPublic) . ' else 0 end')->from('comments', 'c1')->whereColumn('c1.id', 'comments.id');
-        }, true);
-        $query->where(function ($query) use ($whenPublicLevel) {
-            // 公開レベル「全員」
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-            }, PublicLevel::Public);
-            // 公開レベル「会員」
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->where(function ($query) use ($whenPublicLevel) {
-                    $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-                }, PublicLevel::Member)
-                    ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
-            });
-            // 公開レベル「友達」
-            // TODO::友達機能未実装
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->where(function ($query) use ($whenPublicLevel) {
-                    $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-                }, PublicLevel::Friend)
-                    ->where('profile_id', Auth::user()?->profile->id);
-            });
-            // 公開レベル「自分」
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->where(function ($query) use ($whenPublicLevel) {
-                    $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-                }, PublicLevel::Private)
-                    ->where('profile_id', Auth::user()?->profile->id);
-            });
-        });
-    }
+    // /**
+    //  * 公開済みのみを含むようにクエリのスコープを設定
+    //  */
+    // public function scopePublic($query)
+    // {
+    //     $query->where('is_public', true);
+    //     $morphMap = Relation::morphMap();
+    //     $whenIsPublic = array();
+    //     $whenPublicLevel = array();
+    //     foreach ($morphMap as $type => $value) {
+    //         $class = Relation::getMorphedModel($type);
+    //         $post = new $class();
+    //         $table = $post->getTable();
+    //         array_push($whenIsPublic, "when commentable_type = '$type' then (select is_public from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
+    //         array_push($whenPublicLevel, "when commentable_type = '$type' then (select public_level from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
+    //     }
+    //     $query->where(function ($query) use ($whenIsPublic) {
+    //         $query->selectRaw('case ' . implode(' ', $whenIsPublic) . ' else 0 end')->from('comments', 'c1')->whereColumn('c1.id', 'comments.id');
+    //     }, true);
+    //     $query->where(function ($query) use ($whenPublicLevel) {
+    //         // 公開レベル「全員」
+    //         $query->orWhere(function ($query) use ($whenPublicLevel) {
+    //             $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
+    //         }, PublicLevel::Public);
+    //         // 公開レベル「会員」
+    //         $query->orWhere(function ($query) use ($whenPublicLevel) {
+    //             $query->where(function ($query) use ($whenPublicLevel) {
+    //                 $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
+    //             }, PublicLevel::Member)
+    //                 ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
+    //         });
+    //         // 公開レベル「友達」
+    //         // TODO::友達機能未実装
+    //         $query->orWhere(function ($query) use ($whenPublicLevel) {
+    //             $query->where(function ($query) use ($whenPublicLevel) {
+    //                 $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
+    //             }, PublicLevel::Friend)
+    //                 ->where('profile_id', Auth::user()?->profile->id);
+    //         });
+    //         // 公開レベル「自分」
+    //         $query->orWhere(function ($query) use ($whenPublicLevel) {
+    //             $query->where(function ($query) use ($whenPublicLevel) {
+    //                 $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
+    //             }, PublicLevel::Private)
+    //                 ->where('profile_id', Auth::user()?->profile->id);
+    //         });
+    //     });
+    // }
 }
