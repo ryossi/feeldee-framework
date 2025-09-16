@@ -239,4 +239,42 @@ class Reply extends Model
     {
         $query->where('replied_at', '>=', FDate::format($datetime, '+00:00:00'));
     }
+
+    /**
+     * 公開されたコンテンツのみ取得するためのローカルスコープ
+     */
+    public function scopePublic($query): void
+    {
+        $query->where('is_public', true)
+            ->whereHas('comment', function ($q) {
+                $q->where('is_public', true)
+                    ->where(function ($q2) {
+                        $q2->whereHasMorph(
+                            'commentable',
+                            [Journal::class, Photo::class, Location::class, Item::class],
+                            function ($q3) {
+                                $q3->where('is_public', true);
+                            }
+                        );
+                    });
+            });
+    }
+
+    /**
+     * 非公開のコンテンツのみ取得するためのローカルスコープ
+     */
+    public function scopePrivate($query): void
+    {
+        $query->where('is_public', false)
+            ->orWhereHas('comment', function ($q) {
+                $q->where('is_public', false)
+                    ->orWhereHasMorph(
+                        'commentable',
+                        [Journal::class, Photo::class, Location::class, Item::class],
+                        function ($q2) {
+                            $q2->where('is_public', false);
+                        }
+                    );
+            });
+    }
 }

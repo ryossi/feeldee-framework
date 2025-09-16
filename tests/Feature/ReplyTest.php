@@ -388,7 +388,7 @@ class ReplyTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Journal::factory(1)
+        $profile = Profile::factory()->has(Journal::factory(1, ['is_public' => true])
             ->has(Comment::factory(1, ['is_public' => true])
                 ->has(Reply::factory(1, ['is_public' => true]))))->create();
         $reply = $profile->journals->first()->comments->first()->replies->first();
@@ -409,7 +409,7 @@ class ReplyTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Journal::factory(1)
+        $profile = Profile::factory()->has(Journal::factory(1, ['is_public' => true])
             ->has(Comment::factory(1, ['is_public' => true])
                 ->has(Reply::factory(1, ['is_public' => false]))))->create();
         $reply = $profile->journals->first()->comments->first()->replies->first();
@@ -430,7 +430,7 @@ class ReplyTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Journal::factory(1)
+        $profile = Profile::factory()->has(Journal::factory(1, ['is_public' => true])
             ->has(Comment::factory(1, ['is_public' => false])
                 ->has(Reply::factory(1, ['is_public' => true]))))->create();
         $reply = $profile->journals->first()->comments->first()->replies->first();
@@ -451,7 +451,7 @@ class ReplyTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->has(Journal::factory(1)
+        $profile = Profile::factory()->has(Journal::factory(1, ['is_public' => true])
             ->has(Comment::factory(1, ['is_public' => false])
                 ->has(Reply::factory(1, ['is_public' => false]))))->create();
         $reply = $profile->journals->first()->comments->first()->replies->first();
@@ -630,7 +630,7 @@ class ReplyTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()->has(Journal::factory(1)
+        Profile::factory()->has(Journal::factory(1, ['is_public' => true])
             ->has(Comment::factory(1, ['is_public' => true])
                 ->has(Reply::factory(1, [
                     'replyer_nickname' => 'test456',
@@ -657,7 +657,7 @@ class ReplyTest extends TestCase
     {
         // コメント対象準備
         Auth::shouldReceive('id')->andReturn(1);
-        Profile::factory()->has(Journal::factory(1)
+        Profile::factory()->has(Journal::factory(1, ['is_public' => true])
             ->has(Comment::factory(1, ['is_public' => true])
                 ->has(Reply::factory(1, [
                     'replyer_nickname' => 'test456',
@@ -877,6 +877,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 返信日時で返信を絞り込むことができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_at()
     {
@@ -905,6 +907,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 時刻の一部を省略した場合には、指定した時刻での前方一致検索となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_at_partial_time()
     {
@@ -933,6 +937,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 時刻そのものを省略した場合には、指定した日付での前方一致検索となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_at_date_only()
     {
@@ -961,6 +967,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 返信日時の範囲を指定して取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_between()
     {
@@ -989,6 +997,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 範囲指定で時刻の全部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_between_time_omitted()
     {
@@ -1017,6 +1027,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 範囲指定で時刻の一部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_between_time_partial_omitted()
     {
@@ -1045,6 +1057,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 返信日時の未満で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_before()
     {
@@ -1074,6 +1088,8 @@ class ReplyTest extends TestCase
      * 
      * - 返信日時の未満で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_before_partial_omitted()
     {
@@ -1102,6 +1118,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 返信日時のより先で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_after()
     {
@@ -1131,6 +1149,8 @@ class ReplyTest extends TestCase
      * 
      * - 返信日時のより先で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_after_partial_omitted()
     {
@@ -1159,6 +1179,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 返信日時の以前で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_beforeEquals()
     {
@@ -1188,6 +1210,8 @@ class ReplyTest extends TestCase
      * 
      * - 返信日時の以前で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_beforeEquals_partial_omitted()
     {
@@ -1216,6 +1240,8 @@ class ReplyTest extends TestCase
      * 返信日時による絞り込み
      * 
      * - 返信日時の以降で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_afterEquals()
     {
@@ -1245,6 +1271,8 @@ class ReplyTest extends TestCase
      * 
      * - 返信日時の以降で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#返信日時による絞り込み
      */
     public function test_filter_afterEquals_partial_omitted()
     {
@@ -1267,5 +1295,95 @@ class ReplyTest extends TestCase
 
         // 評価
         $this->assertEquals(2, $replies->count());
+    }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - 公開された返信のみ取得する場合は、publicローカルスコープが利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開・非公開による絞り込み
+     */
+    public function test_filter_public()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory(['is_public' => true])->count(1)->has(
+                Comment::factory(1, ['is_public' => true])->has(
+                    Reply::factory(3)->sequence(
+                        ['body' => '返信1', 'replyer_nickname' => 'Feeldee', 'replied_at' => Carbon::parse('2025-09-01 09:30:00'), 'is_public' => true],
+                        ['body' => '返信2', 'replyer_nickname' => 'Feeldee', 'replied_at' => Carbon::parse('2025-09-01 09:31:00'), 'is_public' => false],
+                        ['body' => '返信3', 'replyer_nickname' => 'Feeldee', 'replied_at' => Carbon::parse('2025-09-01 09:32:00'), 'is_public' => true],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::by('Feeldee')->at('2025-09-01')->public()->get();
+
+        // 評価
+        $this->assertEquals(2, $replies->count());
+    }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - 非公開の返信のみを取得する場合は、privateローカルスコープを利用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開・非公開による絞り込み
+     */
+    public function test_filter_private()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory(['is_public' => true])->count(1)->has(
+                Comment::factory(1, ['is_public' => true])->has(
+                    Reply::factory(3)->sequence(
+                        ['replied_at' => Carbon::parse('2025-09-01 09:30:00'), 'is_public' => true],
+                        ['replied_at' => Carbon::parse('2025-09-01 09:31:00'), 'is_public' => false],
+                        ['replied_at' => Carbon::parse('2025-09-01 09:32:00'), 'is_public' => true],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::at('2025-09-01')->private()->get();
+
+        // 評価
+        $this->assertEquals(1, $replies->count());
+    }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - 返信の公開・非公開は、常に返信対象のコメント公開フラグとのAND条件となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開・非公開による絞り込み
+     */
+    public function test_filter_public_or_private_with_comment_is_private()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory(['is_public' => true])->count(1)->has(
+                Comment::factory(1, ['is_public' => false])->has(
+                    Reply::factory(3)->sequence(
+                        ['replied_at' => Carbon::parse('2025-09-01 09:30:00'), 'is_public' => true],
+                        ['replied_at' => Carbon::parse('2025-09-01 09:31:00'), 'is_public' => false],
+                        ['replied_at' => Carbon::parse('2025-09-01 09:32:00'), 'is_public' => true],
+                    )
+                )
+            )
+        )->create();
+
+        // 実行
+        $replies = Reply::at('2025-09-01')->public()->get();
+
+        // 評価
+        $this->assertEquals(0, $replies->count());
     }
 }
