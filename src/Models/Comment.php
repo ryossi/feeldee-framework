@@ -277,7 +277,16 @@ class Comment extends Model
      */
     public function scopePublic($query): void
     {
-        $query->where('is_public', true);
+        $query->where('is_public', true)
+            ->where(function ($q) {
+                $q->whereHasMorph(
+                    'commentable',
+                    [Journal::class, Photo::class, Location::class, Item::class],
+                    function ($subQ) {
+                        $subQ->where('is_public', true);
+                    }
+                );
+            });
     }
 
     /**
@@ -285,7 +294,16 @@ class Comment extends Model
      */
     public function scopePrivate($query): void
     {
-        $query->where('is_public', false);
+        $query->where('is_public', false)
+            ->orWhere(function ($q) {
+                $q->whereHasMorph(
+                    'commentable',
+                    [Journal::class, Photo::class, Location::class, Item::class],
+                    function ($subQ) {
+                        $subQ->where('is_public', false);
+                    }
+                );
+            });
     }
 
     // ========================== ここまで整理ずみ ==========================

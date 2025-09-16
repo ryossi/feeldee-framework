@@ -1003,6 +1003,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - コメント日時でコメントを絞り込むことができることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_at()
     {
@@ -1029,6 +1031,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - 時刻の一部を省略した場合には、指定した時刻での前方一致検索となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_at_partial_time()
     {
@@ -1055,6 +1059,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - 時刻そのものを省略した場合には、指定した日付での前方一致検索となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_at_date_only()
     {
@@ -1081,6 +1087,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - コメント日時の範囲を指定して取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_between()
     {
@@ -1107,6 +1115,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - 範囲指定で時刻の全部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_between_time_omitted()
     {
@@ -1133,6 +1143,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - 範囲指定で時刻の一部を省略した場合には、範囲の開始時刻が00:00:00、終了時刻が23:59:59となるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_between_time_partial_omitted()
     {
@@ -1159,6 +1171,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - コメント日時の未満で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_before()
     {
@@ -1186,6 +1200,8 @@ class CommentTest extends TestCase
      * 
      * - コメント日時の未満で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_before_partial_omitted()
     {
@@ -1212,6 +1228,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - コメント日時のより先で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_after()
     {
@@ -1239,6 +1257,8 @@ class CommentTest extends TestCase
      * 
      * - コメント日時のより先で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_after_partial_omitted()
     {
@@ -1265,6 +1285,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - コメント日時の以前で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_beforeEquals()
     {
@@ -1292,6 +1314,8 @@ class CommentTest extends TestCase
      * 
      * - コメント日時の以前で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_beforeEquals_partial_omitted()
     {
@@ -1318,6 +1342,8 @@ class CommentTest extends TestCase
      * コメント日時による絞り込み
      * 
      * - コメント日時の以降で範囲指定することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_afterEquals()
     {
@@ -1345,6 +1371,8 @@ class CommentTest extends TestCase
      * 
      * - コメント日時の以降で範囲指定することもできることを確認します。
      * - 時刻の一部または全部を省略した場合には、省略部分が常に00:00:00と同じなるに不足部分が補われることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#コメント日時による絞り込み
      */
     public function test_filter_afterEquals_partial_omitted()
     {
@@ -1365,5 +1393,89 @@ class CommentTest extends TestCase
 
         // 評価
         $this->assertEquals(2, $comments->count());
+    }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - 公開されたコメントのみ取得する場合は、publicローカルスコープを利用できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開・非公開による絞り込み
+     */
+    public function test_filter_public()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Item::factory(['is_public' => true])->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['commenter_nickname' => 'Feeldee', 'is_public' => true],
+                    ['commenter_nickname' => 'Feeldee', 'is_public' => false],
+                    ['commenter_nickname' => 'Feeldee', 'is_public' => true],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::by('Feeldee')->public()->get();
+
+        // 評価
+        Assert::assertCount(2, $comments);
+    }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - 非公開のコメントのみを取得する場合は、privateローカルスコープを利用できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開・非公開による絞り込み
+     */
+    public function test_filter_private()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory(['posted_at' => Carbon::parse('2025-09-01'), 'is_public' => true])->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['is_public' => true],
+                    ['is_public' => false],
+                    ['is_public' => true],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Journal::at('2025-09-01')->first()->comments()->private()->get();
+
+        // 評価
+        Assert::assertCount(1, $comments);
+    }
+
+    /**
+     * 公開・非公開による絞り込み
+     * 
+     * - コメントの公開・非公開は、常にコメント対象の投稿公開フラグとのAND条件となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#公開・非公開による絞り込み
+     */
+    public function test_filter_public_and_post_is_public()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Journal::factory(['is_public' => false])->count(1)->has(
+                Comment::factory(3)->sequence(
+                    ['is_public' => true],
+                    ['is_public' => false],
+                    ['is_public' => true],
+                )
+            )
+        )->create();
+
+        // 実行
+        $comments = Comment::public()->get();
+
+        // 評価
+        Assert::assertCount(0, $comments);
     }
 }
