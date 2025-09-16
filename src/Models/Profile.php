@@ -166,6 +166,14 @@ class Profile extends Model
         return $this->hasMany(Config::class);
     }
 
+    /**
+     * 友達リスト
+     */
+    public function friends()
+    {
+        return $this->belongsToMany(Profile::class, 'friends', 'profile_id', 'friend_id');
+    }
+
     private $configCache = [];
 
     /**

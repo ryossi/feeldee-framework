@@ -503,6 +503,26 @@ class ProfileTest extends TestCase
     }
 
     /**
+     * 友達リスト
+     * 
+     * - プロフィールに友達として紐づけられた他のプロフィールのコレクションであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#友達リスト
+     */
+    public function test_friends()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->hasAttached(Profile::factory(2), [
+            'created_by' => 1,
+            'updated_by' => 1
+        ], 'friends')->create();
+
+        // 評価
+        $this->assertEquals(2, $profile->friends->count());
+    }
+
+    /**
      * ユーザEloquentモデルへのプロフィール関連付け
      * 
      * - ユーザEloquentモデルからプロフィールリストにアクセスできることを確認します。
