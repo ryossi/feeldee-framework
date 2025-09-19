@@ -8,9 +8,11 @@ use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
+use Feeldee\Framework\Models\PublicLevel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
+use Tests\Models\User;
 
 class PostTest extends TestCase
 {
@@ -755,5 +757,156 @@ class PostTest extends TestCase
 
         // 評価
         $this->assertEquals(1, $locations->count());
+    }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - 閲覧可能なコンテンツのみに絞り込む場合は、viewableローカルスコープが利用できることを確認します。
+     * - 匿名ユーザは、公開レベル「全員」のみ閲覧可否であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_filter_viewable()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->has(
+            Photo::factory(5)->sequence(
+                ['is_public' => false, 'public_level' => PublicLevel::Public],
+                ['is_public' => true, 'public_level' => PublicLevel::Private],
+                ['is_public' => true, 'public_level' => PublicLevel::Friend],
+                ['is_public' => true, 'public_level' => PublicLevel::Member],
+                ['is_public' => true, 'public_level' => PublicLevel::Public],
+            )
+        )->create();
+
+        // 実行
+        $photos = Photo::viewable()->get();
+
+        // 評価
+        $this->assertEquals(1, $photos->count());
+        foreach ($photos as $photo) {
+            $this->assertTrue($photo->is_public, "Photo ID {$photo->id} is not public");
+        }
+        $this->assertContains(PublicLevel::Public, $photos->pluck('public_level'));
+    }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - プロフィールが関連付けされているユーザEloquentモデルが指定された場合は、デフォルトプロフィールに基づき閲覧可否が判断されることを確認します。
+     * - ログインユーザは、公開レベル「全員」「会員」が閲覧可否であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_filter_viewable_with_user_model()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'Viewer',
+            'title' => '閲覧者'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+
+        Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->has(Journal::factory(5)->sequence(
+            ['is_public' => false, 'public_level' => PublicLevel::Public],
+            ['is_public' => true, 'public_level' => PublicLevel::Private],
+            ['is_public' => true, 'public_level' => PublicLevel::Friend],
+            ['is_public' => true, 'public_level' => PublicLevel::Member],
+            ['is_public' => true, 'public_level' => PublicLevel::Public],
+        ))->create();
+
+        // 実行
+        $journals = Journal::by('Feeldee')->viewable(Auth::user())->get();
+
+        // 評価
+        $this->assertEquals(2, $journals->count());
+        foreach ($journals as $journal) {
+            $this->assertTrue($journal->is_public, "Journal ID {$journal->id} is not public");
+        }
+        $this->assertContains(PublicLevel::Public, $journals->pluck('public_level'));
+        $this->assertContains(PublicLevel::Member, $journals->pluck('public_level'));
+    }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - 閲覧可否の判断にニックネームでも指定が可能でることを確認します。
+     * - 閲覧者が友達リストに含まれる場合は、「全員」「会員」に加え「友達」のコンテンツも閲覧可能となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_filter_viewable_with_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(
+            Item::factory(5)->sequence(
+                ['is_public' => false, 'public_level' => PublicLevel::Public],
+                ['is_public' => true, 'public_level' => PublicLevel::Private],
+                ['is_public' => true, 'public_level' => PublicLevel::Friend],
+                ['is_public' => true, 'public_level' => PublicLevel::Member],
+                ['is_public' => true, 'public_level' => PublicLevel::Public],
+            )
+        )->hasAttached(Profile::factory(['nickname' => 'Friend']), ['created_by' => 1, 'updated_by' => 1], 'friends')->create();
+
+        // 実行
+        $items = Item::by('Feeldee')->viewable('Friend')->get();
+
+        // 評価
+        $this->assertEquals(3, $items->count());
+        foreach ($items as $item) {
+            $this->assertTrue($item->is_public, "Item ID {$item->id} is not public");
+        }
+        $this->assertContains(PublicLevel::Public, $items->pluck('public_level'));
+        $this->assertContains(PublicLevel::Member, $items->pluck('public_level'));
+        $this->assertContains(PublicLevel::Friend, $items->pluck('public_level'));
+    }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - プロフィールを指定して閲覧可否が判断されることを確認します。
+     * - 閲覧者が自分自身の場合は「全員」「会員」のコンテンツに加えて「友達」「自分」のコンテンツも閲覧可能となることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_filter_viewable_with_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(
+            [
+                'nickname' => 'Feeldee'
+            ]
+        )->has(Location::factory(5)->sequence(
+            ['is_public' => false, 'public_level' => PublicLevel::Public],
+            ['is_public' => true, 'public_level' => PublicLevel::Private],
+            ['is_public' => true, 'public_level' => PublicLevel::Friend],
+            ['is_public' => true, 'public_level' => PublicLevel::Member],
+            ['is_public' => true, 'public_level' => PublicLevel::Public],
+        ))->create();
+
+        // 実行
+        $locations = Location::by('Feeldee')->viewable(Profile::of('Feeldee')->first())->get();
+
+        // 評価
+        $this->assertEquals(4, $locations->count());
+        foreach ($locations as $location) {
+            $this->assertTrue($location->is_public, "Location ID {$location->id} is not public");
+        }
+        $this->assertContains(PublicLevel::Public, $locations->pluck('public_level'));
+        $this->assertContains(PublicLevel::Member, $locations->pluck('public_level'));
+        $this->assertContains(PublicLevel::Friend, $locations->pluck('public_level'));
+        $this->assertContains(PublicLevel::Private, $locations->pluck('public_level'));
     }
 }

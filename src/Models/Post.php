@@ -240,6 +240,53 @@ abstract class Post extends Model
         $query->where('is_public', false);
     }
 
+    /**
+     * 閲覧可能なコンテンツの絞り込むためのローカルスコープ
+     */
+    public function scopeViewable(Builder $query, $viewer = null): void
+    {
+        // 閲覧プロフィールの特定
+        if (!($viewer instanceof Profile)) {
+            // プロフィールが関連付けされているユーザEloquentモデルが指定された場合
+            if ($viewer && method_exists($viewer, 'profile')) {
+                // デフォルトプロフィールに基づき閲覧可否が判断されるため、profile()メソッドを呼び出してプロフィールを取得
+                $viewer = $viewer->profile;
+            } else if (is_string($viewer)) {
+                // $viewerがstringの場合は、プロフィールニックネームとする
+                $viewer = Profile::of($viewer)->first();
+            } else {
+                // デフォルトプロフィールが特定できない場合は、匿名ユーザー(null)として扱う
+                $viewer = null;
+            }
+        }
+
+        $query->public()->where(function (Builder $query) use ($viewer) {
+            // 公開レベル「全員」
+            $query->orWhere('public_level', PublicLevel::Public);
+            if (!is_null($viewer)) {
+                // 公開レベル「会員」
+                $query->orWhere('public_level', PublicLevel::Member);
+                // 公開レベル「友達」
+                // 友達機能: viewerが投稿者のfriendsテーブルに含まれているか判定
+                $query->orWhere(function (Builder $q) use ($viewer) {
+                    $q->where('public_level', PublicLevel::Friend)
+                        ->where(function ($friendQuery) use ($viewer) {
+                            // 自分自身の場合も含める
+                            $friendQuery->where('profile_id', $viewer->id)
+                                ->orWhereHas('profile.friends', function ($fq) use ($viewer) {
+                                    $fq->where('friend_id', $viewer->id);
+                                });
+                        });
+                });
+                // 公開レベル「自分」
+                $query->orWhere(function (Builder $q) use ($viewer) {
+                    $q->where('public_level', PublicLevel::Private)
+                        ->where('profile_id', $viewer->id);
+                });
+            }
+        });
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
@@ -293,34 +340,4 @@ abstract class Post extends Model
     {
         return $query->orderBy('title', $direction);
     }
-
-    // /**
-    //  * 公開済み、かつ公開レベルに応じて公開範囲を制御するようにクエリのスコープを設定
-    //  */
-    // public function scopePublic($query)
-    // {
-    //     $table = (new $this)->getTable();
-    //     $query->where($table . '.is_public', true);
-    //     $query->where(function (Builder $query) use ($table) {
-    //         // 公開レベル「全員」
-    //         $query->orWhere($table . '.public_level', PublicLevel::Public);
-    //         // 公開レベル「会員」
-    //         $query->orWhere(function (Builder $query) use ($table) {
-    //             $query->where($table . '.public_level', PublicLevel::Member)
-    //                 ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
-    //         });
-    //         // 公開レベル「友達」
-    //         // TODO::友達機能未実装
-    //         $query->orWhere(function (Builder $query) use ($table) {
-    //             $query->where($table . '.public_level', PublicLevel::Friend)
-    //                 ->where($table . '.profile_id', Auth::user()?->profile->id);
-    //         });
-    //         // 公開レベル「自分」
-    //         $query->orWhere(function (Builder $query) use ($table) {
-    //             $query->where($table . '.public_level', PublicLevel::Private)
-    //                 ->where($table . '.profile_id', Auth::user()?->profile->id);
-    //         });
-    //     });
-    //     return $query;
-    // }
 }

@@ -14,7 +14,6 @@ use Feeldee\Framework\Models\Reply;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Testing\Assert;
 use Tests\Models\User;
 
