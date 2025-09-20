@@ -359,6 +359,8 @@ class Comment extends Model
                                 $q2->where('public_level', PublicLevel::Private)
                                     ->where('profile_id', $viewer->id);
                             });
+                            // コメント者が自分の場合も含める
+                            $q->orWhere('commenter_profile_id', $viewer->id);
                         }
                     });
                 }
