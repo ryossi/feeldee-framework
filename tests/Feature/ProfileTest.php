@@ -778,4 +778,69 @@ class ProfileTest extends TestCase
         $this->assertCount(1, $filteredProfiles, 'コンフィグ値でのプロフィールの絞り込みができること');
         $this->assertEquals($profile1->id, $filteredProfiles->first()->id, '正しいプロフィールが取得されること');
     }
+
+    /**
+     * 友達かどうかを判定する
+     * 
+     * - 友達リストは、LaravelのCollection型を返すため、containsメソッドなどで友達リストに特定のプロフィールが含まれているかどうかで、友達かどうかを判定することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#友達かどうかを判定する
+     */
+    public function test_is_friend_collection_contains()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create(['nickname' => 'Feeldee']);
+        $friendProfile = Profile::factory()->create(['nickname' => 'Friend']);
+        $profile->friends()->attach($friendProfile->id);
+
+        // 評価
+        $this->assertTrue(Profile::of('Feeldee')->first()->friends->contains(function (Profile $friend) {
+            return $friend->nickname == 'Friend';
+        }));
+    }
+
+    /**
+     * 友達かどうかを判定する
+     * 
+     * - isFriendメソッドを使用して簡単に記述することができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#友達かどうかを判定する
+     */
+    public function test_is_friend()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create(['nickname' => 'Feeldee']);
+        $friendProfile = Profile::factory()->create(['nickname' => 'Friend']);
+        $profile->friends()->attach($friendProfile->id);
+
+        // 実行
+        $is_friend = $profile->isFriend($friendProfile);
+
+        // 評価
+        $this->assertTrue($is_friend);
+    }
+
+    /**
+     * 友達かどうかを判定する
+     * 
+     * - ニックネームを直接指定して判断することもできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#友達かどうかを判定する
+     */
+    public function test_is_friend_by_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create(['nickname' => 'Feeldee']);
+        $friendProfile = Profile::factory()->create(['nickname' => 'Friend']);
+        $profile->friends()->attach($friendProfile->id);
+
+        // 実行
+        $is_friend = $profile->isFriend('Friend');
+
+        // 評価
+        $this->assertTrue($is_friend);
+    }
 }
