@@ -909,4 +909,159 @@ class PostTest extends TestCase
         $this->assertContains(PublicLevel::Friend, $locations->pluck('public_level'));
         $this->assertContains(PublicLevel::Private, $locations->pluck('public_level'));
     }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - isViewableメソッドでログイン中のユーザが閲覧可能かどうかを判定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_is_viewable()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'Viewer',
+            'title' => '閲覧者'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        Profile::factory(['nickname' => 'Feeldee'])->has(
+            Journal::factory()->count(5)->sequence(
+                ['posted_at' => '2025-09-16', 'is_public' => false, 'public_level' => PublicLevel::Public],
+                ['posted_at' => '2025-09-17', 'is_public' => true, 'public_level' => PublicLevel::Private],
+                ['posted_at' => '2025-09-18', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+                ['posted_at' => '2025-09-19', 'is_public' => true, 'public_level' => PublicLevel::Member],
+                ['posted_at' => '2025-09-20', 'is_public' => true, 'public_level' => PublicLevel::Public],
+            )
+        )->create();
+
+        // 実行
+        $noPublic = Journal::by('Feeldee')->at('2025-09-16')->first()->isViewable(Auth::user());
+        $private = Journal::by('Feeldee')->at('2025-09-17')->first()->isViewable(Auth::user());
+        $friend = Journal::by('Feeldee')->at('2025-09-18')->first()->isViewable(Auth::user());
+        $member = Journal::by('Feeldee')->at('2025-09-19')->first()->isViewable(Auth::user());
+        $public = Journal::by('Feeldee')->at('2025-09-20')->first()->isViewable(Auth::user());
+
+        // 評価
+        $this->assertFalse($noPublic);
+        $this->assertFalse($private);
+        $this->assertFalse($friend);
+        $this->assertTrue($member);
+        $this->assertTrue($public);
+    }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - isViewableメソッドでログインしていない匿名ユーザも判定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_is_viewable_with_anonymous_user()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(
+            Photo::factory()->count(5)->sequence(
+                ['posted_at' => '2025-09-16 09:30', 'is_public' => false, 'public_level' => PublicLevel::Public],
+                ['posted_at' => '2025-09-16 10:30', 'is_public' => true, 'public_level' => PublicLevel::Private],
+                ['posted_at' => '2025-09-16 11:30', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+                ['posted_at' => '2025-09-16 12:30', 'is_public' => true, 'public_level' => PublicLevel::Member],
+                ['posted_at' => '2025-09-16 13:30', 'is_public' => true, 'public_level' => PublicLevel::Public],
+            )
+        )->create();
+
+        // 実行
+        $noPublic = Photo::by('Feeldee')->at('2025-09-16 09:30')->first()->isViewable();
+        $private = Photo::by('Feeldee')->at('2025-09-16 10:30')->first()->isViewable();
+        $friend = Photo::by('Feeldee')->at('2025-09-16 11:30')->first()->isViewable();
+        $member = Photo::by('Feeldee')->at('2025-09-16 12:30')->first()->isViewable();
+        $public = Photo::by('Feeldee')->at('2025-09-16 13:30')->first()->isViewable();
+
+        // 評価
+        $this->assertFalse($noPublic);
+        $this->assertFalse($private);
+        $this->assertFalse($friend);
+        $this->assertFalse($member);
+        $this->assertTrue($public);
+    }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - isViewableメソッドでニックネームを直接指定しても判定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_is_viewable_with_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(
+            Location::factory()->count(5)->sequence(
+                ['posted_at' => '2025-09-16 09:30', 'is_public' => false, 'public_level' => PublicLevel::Public],
+                ['posted_at' => '2025-09-17 09:30', 'is_public' => true, 'public_level' => PublicLevel::Private],
+                ['posted_at' => '2025-09-18 09:30', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+                ['posted_at' => '2025-09-19 09:30', 'is_public' => true, 'public_level' => PublicLevel::Member],
+                ['posted_at' => '2025-09-20 09:30', 'is_public' => true, 'public_level' => PublicLevel::Public],
+            )
+        )->hasAttached(Profile::factory(['nickname' => 'ユーザ1']), [], 'friends')->create();
+
+        // 実行
+        $noPublic = Location::by('Feeldee')->at('2025-09-16 09:30')->first()->isViewable('ユーザ1');
+        $private = Location::by('Feeldee')->at('2025-09-17 09:30')->first()->isViewable('ユーザ1');
+        $friend = Location::by('Feeldee')->at('2025-09-18 09:30')->first()->isViewable('ユーザ1');
+        $member = Location::by('Feeldee')->at('2025-09-19 09:30')->first()->isViewable('ユーザ1');
+        $public = Location::by('Feeldee')->at('2025-09-20 09:30')->first()->isViewable('ユーザ1');
+
+        // 評価
+        $this->assertFalse($noPublic);
+        $this->assertFalse($private);
+        $this->assertTrue($friend);
+        $this->assertTrue($member);
+        $this->assertTrue($public);
+    }
+
+    /**
+     * 閲覧可能なコンテンツの絞り込み
+     * 
+     * - isViewableメソッドで自分自身を指定しても判定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     */
+    public function test_is_viewable_with_mine()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Item::factory()->count(5)->sequence(
+            ['posted_at' => '2025-09-16 09:30', 'is_public' => false, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-09-17 09:30', 'is_public' => true, 'public_level' => PublicLevel::Private],
+            ['posted_at' => '2025-09-18 09:30', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+            ['posted_at' => '2025-09-19 09:30', 'is_public' => true, 'public_level' => PublicLevel::Member],
+            ['posted_at' => '2025-09-20 09:30', 'is_public' => true, 'public_level' => PublicLevel::Public],
+        )->for($profile)->create();
+
+        // 実行
+        $noPublic = Item::by('Feeldee')->at('2025-09-16 09:30')->first()->isViewable($profile);
+        $private = Item::by('Feeldee')->at('2025-09-17 09:30')->first()->isViewable($profile);
+        $friend = Item::by('Feeldee')->at('2025-09-18 09:30')->first()->isViewable($profile);
+        $member = Item::by('Feeldee')->at('2025-09-19 09:30')->first()->isViewable($profile);
+        $public = Item::by('Feeldee')->at('2025-09-20 09:30')->first()->isViewable($profile);
+
+        // 評価
+        $this->assertFalse($noPublic);
+        $this->assertTrue($private);
+        $this->assertTrue($friend);
+        $this->assertTrue($member);
+        $this->assertTrue($public);
+    }
 }

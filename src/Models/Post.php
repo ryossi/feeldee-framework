@@ -242,6 +242,8 @@ abstract class Post extends Model
 
     /**
      * 閲覧可能なコンテンツの絞り込むためのローカルスコープ
+     * 
+     * @see https://github.com/ryossi/feeldee-framework/wiki/公開レベル
      */
     public function scopeViewable(Builder $query, $viewer = null): void
     {
@@ -287,6 +289,60 @@ abstract class Post extends Model
         });
     }
 
+    /**
+     * 取得したコンテンツそのものが閲覧可能かどうかを判断します。
+     * 
+     * @see https://github.com/ryossi/feeldee-framework/wiki/公開レベル
+     *
+     * @param mixed $viewer 閲覧者（未特定の場合null）
+     * @return bool 閲覧可能な場合true、閲覧不可の場合false
+     */
+    public function isViewable(mixed $viewer = null): bool
+    {
+        if (!$this->is_public) {
+            // 投稿が未公開の場合、閲覧不可
+            return false;
+        }
+
+        if ($this->public_level === PublicLevel::Public) {
+            // 投稿が公開レベル「全員」の場合、常に閲覧可能
+            return true;
+        }
+
+        // 閲覧プロフィールの特定
+        if (!($viewer instanceof Profile)) {
+            // プロフィールが関連付けされているユーザEloquentモデルが指定された場合
+            if ($viewer && method_exists($viewer, 'profile')) {
+                // デフォルトプロフィールに基づき閲覧可否が判断されるため、profile()メソッドを呼び出してプロフィールを取得
+                $viewer = $viewer->profile;
+            } else if (is_string($viewer)) {
+                // $viewerがstringの場合は、プロフィールニックネームとする
+                $viewer = Profile::of($viewer)->first();
+            } else {
+                // デフォルトプロフィールが特定できない場合は、匿名ユーザー(null)として扱う
+                return false;
+            }
+        }
+
+        if ($this->public_level === PublicLevel::Member) {
+            // 投稿が公開レベル「会員」の場合、viewerが特定されている場合に閲覧可能
+            return !is_null($viewer);
+        }
+
+        if ($this->public_level === PublicLevel::Friend) {
+            // 投稿が公開レベル「友達」の場合、自分自身もしくはviewerが友達である必要がある
+            return $viewer->id === $this->profile_id || $this->profile->isFriend($viewer);
+        }
+
+        if ($this->public_level === PublicLevel::Private) {
+            // 投稿が公開レベル「自分」の場合、viewerが投稿者自身である必要がある
+            return $viewer->id === $this->profile_id;
+        }
+
+        return false;
+    }
+
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
@@ -299,30 +355,6 @@ abstract class Post extends Model
     public function textTruncate(int $width, string $trim_marker, ?string $encoding)
     {
         return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
-    }
-
-    /**
-     * 投稿が閲覧可能か判定します。
-     * 投稿が閲覧可能かどうかは、投稿の公開レベルが閲覧者の最小公開レベル以上かどうかで決定されます。
-     * 
-     * 投稿が未公開・・・閲覧不可
-     * 投稿が公開済み、かつ公開レベルが「自分」・・・閲覧者が自分自身の場合のみ閲覧可能
-     * 投稿が公開済み、かつ公開レベルが「友達」・・・閲覧者が投稿を所有するプロフィールの友達リストに含まれる場合のみ閲覧可能
-     * 投稿が公開済み、かつ公開レベルが「会員」・・・閲覧者が特定できている（null以外）場合のみ閲覧可能
-     * 投稿が公開済み、かつ公開レベルが「全員」・・・閲覧者が未特定（null）の場合でも閲覧可能
-     *
-     * @param ?Profile 閲覧者（未特定の場合null）
-     * @return bool 閲覧可能な場合true、閲覧不可の場合false
-     */
-    public function isView(?Profile $viewer): bool
-    {
-        if (!$this->isPublic()) {
-            // 投稿が未公開の場合、閲覧不可
-            return false;
-        }
-
-        // 公開レベルと最小公開レベルを比較
-        return $this->public_level->value >= $this->profile->minPublicLevel($viewer)->value;
     }
 
     /**
