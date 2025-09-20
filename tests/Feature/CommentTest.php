@@ -1677,11 +1677,11 @@ class CommentTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
      */
-    public function test_is_viewable_with_nickname()
+    public function test_filter_viewable_with_nickname()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
         // コメント対象が非公開
         Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
             Comment::factory()->sequence(
@@ -1720,7 +1720,7 @@ class CommentTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $comments = Comment::by('Feeldee')->viewable('Feeldee')->get();
+        $comments = Comment::viewable('Feeldee')->get();
 
         // 評価
         Assert::assertCount(4, $comments);
@@ -1791,5 +1791,351 @@ class CommentTest extends TestCase
             $this->assertTrue($comment->commentable->is_public, 'コメント対象が公開されていること');
             $this->assertContains($comment->commentable->public_level, [PublicLevel::Public, PublicLevel::Member, PublicLevel::Friend, PublicLevel::Private], '自分自身のコメントについては、コメント対象の投稿公開レベルにかかわらず、公開済みであれば閲覧可能');
         }
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - isViewableメソッドで匿名ユーザにも閲覧可能かどうかを判定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_is_viewable_with_anonymous_user()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-21', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-22', 'is_public' => false, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-23', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-24', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-25', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-26', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable();
+        $comment_falese = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable();
+        $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable();
+        $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable();
+        $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable();
+        $post_private = Comment::by('Commenter')->at('2025-09-26')->first()->isViewable();
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントは匿名ユーザには閲覧できないこと');
+        $this->assertFalse($comment_falese, '非公開コメントは匿名ユーザには閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」は匿名ユーザにも閲覧可能であること');
+        $this->assertFalse($post_member, '「会員」は匿名ユーザには閲覧できないこと');
+        $this->assertFalse($post_friend, '「友達」は匿名ユーザには閲覧できないこと');
+        $this->assertFalse($post_private, '「自分」は匿名ユーザには閲覧できないこと');
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - isViewableメソッドでログイン中のユーザが閲覧可能かどうかを判定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_is_viewable_with_logged_in_user()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'Viewer',
+            'title' => '閲覧者'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-21', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-22', 'is_public' => false, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-23', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-24', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-25', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-26', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable(Auth::user());
+        $comment_false = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable(Auth::user());
+        $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable(Auth::user());
+        $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable(Auth::user());
+        $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable(Auth::user());
+        $post_private = Comment::by('Commenter')->at('2025-09-26')->first()->isViewable(Auth::user());
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントはログインユーザには閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントはログインユーザには閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」はログインユーザにも閲覧可能であること');
+        $this->assertTrue($post_member, '「会員」はログインユーザにも閲覧可能であること');
+        $this->assertFalse($post_friend, '「友達」はログインユーザには閲覧できないこと');
+        $this->assertFalse($post_private, '「自分」はログインユーザには閲覧できないこと');
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - isViewableメソッドでコメント対象の友達リストに登録されたプロフィールで閲覧可能かどうかを判定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_is_viewable_with_friend_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])
+            ->hasAttached(Profile::factory(['nickname' => 'Friend']), [], 'friends')->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-21', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-22', 'is_public' => false, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-23', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-24', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-25', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-26', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable(Profile::of('Friend')->first());
+        $comment_false = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable(Profile::of('Friend')->first());
+        $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable(Profile::of('Friend')->first());
+        $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable(Profile::of('Friend')->first());
+        $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable(Profile::of('Friend')->first());
+        $post_private = Comment::by('Commenter')->at('2025-09-26')->first()->isViewable(Profile::of('Friend')->first());
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントは友達登録されたプロフィールには閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントは友達登録されたプロフィールには閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」は友達登録されたプロフィールにも閲覧可能であること');
+        $this->assertTrue($post_member, '「会員」は友達登録されたプロフィールにも閲覧可能であること');
+        $this->assertTrue($post_friend, '「友達」は友達登録されたプロフィールにも閲覧可能であること');
+        $this->assertFalse($post_private, '「自分」は友達登録されたプロフィールには閲覧できないこと');
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - isViewableメソッドでコメント対象の投稿者自身がニックネームで閲覧可能かどうかを判定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_is_viewable_with_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-21', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-22', 'is_public' => false, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-23', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-24', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-25', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-26', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable('Feeldee');
+        $comment_false = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable('Feeldee');
+        $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable('Feeldee');
+        $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable('Feeldee');
+        $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable('Feeldee');
+        $post_private = Comment::by('Commenter')->at('2025-09-26')->first()->isViewable('Feeldee');
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントはコメント対象投稿者には閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントはコメント対象投稿者には閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」はコメント対象投稿者にも閲覧可能であること');
+        $this->assertTrue($post_member, '「会員」はコメント対象投稿者にも閲覧可能であること');
+        $this->assertTrue($post_friend, '「友達」はコメント対象投稿者にも閲覧可能であること');
+        $this->assertTrue($post_private, '「自分」はコメント対象投稿者にも閲覧可能であること');
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - isViewableメソッドで自分自身のコメントが閲覧可能かどうかを判定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_is_viewable_with_mine()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-21', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-22', 'is_public' => false, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-23', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-24', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-25', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['commented_at' => '2025-09-26', 'is_public' => true, 'commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable('Commenter');
+        $comment_false = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable('Commenter');
+        $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable('Commenter');
+        $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable('Commenter');
+        $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable('Commenter');
+        $post_private = Comment::by('Commenter')->at('2025-09-26')->first()->isViewable('Commenter');
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントは自分自身でも閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントは自分自身でも閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」は自分自身にも閲覧可能であること');
+        $this->assertTrue($post_member, '「会員」は自分自身にも閲覧可能であること');
+        $this->assertTrue($post_friend, '「友達」は自分自身にも閲覧可能であること');
+        $this->assertTrue($post_private, '「自分」は自分自身にも閲覧可能であること');
     }
 }

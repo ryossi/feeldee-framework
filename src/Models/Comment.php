@@ -368,6 +368,57 @@ class Comment extends Model
         });
     }
 
+    /**
+     * 取得したコメントそのものが閲覧可能かどうかを判断します。
+     * 
+     * @see https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
+     *
+     * @param mixed $viewer 閲覧者（未特定の場合null）
+     * @return bool 閲覧可能な場合true、閲覧不可の場合false
+     */
+    public function isViewable(mixed $viewer = null): bool
+    {
+        // コメントが非公開の場合は閲覧不可
+        if (!$this->is_public) {
+            return false;
+        }
+
+        // コメント対象が非公開の場合も閲覧不可
+        if (!$this->commentable?->is_public) {
+            return false;
+        }
+
+        // viewerをProfileインスタンスに変換
+        if (!($viewer instanceof Profile)) {
+            if ($viewer && method_exists($viewer, 'profile')) {
+                $viewer = $viewer->profile;
+            } elseif (is_string($viewer)) {
+                $viewer = Profile::of($viewer)->first();
+            } else {
+                $viewer = null;
+            }
+        }
+
+        // コメント者自身の場合は常に閲覧可能
+        if ($viewer && $viewer->id === $this->commenter_profile_id) {
+            return true;
+        }
+
+        // コメント対象の公開レベルによる判定
+        switch ($this->commentable?->public_level) {
+            case PublicLevel::Public:
+                return true;
+            case PublicLevel::Member:
+                return !is_null($viewer);
+            case PublicLevel::Friend:
+                return $viewer && ($viewer->id === $this->commentable?->profile_id || $this->commentable?->profile->isFriend($viewer));
+            case PublicLevel::Private:
+                return $viewer && $viewer->id === $this->commentable?->profile_id;
+            default:
+                return false;
+        }
+    }
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
