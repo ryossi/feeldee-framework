@@ -225,7 +225,7 @@ abstract class Post extends Model
     }
 
     /**
-     * 公開されたコンテンツのみ取得するためのローカルスコープ
+     * 公開された投稿のみ取得するためのローカルスコープ
      */
     public function scopePublic($query): void
     {
@@ -233,7 +233,7 @@ abstract class Post extends Model
     }
 
     /**
-     * 非公開のコンテンツのみ取得するためのローカルスコープ
+     * 非公開の投稿のみ取得するためのローカルスコープ
      */
     public function scopePrivate($query): void
     {
@@ -241,7 +241,7 @@ abstract class Post extends Model
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込むためのローカルスコープ
+     * 閲覧可能な投稿の絞り込むためのローカルスコープ
      * 
      * @see https://github.com/ryossi/feeldee-framework/wiki/公開レベル
      */
@@ -290,7 +290,7 @@ abstract class Post extends Model
     }
 
     /**
-     * 取得したコンテンツそのものが閲覧可能かどうかを判断します。
+     * 取得した投稿そのものが閲覧可能かどうかを判断します。
      * 
      * @see https://github.com/ryossi/feeldee-framework/wiki/公開レベル
      *
@@ -300,46 +300,32 @@ abstract class Post extends Model
     public function isViewable(mixed $viewer = null): bool
     {
         if (!$this->is_public) {
-            // 投稿が未公開の場合、閲覧不可
             return false;
         }
 
-        if ($this->public_level === PublicLevel::Public) {
-            // 投稿が公開レベル「全員」の場合、常に閲覧可能
-            return true;
-        }
-
-        // 閲覧プロフィールの特定
+        // viewerをProfileインスタンスに変換
         if (!($viewer instanceof Profile)) {
-            // プロフィールが関連付けされているユーザEloquentモデルが指定された場合
             if ($viewer && method_exists($viewer, 'profile')) {
-                // デフォルトプロフィールに基づき閲覧可否が判断されるため、profile()メソッドを呼び出してプロフィールを取得
                 $viewer = $viewer->profile;
-            } else if (is_string($viewer)) {
-                // $viewerがstringの場合は、プロフィールニックネームとする
+            } elseif (is_string($viewer)) {
                 $viewer = Profile::of($viewer)->first();
             } else {
-                // デフォルトプロフィールが特定できない場合は、匿名ユーザー(null)として扱う
-                return false;
+                $viewer = null;
             }
         }
 
-        if ($this->public_level === PublicLevel::Member) {
-            // 投稿が公開レベル「会員」の場合、viewerが特定されている場合に閲覧可能
-            return !is_null($viewer);
+        switch ($this->public_level) {
+            case PublicLevel::Public:
+                return true;
+            case PublicLevel::Member:
+                return !is_null($viewer);
+            case PublicLevel::Friend:
+                return $viewer && ($viewer->id === $this->profile_id || $this->profile->isFriend($viewer));
+            case PublicLevel::Private:
+                return $viewer && $viewer->id === $this->profile_id;
+            default:
+                return false;
         }
-
-        if ($this->public_level === PublicLevel::Friend) {
-            // 投稿が公開レベル「友達」の場合、自分自身もしくはviewerが友達である必要がある
-            return $viewer->id === $this->profile_id || $this->profile->isFriend($viewer);
-        }
-
-        if ($this->public_level === PublicLevel::Private) {
-            // 投稿が公開レベル「自分」の場合、viewerが投稿者自身である必要がある
-            return $viewer->id === $this->profile_id;
-        }
-
-        return false;
     }
 
 

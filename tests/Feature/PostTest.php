@@ -760,12 +760,12 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - 閲覧可能なコンテンツのみに絞り込む場合は、viewableローカルスコープが利用できることを確認します。
      * - 匿名ユーザは、公開レベル「全員」のみ閲覧可否であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_filter_viewable()
     {
@@ -793,12 +793,12 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - プロフィールが関連付けされているユーザEloquentモデルが指定された場合は、デフォルトプロフィールに基づき閲覧可否が判断されることを確認します。
      * - ログインユーザは、公開レベル「全員」「会員」が閲覧可否であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_filter_viewable_with_user_model()
     {
@@ -838,12 +838,12 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - 閲覧可否の判断にニックネームでも指定が可能でることを確認します。
      * - 閲覧者が友達リストに含まれる場合は、「全員」「会員」に加え「友達」のコンテンツも閲覧可能となることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_filter_viewable_with_nickname()
     {
@@ -873,12 +873,12 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - プロフィールを指定して閲覧可否が判断されることを確認します。
      * - 閲覧者が自分自身の場合は「全員」「会員」のコンテンツに加えて「友達」「自分」のコンテンツも閲覧可能となることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_filter_viewable_with_profile()
     {
@@ -911,11 +911,11 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - isViewableメソッドでログイン中のユーザが閲覧可能かどうかを判定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_is_viewable()
     {
@@ -957,11 +957,11 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - isViewableメソッドでログインしていない匿名ユーザも判定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_is_viewable_with_anonymous_user()
     {
@@ -993,11 +993,11 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - isViewableメソッドでニックネームを直接指定しても判定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_is_viewable_with_nickname()
     {
@@ -1029,11 +1029,11 @@ class PostTest extends TestCase
     }
 
     /**
-     * 閲覧可能なコンテンツの絞り込み
+     * 閲覧可能な投稿の絞り込み
      * 
      * - isViewableメソッドで自分自身を指定しても判定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能なコンテンツの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
      */
     public function test_is_viewable_with_mine()
     {
