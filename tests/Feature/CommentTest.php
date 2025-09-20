@@ -10,6 +10,7 @@ use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\PublicLevel;
 use Feeldee\Framework\Models\Reply;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -1476,5 +1477,257 @@ class CommentTest extends TestCase
 
         // 評価
         Assert::assertCount(0, $comments);
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - 匿名ユーザでも閲覧可能なコメントリストを取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_filter_viewable_with_anonymous_user()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => false],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $comments = Comment::viewable()->get();
+
+        // 評価
+        Assert::assertCount(1, $comments);
+        Assert::assertTrue($comments->first()->is_public, 'コメントが公開されていること');
+        Assert::assertTrue($comments->first()->commentable->is_public, 'コメント対象が公開されていること');
+        Assert::assertEquals(PublicLevel::Public, $comments->first()->commentable->public_level, 'コメント対象の公開レベル「全員」であること');
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - ログイン済みユーザが閲覧可能なコメントリストを取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_filter_viewable_with_logged_in_user()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'Viewer',
+            'title' => '閲覧者'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        $profile = Profile::factory()->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => false],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $comments = Comment::viewable(Auth::user())->get();
+
+        // 評価
+        Assert::assertCount(2, $comments);
+        foreach ($comments as $comment) {
+            $this->assertTrue($comment->is_public, 'コメントが公開されていること');
+            $this->assertTrue($comment->commentable->is_public, 'コメント対象が公開されていること');
+            $this->assertContains($comment->commentable->public_level, [PublicLevel::Public, PublicLevel::Member], 'コメント対象の公開レベルが適切であること');
+        }
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - 友達リストに登録済みプロフィールで閲覧可能なコメントリストを取得できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_filter_viewable_with_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->hasAttached(Profile::factory(['nickname' => 'Friend']), [], 'friends')->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => false],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $comments = Comment::viewable(Profile::of('Friend')->first())->get();
+
+        // 評価
+        Assert::assertCount(3, $comments);
+        foreach ($comments as $comment) {
+            $this->assertTrue($comment->is_public, 'コメントが公開されていること');
+            $this->assertTrue($comment->commentable->is_public, 'コメント対象が公開されていること');
+            $this->assertContains($comment->commentable->public_level, [PublicLevel::Public, PublicLevel::Member, PublicLevel::Friend], 'コメント対象の公開レベルが適切であること');
+        }
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込み
+     * 
+     * - 自分自身が閲覧可能なコメントリストを取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_is_viewable_with_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、コメントが非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => false],
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory()->sequence(
+                ['is_public' => true],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $comments = Comment::by('Feeldee')->viewable('Feeldee')->get();
+
+        // 評価
+        Assert::assertCount(4, $comments);
+        foreach ($comments as $comment) {
+            $this->assertTrue($comment->is_public, 'コメントが公開されていること');
+            $this->assertTrue($comment->commentable->is_public, 'コメント対象が公開されていること');
+            $this->assertContains($comment->commentable->public_level, [PublicLevel::Public, PublicLevel::Member, PublicLevel::Friend, PublicLevel::Private], 'コメント対象の公開レベルが適切であること');
+        }
     }
 }
