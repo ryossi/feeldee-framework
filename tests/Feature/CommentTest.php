@@ -1845,7 +1845,7 @@ class CommentTest extends TestCase
 
         // 実行
         $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable();
-        $comment_falese = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable();
+        $comment_fales = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable();
         $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable();
         $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable();
         $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable();
@@ -1853,7 +1853,7 @@ class CommentTest extends TestCase
 
         // 評価
         $this->assertFalse($post_false, 'コメント対象が非公開のコメントは匿名ユーザには閲覧できないこと');
-        $this->assertFalse($comment_falese, '非公開コメントは匿名ユーザには閲覧できないこと');
+        $this->assertFalse($comment_fales, '非公開コメントは匿名ユーザには閲覧できないこと');
         $this->assertTrue($post_public, '「全員」は匿名ユーザにも閲覧可能であること');
         $this->assertFalse($post_member, '「会員」は匿名ユーザには閲覧できないこと');
         $this->assertFalse($post_friend, '「友達」は匿名ユーザには閲覧できないこと');

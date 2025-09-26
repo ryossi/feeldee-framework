@@ -370,8 +370,8 @@ class Comment extends Model
 
     /**
      * 取得したコメントそのものが閲覧可能かどうかを判断します。
-     * 
-     * @see https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
+     *
+     * @see https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
      *
      * @param mixed $viewer 閲覧者（未特定の場合null）
      * @return bool 閲覧可能な場合true、閲覧不可の場合false

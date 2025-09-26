@@ -1809,4 +1809,374 @@ class ReplyTest extends TestCase
         Assert::assertTrue($replies->first()->comment->commentable->is_public, 'コメント対象が公開されていること');
         Assert::assertTrue(in_array($replies->first()->comment->commentable->public_level, [PublicLevel::Public, PublicLevel::Member, PublicLevel::Friend, PublicLevel::Private]), 'コメント対象の公開レベルが「全員」「会員」「友達」「自分」であること');
     }
+
+    /**
+     * 閲覧可能な返信の絞り込み
+     * 
+     * - isViewableメソッドで匿名ユーザにも閲覧可能かどうかを判定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#閲覧可能な返信の絞り込み
+     */
+    public function test_is_viewable_with_anonymous_user()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->hasAttached(Profile::factory(['nickname' => 'Friend']), [], 'friends')->create();
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $replyer = Profile::factory(['nickname' => 'Replyer'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-21'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、返信対象が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => false, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-22'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済み、かつ返信対象も公開済みだが、返信が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => false, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-23'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-24']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-25']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-26']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-27']
+                )
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Reply::by('Replyer')->at('2025-09-21')->first()->isViewable();
+        $comment_false = Reply::by('Replyer')->at('2025-09-22')->first()->isViewable();
+        $reply_false = Reply::by('Replyer')->at('2025-09-23')->first()->isViewable();
+        $post_public = Reply::by('Replyer')->at('2025-09-24')->first()->isViewable();
+        $post_member = Reply::by('Replyer')->at('2025-09-25')->first()->isViewable();
+        $post_friend = Reply::by('Replyer')->at('2025-09-26')->first()->isViewable();
+        $post_private = Reply::by('Replyer')->at('2025-09-27')->first()->isViewable();
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントは匿名ユーザには閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントは匿名ユーザには閲覧できないこと');
+        $this->assertFalse($reply_false, '非公開返信は匿名ユーザには閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」は匿名ユーザにも閲覧可能であること');
+        $this->assertFalse($post_member, '「会員」は匿名ユーザには閲覧できないこと');
+        $this->assertFalse($post_friend, '「友達」は匿名ユーザには閲覧できないこと');
+        $this->assertFalse($post_private, '「自分」は匿名ユーザには閲覧できないこと');
+    }
+
+    /**
+     * 閲覧可能な返信の絞り込み
+     * 
+     * - isViewableメソッドでログイン中のユーザが閲覧可能かどうかを判定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#閲覧可能な返信の絞り込み
+     */
+    public function test_is_viewable_with_logged_in_user()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'name' => 'テストユーザ',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password123')
+        ]);
+        $user->profiles()->create([
+            'nickname' => 'Viewer',
+            'title' => '閲覧者'
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->hasAttached(Profile::factory(['nickname' => 'Friend']), [], 'friends')->create();
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $replyer = Profile::factory(['nickname' => 'Replyer'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-21'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、返信対象が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => false, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-22'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済み、かつ返信対象も公開済みだが、返信が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => false, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-23'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-24']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-25']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-26']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-27']
+                )
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Reply::by('Replyer')->at('2025-09-21')->first()->isViewable(Auth::user());
+        $comment_false = Reply::by('Replyer')->at('2025-09-22')->first()->isViewable(Auth::user());
+        $reply_false = Reply::by('Replyer')->at('2025-09-23')->first()->isViewable(Auth::user());
+        $post_public = Reply::by('Replyer')->at('2025-09-24')->first()->isViewable(Auth::user());
+        $post_member = Reply::by('Replyer')->at('2025-09-25')->first()->isViewable(Auth::user());
+        $post_friend = Reply::by('Replyer')->at('2025-09-26')->first()->isViewable(Auth::user());
+        $post_private = Reply::by('Replyer')->at('2025-09-27')->first()->isViewable(Auth::user());
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントはログインユーザには閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントはログインユーザには閲覧できないこと');
+        $this->assertFalse($reply_false, '非公開返信はログインユーザには閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」はログインユーザにも閲覧可能であること');
+        $this->assertTrue($post_member, '「会員」はログインユーザにも閲覧可能であること');
+        $this->assertFalse($post_friend, '「友達」はログインユーザには閲覧できないこと');
+        $this->assertFalse($post_private, '「自分」はログインユーザには閲覧できないこと');
+    }
+
+    /**
+     * 閲覧可能な返信の絞り込み
+     * 
+     * - isViewableメソッドでコメント対象の友達リストに登録されたプロフィールで閲覧可能かどうかを判定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     */
+    public function test_is_viewable_with_friend_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->hasAttached(Profile::factory(['nickname' => 'Friend']), [], 'friends')->create();
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $replyer = Profile::factory(['nickname' => 'Replyer'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-21'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、返信対象が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => false, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-22'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済み、かつ返信対象も公開済みだが、返信が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => false, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-23'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-24']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-25']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-26']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-27']
+                )
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Reply::by('Replyer')->at('2025-09-21')->first()->isViewable('Friend');
+        $comment_false = Reply::by('Replyer')->at('2025-09-22')->first()->isViewable('Friend');
+        $reply_false = Reply::by('Replyer')->at('2025-09-23')->first()->isViewable('Friend');
+        $post_public = Reply::by('Replyer')->at('2025-09-24')->first()->isViewable('Friend');
+        $post_member = Reply::by('Replyer')->at('2025-09-25')->first()->isViewable('Friend');
+        $post_friend = Reply::by('Replyer')->at('2025-09-26')->first()->isViewable('Friend');
+        $post_private = Reply::by('Replyer')->at('2025-09-27')->first()->isViewable('Friend');
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントは友達登録されたプロフィールには閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントは友達登録されたプロフィールには閲覧できないこと');
+        $this->assertFalse($reply_false, '非公開返信は友達登録されたプロフィールには閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」は友達登録されたプロフィールにも閲覧可能であること');
+        $this->assertTrue($post_member, '「会員」は友達登録されたプロフィールにも閲覧可能であること');
+        $this->assertTrue($post_friend, '「友達」は友達登録されたプロフィールにも閲覧可能であること');
+        $this->assertFalse($post_private, '「自分」は友達登録されたプロフィールには閲覧できないこと');
+    }
+
+    /**
+     * 閲覧可能な返信の絞り込み
+     * 
+     * - isViewableメソッドでコメント対象の投稿者自身がニックネームで閲覧可能かどうかを判定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#閲覧可能な返信の絞り込み
+     */
+    public function test_is_viewable_with_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->hasAttached(Profile::factory(['nickname' => 'Friend']), [], 'friends')->create();
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $replyer = Profile::factory(['nickname' => 'Replyer'])->create();
+        // コメント対象が非公開
+        Journal::factory(['is_public' => false, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-21'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済みだが、返信対象が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => false, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-22'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象は「全員」に公開済み、かつ返信対象も公開済みだが、返信が非公開
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => false, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-23'],
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「全員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Public])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-24']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「会員」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Member])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-25']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「友達」に公開済みで、返信対象も返信も公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Friend])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-26']
+                )
+            )
+        )->for($profile)->create();
+        // コメント対象が「自分」に公開済みで、コメントも公開済み
+        Journal::factory(['is_public' => true, 'public_level' => PublicLevel::Private])->count(1)->has(
+            Comment::factory(['is_public' => true, 'commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['is_public' => true, 'replyer_profile_id' => $replyer->id, 'replied_at' => '2025-09-27']
+                )
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $post_false = Reply::by('Replyer')->at('2025-09-21')->first()->isViewable('Replyer');
+        $comment_false = Reply::by('Replyer')->at('2025-09-22')->first()->isViewable('Replyer');
+        $reply_false = Reply::by('Replyer')->at('2025-09-23')->first()->isViewable('Replyer');
+        $post_public = Reply::by('Replyer')->at('2025-09-24')->first()->isViewable('Replyer');
+        $post_member = Reply::by('Replyer')->at('2025-09-25')->first()->isViewable('Replyer');
+        $post_friend = Reply::by('Replyer')->at('2025-09-26')->first()->isViewable('Replyer');
+        $post_private = Reply::by('Replyer')->at('2025-09-27')->first()->isViewable('Replyer');
+
+        // 評価
+        $this->assertFalse($post_false, 'コメント対象が非公開のコメントは自分自身でも閲覧できないこと');
+        $this->assertFalse($comment_false, '非公開コメントは自分自身でも閲覧できないこと');
+        $this->assertFalse($reply_false, '非公開返信は自分自身でも閲覧できないこと');
+        $this->assertTrue($post_public, '「全員」は自分自身にも閲覧可能であること');
+        $this->assertTrue($post_member, '「会員」は自分自身にも閲覧可能であること');
+        $this->assertTrue($post_friend, '「友達」は自分自身にも閲覧可能であること');
+        $this->assertTrue($post_private, '「自分」は自分自身にも閲覧可能であること');
+    }
 }
