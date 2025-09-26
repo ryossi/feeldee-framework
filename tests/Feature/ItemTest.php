@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Carbon\Carbon;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
@@ -1253,5 +1254,51 @@ class ItemTest extends TestCase
             'posted_at' => $item->posted_at->format('Y-m-d H:i:s'),
             'value' => $value,
         ]);
+    }
+
+    /**
+     * アイテムリストの並び順
+     * 
+     * - アイテムリストのデフォルトの並び順は、1.表示順昇順、2.投稿日時降順（最新順）であることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムリストの並び順
+     */
+    public function test_collection_sort_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $itemA = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+            'order_number' => 1,
+        ]);
+        $itemB = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+            'order_number' => 2,
+        ]);
+        $itemC = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+            'order_number' => 3,
+        ]);
+        $itemD = Item::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+            'order_number' => 3,
+        ]);
+
+        // 実行
+        $items = Profile::of('Feeldee')->first()->items;
+
+        // 評価
+        $this->assertEquals(4, $items->count());
+        $this->assertEquals($itemA->id, $items[0]->id);
+        $this->assertEquals($itemB->id, $items[1]->id);
+        $this->assertEquals($itemD->id, $items[2]->id);
+        $this->assertEquals($itemC->id, $items[3]->id);
     }
 }

@@ -1237,11 +1237,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 写真作成
+     * 新規作成
      * 
      * - 写真の作成は、写真を追加したいプロフィールの写真リストに追加することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
      */
     public function test_create()
     {
@@ -1267,11 +1267,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 写真作成
+     * 新規作成
      * 
      * - 写真ソースは、必須であることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
      */
     public function test_create_src_required()
     {
@@ -1288,11 +1288,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 写真作成
+     * 新規作成
      * 
      * - 投稿日時を省略した場合は、システム日時が設定されることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真作成
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
      */
     public function test_create_posted_at_default()
     {
@@ -1313,5 +1313,42 @@ class PhotoTest extends TestCase
             'src' => $src,
             'posted_at' => $photo->posted_at->format('Y-m-d H:i:s'), // システム日時が設定されていること
         ]);
+    }
+
+    /**
+     * 写真リストの並び順
+     *
+     * - 写真リストのデフォルトの並び順は、投稿日時降順（最新順）であることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真リストの並び順
+     */
+    public function test_collection_sort_default()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $postA = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-22 10:00:00'),
+        ]);
+        $postB = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-23 10:00:00'),
+        ]);
+        $postC = Photo::factory()->create([
+            'profile_id' => $profile->id,
+            'posted_at' => Carbon::parse('2025-04-21 10:00:00'),
+        ]);
+
+        // 実行
+        $photos = Profile::of('Feeldee')->first()->photos;
+
+        // 評価
+        $this->assertEquals(3, $photos->count());
+        $this->assertEquals($postB->id, $photos[0]->id);
+        $this->assertEquals($postA->id, $photos[1]->id);
+        $this->assertEquals($postC->id, $photos[2]->id);
     }
 }

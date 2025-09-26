@@ -28,6 +28,12 @@ class FeeldeeServiceProvider extends ServiceProvider
             'PublicLevel',
             \Feeldee\Framework\Models\PublicLevel::class
         );
+
+        // ファサードのエイリアスを登録 
+        AliasLoader::getInstance()->alias(
+            'FDate',
+            \Feeldee\Framework\Facades\FDate::class
+        );
     }
 
     /**

@@ -6,6 +6,7 @@ use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -65,7 +66,7 @@ class Profile extends Model
 
     protected static function bootedNickname(Self $model)
     {
-        if (Profile::ofNickname($model->nickname)->first()?->id !== $model->id) {
+        if (Profile::of($model->nickname)->first()?->id !== $model->id) {
             // ニックネームが重複している場合
             throw new ApplicationException(Profile::ERROR_CODE_NICKNAME_DUPLICATED, ['nickname' => $model->nickname]);
         }
@@ -167,19 +168,14 @@ class Profile extends Model
     }
 
     /**
-     * ユーザIDを条件に含むようにクエリスコープを設定
+     * 友達リスト
      */
-    public function scopeOfUserId($query, int $userId)
+    public function friends()
     {
-        return $query->where('user_id', $userId);
-    }
-
-    /**
-     * ニックネームを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfNickname($query, ?string $nickname)
-    {
-        return $query->where('nickname', $nickname);
+        $friendPivot = new class extends Pivot {
+            use SetUser;
+        };
+        return $this->belongsToMany(Profile::class, 'friends', 'profile_id', 'friend_id')->using($friendPivot);
     }
 
     private $configCache = [];
@@ -240,11 +236,37 @@ class Profile extends Model
         return parent::__get($key);
     }
 
+
     /**
-     * コンフィグ値によるプロフィール絞り込みのスコープを設定
+     * ユーザIDを指定してプロフィールを特定します。
      * 
      * @param Builder $query クエリビルダ
-     * @param string $type コンフィグのタイプ
+     * @param mixed $userId ユーザID
+     * @return void
+     */
+    public function scopeCreatedBy($query, mixed $userId)
+    {
+        return $query->where('user_id', $userId);
+    }
+
+    /**
+     * ニックネームを指定してプロフィールを特定します。
+     * 
+     * @param Builder $query クエリビルダ
+     * @param string|null $nickname ニックネーム
+     * @return void
+     */
+    public function scopeOf($query, string|null $nickname)
+    {
+        return $query->where('nickname', $nickname);
+    }
+
+    /**
+     * 指定したコンフィグタイプに一致するコンフィグのキーが、指定した値と一致する設定となっているプロフィールを絞り込みます。
+     * 
+     * @param Builder $query クエリビルダ
+     * @param string $type コンフィグタイプ
+     * @param string $key コンフィグのキー
      * @param mixed $value コンフィグの値
      * @return void
      */
@@ -253,6 +275,23 @@ class Profile extends Model
         $query->whereHas('configs', function ($q) use ($type, $key, $value) {
             $q->where('type', $type)->where("value->$key", $value);
         });
+    }
+
+    /**
+     * 友達リストに指定したプロフィールが含まれているかどうかを判断します。
+     * 
+     * @param Profile|string|null $profile プロフィールまたはニックネーム
+     * @return bool 友達の場合true、友達以外の場合false
+     */
+    public function isFriend(Profile|string|null $profile): bool
+    {
+        $friendProfile = $profile instanceof Profile
+            ? $profile
+            : Profile::of($profile)->first();
+
+        return $friendProfile
+            ? $this->friends()->where('friend_id', $friendProfile->id)->exists()
+            : false;
     }
 
     // ========================== ここまで整理済み ==========================
@@ -274,47 +313,5 @@ class Profile extends Model
     public function storeImage(mixed $data): void
     {
         $this->image = 'data:image/jpeg;base64,' . base64_encode(Image::make($data)->resize(120, 120)->encode('jpg', 80));
-    }
-
-    /**
-     * 閲覧者に対する最小公開レベルを返却します。
-     * 
-     * 閲覧者が自分自身の場合、「自分」
-     * 閲覧者が友達リストに含まれる場合、「友達」
-     * 閲覧者が友達または自分以外の場合、「会員」
-     * 閲覧者不明の場合、「全員」
-     * 
-     * @param ?Profile $viewer 閲覧者
-     * @return PublicLevel 最小公開レベル
-     */
-    public function minPublicLevel(?Profile $viewer): PublicLevel
-    {
-        if (!$viewer) {
-            // 閲覧者不明の場合、「全員」
-            return PublicLevel::Public;
-        }
-        if ($viewer == $this) {
-            // 閲覧者が自分自身の場合、「自分」
-            return PublicLevel::Private;
-        }
-        if ($this->isFriend($viewer)) {
-            // 閲覧者が友達リストに含まれる場合、「友達」
-            return PublicLevel::Friend;
-        }
-        // 閲覧者が友達または自分以外の場合、「会員」
-        return PublicLevel::Member;
-    }
-
-    /**
-     * 閲覧者が友達かどうかを判断します。
-     * 
-     * @param Profile viewer 閲覧者
-     * @return bool 友達の場合true、友達以外の場合false
-     */
-    public function isFriend(?Profile $viewer): bool
-    {
-        if (!$viewer) return false;
-
-        return false;
     }
 }

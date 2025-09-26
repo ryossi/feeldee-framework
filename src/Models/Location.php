@@ -63,6 +63,13 @@ class Location extends Post
     ];
 
     /**
+     * ソートするカラム名
+     * 
+     * @var array
+     */
+    protected $order_column = 'posted_at';
+
+    /**
      * 必須にする属性
      * 
      * @var array
@@ -85,6 +92,10 @@ class Location extends Post
      */
     protected static function booted(): void
     {
+        static::addGlobalScope('defaultSort', function ($builder) {
+            $builder->orderByDesc('posted_at');
+        });
+
         static::saving(
             function (self $model) {
                 // 投稿日時

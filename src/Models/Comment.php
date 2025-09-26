@@ -5,13 +5,12 @@ namespace Feeldee\Framework\Models;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * コメントをあらわすモデル
@@ -133,7 +132,7 @@ class Comment extends Model
     protected function isPublic(): Attribute
     {
         return Attribute::make(
-            get: fn($value) => $value ?? false,
+            get: fn($value) => $this->commentable?->is_public ? (boolval($value) ?? false) : false,
         );
     }
 
@@ -174,19 +173,31 @@ class Comment extends Model
     }
 
     /**
-     * 最新のものから並び替えるクエリのスコープを設定
+     * 最新のものから並び替えるローカルスコープ
      */
-    public function scopeOrderLatest($query)
+    public function scopeOrderLatest($query): void
     {
-        return $query->latest('commented_at');
+        $query->latest('commented_at');
     }
 
     /**
-     * 古いものから並び替えるクエリのスコープを設定
+     * 古いものから並び替えるローカルスコープ
      */
-    public function scopeOrderOldest($query)
+    public function scopeOrderOldest($query): void
     {
-        return $query->oldest('commented_at');
+        $query->oldest('commented_at');
+    }
+
+    /**
+     * 最新(latest|desc)または古いもの(oldest|asc)の文字列を直接指定してソートするローカルスコープ
+     */
+    public function scopeOrderDirection($query, string $direction = 'asc'): void
+    {
+        if ($direction == 'desc' || $direction == 'latest') {
+            $query->orderLatest();
+        } else if ($direction == 'asc' || $direction == 'oldest') {
+            $query->orderOldest();
+        }
     }
 
     /**
@@ -204,18 +215,208 @@ class Comment extends Model
 
     /**
      * コメント日時で絞り込むためのローカルスコープ
-     * 
      */
     public function scopeAt(Builder $query, $datetime): void
     {
-        // 時刻が指定されていない場合は、00:00:00を付与
-        if (is_string($datetime) && !str_contains($datetime, ' ')) {
-            $datetime .= ' 00:00:00';
+        if (is_string($datetime)) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}(?: \d{2}(?::\d{2})?)?$/', $datetime)) {
+                // 時刻以下が省略されている場合は、前方一致検索
+                $query->where('commented_at', 'like', $datetime . '%');
+            } else {
+                $query->where('commented_at', $datetime);
+            }
         } elseif ($datetime instanceof CarbonImmutable) {
             // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
             $datetime = $datetime->format('Y-m-d H:i:s');
+            $query->where('commented_at', $datetime);
         }
-        $query->where('commented_at', $datetime);
+    }
+
+    /**
+     * コメント日時の範囲を指定して取得するためのローカルスコープ
+     */
+    public function scopeBetween(Builder $query, $start, $end): void
+    {
+        $query->whereBetween('commented_at', [FDate::format($start, '+00:00:00'), FDate::format($end, '+23:59:59')]);
+    }
+
+    /**
+     * コメント日時の未満で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBefore(Builder $query, $datetime): void
+    {
+        $query->where('commented_at', '<', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * コメント日時のより先で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfter(Builder $query, $datetime): void
+    {
+        $query->where('commented_at', '>', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * コメント日時の以前で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBeforeEquals(Builder $query, $datetime): void
+    {
+        $query->where('commented_at', '<=', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * コメント日時の以降で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfterEquals(Builder $query, $datetime): void
+    {
+        $query->where('commented_at', '>=', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 公開されたコメントのみ取得するためのローカルスコープ
+     */
+    public function scopePublic($query): void
+    {
+        $query->where('is_public', true)
+            ->where(function ($q) {
+                $q->whereHasMorph(
+                    'commentable',
+                    [Journal::class, Photo::class, Location::class, Item::class],
+                    function ($subQ) {
+                        $subQ->where('is_public', true);
+                    }
+                );
+            });
+    }
+
+    /**
+     * 非公開のコメントのみ取得するためのローカルスコープ
+     */
+    public function scopePrivate($query): void
+    {
+        $query->where('is_public', false)
+            ->orWhere(function ($q) {
+                $q->whereHasMorph(
+                    'commentable',
+                    [Journal::class, Photo::class, Location::class, Item::class],
+                    function ($subQ) {
+                        $subQ->where('is_public', false);
+                    }
+                );
+            });
+    }
+
+    /**
+     * 閲覧可能なコメントの絞り込むためのローカルスコープ
+     * 
+     * @see https://github.com/ryossi/feeldee-framework/wiki/投稿#閲覧可能な投稿の絞り込み
+     */
+    public function scopeViewable(Builder $query, $viewer = null): void
+    {
+        // 閲覧プロフィールの特定
+        if (!($viewer instanceof Profile)) {
+            // プロフィールが関連付けされているユーザEloquentモデルが指定された場合
+            if ($viewer && method_exists($viewer, 'profile')) {
+                // デフォルトプロフィールに基づき閲覧可否が判断されるため、profile()メソッドを呼び出してプロフィールを取得
+                $viewer = $viewer->profile;
+            } else if (is_string($viewer)) {
+                // $viewerがstringの場合は、プロフィールニックネームとする
+                $viewer = Profile::of($viewer)->first();
+            } else {
+                // デフォルトプロフィールが特定できない場合は、匿名ユーザー(null)として扱う
+                $viewer = null;
+            }
+        }
+
+        $query->public()->where(function (Builder $query) use ($viewer) {
+            $query->whereHasMorph(
+                'commentable',
+                [Journal::class, Photo::class, Location::class, Item::class],
+                function ($subQ) use ($viewer) {
+                    // コメント対象は公開済みのみ
+                    $subQ->where('is_public', true);
+                    // 公開レベルによる閲覧可否を判定
+                    $subQ->where(function ($q) use ($viewer) {
+                        // 公開レベル「全員」
+                        $q->where('public_level', PublicLevel::Public);
+                        if (!is_null($viewer)) {
+                            // 公開レベル「会員」
+                            $q->orWhere('public_level', PublicLevel::Member);
+                            // 公開レベル「友達」
+                            // 友達機能: viewerが投稿者のfriendsテーブルに含まれているか判定
+                            $q->orWhere(function (Builder $q2) use ($viewer) {
+                                $q2->where('public_level', PublicLevel::Friend)
+                                    ->where(function ($friendQuery) use ($viewer) {
+                                        // 自分自身の場合も含める
+                                        $friendQuery->where('profile_id', $viewer->id)
+                                            ->orWhereHas('profile.friends', function ($fq) use ($viewer) {
+                                                $fq->where('friend_id', $viewer->id);
+                                            });
+                                    });
+                            });
+                            // 公開レベル「自分」
+                            $q->orWhere(function (Builder $q2) use ($viewer) {
+                                $q2->where('public_level', PublicLevel::Private)
+                                    ->where('profile_id', $viewer->id);
+                            });
+                            // コメント者が自分の場合も含める
+                            $q->orWhere('commenter_profile_id', $viewer->id);
+                        }
+                    });
+                }
+            );
+        });
+    }
+
+    /**
+     * 取得したコメントそのものが閲覧可能かどうかを判断します。
+     *
+     * @see https://github.com/ryossi/feeldee-framework/wiki/コメント#閲覧可能なコメントの絞り込み
+     *
+     * @param mixed $viewer 閲覧者（未特定の場合null）
+     * @return bool 閲覧可能な場合true、閲覧不可の場合false
+     */
+    public function isViewable(mixed $viewer = null): bool
+    {
+        // コメントが非公開の場合は閲覧不可
+        if (!$this->is_public) {
+            return false;
+        }
+
+        // コメント対象が非公開の場合も閲覧不可
+        if (!$this->commentable?->is_public) {
+            return false;
+        }
+
+        // viewerをProfileインスタンスに変換
+        if (!($viewer instanceof Profile)) {
+            if ($viewer && method_exists($viewer, 'profile')) {
+                $viewer = $viewer->profile;
+            } elseif (is_string($viewer)) {
+                $viewer = Profile::of($viewer)->first();
+            } else {
+                $viewer = null;
+            }
+        }
+
+        // コメント者自身の場合は常に閲覧可能
+        if ($viewer && $viewer->id === $this->commenter_profile_id) {
+            return true;
+        }
+
+        // コメント対象の公開レベルによる判定
+        switch ($this->commentable?->public_level) {
+            case PublicLevel::Public:
+                return true;
+            case PublicLevel::Member:
+                return !is_null($viewer);
+            case PublicLevel::Friend:
+                return $viewer && ($viewer->id === $this->commentable?->profile_id || $this->commentable?->profile->isFriend($viewer));
+            case PublicLevel::Private:
+                return $viewer && $viewer->id === $this->commentable?->profile_id;
+            default:
+                return false;
+        }
     }
 
     // ========================== ここまで整理ずみ ==========================
@@ -229,54 +430,5 @@ class Comment extends Model
     public function scopeOfCommentableType($query, string $commentableType)
     {
         $query->where('commentable_type', $commentableType);
-    }
-
-    /**
-     * 公開済みのみを含むようにクエリのスコープを設定
-     */
-    public function scopePublic($query)
-    {
-        $query->where('is_public', true);
-        $morphMap = Relation::morphMap();
-        $whenIsPublic = array();
-        $whenPublicLevel = array();
-        foreach ($morphMap as $type => $value) {
-            $class = Relation::getMorphedModel($type);
-            $post = new $class();
-            $table = $post->getTable();
-            array_push($whenIsPublic, "when commentable_type = '$type' then (select is_public from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
-            array_push($whenPublicLevel, "when commentable_type = '$type' then (select public_level from $table where profile_id = comments.profile_id and id = comments.commentable_id)");
-        }
-        $query->where(function ($query) use ($whenIsPublic) {
-            $query->selectRaw('case ' . implode(' ', $whenIsPublic) . ' else 0 end')->from('comments', 'c1')->whereColumn('c1.id', 'comments.id');
-        }, true);
-        $query->where(function ($query) use ($whenPublicLevel) {
-            // 公開レベル「全員」
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-            }, PublicLevel::Public);
-            // 公開レベル「会員」
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->where(function ($query) use ($whenPublicLevel) {
-                    $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-                }, PublicLevel::Member)
-                    ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
-            });
-            // 公開レベル「友達」
-            // TODO::友達機能未実装
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->where(function ($query) use ($whenPublicLevel) {
-                    $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-                }, PublicLevel::Friend)
-                    ->where('profile_id', Auth::user()?->profile->id);
-            });
-            // 公開レベル「自分」
-            $query->orWhere(function ($query) use ($whenPublicLevel) {
-                $query->where(function ($query) use ($whenPublicLevel) {
-                    $query->selectRaw('case ' . implode(' ', $whenPublicLevel) . ' else 0 end')->from('comments', 'c2')->whereColumn('c2.id', 'comments.id');
-                }, PublicLevel::Private)
-                    ->where('profile_id', Auth::user()?->profile->id);
-            });
-        });
     }
 }

@@ -66,6 +66,10 @@ class Journal extends Post
      */
     protected static function booted(): void
     {
+        static::addGlobalScope('defaultSort', function ($builder) {
+            $builder->orderByDesc('posted_at');
+        });
+
         static::saving(
             function (self $model) {
                 // 投稿日時
@@ -94,22 +98,6 @@ class Journal extends Post
     public function photos(): BelongsToMany
     {
         return $this->belongsToMany(Photo::class, 'posted_photos');
-    }
-
-    /**
-     * 投稿日で絞り込むためのローカルスコープ
-     * 
-     */
-    public function scopeAt(Builder $query, $date): void
-    {
-        // 時刻が指定されていない場合は、00:00:00を付与
-        if (is_string($date) && !str_contains($date, ' ')) {
-            $date .= ' 00:00:00';
-        } elseif ($date instanceof CarbonImmutable) {
-            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
-            $date = $date->format('Y-m-d H:i:s');
-        }
-        $query->where('posted_at', $date);
     }
 
     // ========================== ここまで整理ずみ ==========================
@@ -440,43 +428,5 @@ class Journal extends Post
         }
 
         return $query;
-    }
-
-    /**
-     * 投稿日の範囲を条件に指定して投稿リスト検索するクエリのスコープを設定
-     */
-    public static function scopeBetween($query, mixed $from = null, mixed $to = null)
-    {
-        if (!is_null($from)) {
-            $query->whereDate('post_date', '>=', $from);
-        }
-        if (!is_null($to)) {
-            $query->whereDate('post_date', '<=', $to);
-        }
-        return $query;
-    }
-
-    /**
-     * 投稿日を条件に含むようにクエリのスコープを設定
-     */
-    public static function scopeOfDate($query, mixed $post_date): void
-    {
-        $query->whereDate('post_date', $post_date);
-    }
-
-    /**
-     * 指定日より前の投稿のみを含むようにクエリのスコープを設定
-     */
-    public static function scopeBefore($query, mixed $date): void
-    {
-        $query->whereDate('post_date', '<', $date);
-    }
-
-    /**
-     * 指定日より後の投稿のみを含むようにクエリのスコープを設定
-     */
-    public static function scopeAfter($query, mixed $date): void
-    {
-        $query->whereDate('post_date', '>', $date);
     }
 }

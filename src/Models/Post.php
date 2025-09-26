@@ -2,12 +2,13 @@
 
 namespace Feeldee\Framework\Models;
 
+use Carbon\CarbonImmutable;
+use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * 投稿をあらわすベースモデル
@@ -126,6 +127,36 @@ abstract class Post extends Model
         return $this->morphMany(Comment::class, 'commentable');
     }
 
+    protected $order_column = null;
+
+    /**
+     * 最新のものから並び替えるローカルスコープ
+     */
+    public function scopeOrderLatest($query): void
+    {
+        $query->latest($this->order_column);
+    }
+
+    /**
+     * 古いものから並び替えるローカルスコープ
+     */
+    public function scopeOrderOldest($query): void
+    {
+        $query->oldest($this->order_column);
+    }
+
+    /**
+     * 最新(latest|desc)または古いもの(oldest|asc)の文字列を直接指定してソートするローカルスコープ
+     */
+    public function scopeOrderDirection($query, string $direction = 'asc'): void
+    {
+        if ($direction == 'desc' || $direction == 'latest') {
+            $query->latest($this->order_column);
+        } else if ($direction == 'asc' || $direction == 'oldest') {
+            $query->oldest($this->order_column);
+        }
+    }
+
     /**
      * 投稿者プロフィールのニックネームで絞り込むためのローカルスコープ
      */
@@ -133,6 +164,170 @@ abstract class Post extends Model
     {
         $query->whereHas('profile', fn($q) => $q->where('nickname', $nickname));
     }
+
+    /**
+     * 投稿日時で絞り込むためのローカルスコープ
+     */
+    public function scopeAt(Builder $query, $datetime): void
+    {
+        if (is_string($datetime)) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}(?: \d{2}(?::\d{2})?)?$/', $datetime)) {
+                // 時刻以下が省略されている場合は、前方一致検索
+                $query->where('posted_at', 'like', $datetime . '%');
+            } else {
+                $query->where('posted_at', $datetime);
+            }
+        } elseif ($datetime instanceof CarbonImmutable) {
+            // CarbonImmutableインスタンスの場合は、フォーマットして文字列に変換
+            $datetime = $datetime->format('Y-m-d H:i:s');
+            $query->where('posted_at', $datetime);
+        }
+    }
+
+    /**
+     * 投稿日時の範囲を指定して取得するためのローカルスコープ
+     */
+    public function scopeBetween(Builder $query, $start, $end): void
+    {
+        $query->whereBetween('posted_at', [FDate::format($start, '+00:00:00'), FDate::format($end, '+23:59:59')]);
+    }
+
+    /**
+     * 投稿日時の未満で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBefore(Builder $query, $datetime): void
+    {
+        $query->where('posted_at', '<', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 投稿日時のより先で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfter(Builder $query, $datetime): void
+    {
+        $query->where('posted_at', '>', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 投稿日時の以前で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeBeforeEquals(Builder $query, $datetime): void
+    {
+        $query->where('posted_at', '<=', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 投稿日時の以降で範囲指定して取得するためのローカルスコープ
+     */
+    public function scopeAfterEquals(Builder $query, $datetime): void
+    {
+        $query->where('posted_at', '>=', FDate::format($datetime, '+00:00:00'));
+    }
+
+    /**
+     * 公開された投稿のみ取得するためのローカルスコープ
+     */
+    public function scopePublic($query): void
+    {
+        $query->where('is_public', true);
+    }
+
+    /**
+     * 非公開の投稿のみ取得するためのローカルスコープ
+     */
+    public function scopePrivate($query): void
+    {
+        $query->where('is_public', false);
+    }
+
+    /**
+     * 閲覧可能な投稿の絞り込むためのローカルスコープ
+     * 
+     * @see https://github.com/ryossi/feeldee-framework/wiki/公開レベル
+     */
+    public function scopeViewable(Builder $query, $viewer = null): void
+    {
+        // 閲覧プロフィールの特定
+        if (!($viewer instanceof Profile)) {
+            // プロフィールが関連付けされているユーザEloquentモデルが指定された場合
+            if ($viewer && method_exists($viewer, 'profile')) {
+                // デフォルトプロフィールに基づき閲覧可否が判断されるため、profile()メソッドを呼び出してプロフィールを取得
+                $viewer = $viewer->profile;
+            } else if (is_string($viewer)) {
+                // $viewerがstringの場合は、プロフィールニックネームとする
+                $viewer = Profile::of($viewer)->first();
+            } else {
+                // デフォルトプロフィールが特定できない場合は、匿名ユーザー(null)として扱う
+                $viewer = null;
+            }
+        }
+
+        $query->public()->where(function (Builder $query) use ($viewer) {
+            // 公開レベル「全員」
+            $query->orWhere('public_level', PublicLevel::Public);
+            if (!is_null($viewer)) {
+                // 公開レベル「会員」
+                $query->orWhere('public_level', PublicLevel::Member);
+                // 公開レベル「友達」
+                // 友達機能: viewerが投稿者のfriendsテーブルに含まれているか判定
+                $query->orWhere(function (Builder $q) use ($viewer) {
+                    $q->where('public_level', PublicLevel::Friend)
+                        ->where(function ($friendQuery) use ($viewer) {
+                            // 自分自身の場合も含める
+                            $friendQuery->where('profile_id', $viewer->id)
+                                ->orWhereHas('profile.friends', function ($fq) use ($viewer) {
+                                    $fq->where('friend_id', $viewer->id);
+                                });
+                        });
+                });
+                // 公開レベル「自分」
+                $query->orWhere(function (Builder $q) use ($viewer) {
+                    $q->where('public_level', PublicLevel::Private)
+                        ->where('profile_id', $viewer->id);
+                });
+            }
+        });
+    }
+
+    /**
+     * 取得した投稿そのものが閲覧可能かどうかを判断します。
+     * 
+     * @see https://github.com/ryossi/feeldee-framework/wiki/公開レベル
+     *
+     * @param mixed $viewer 閲覧者（未特定の場合null）
+     * @return bool 閲覧可能な場合true、閲覧不可の場合false
+     */
+    public function isViewable(mixed $viewer = null): bool
+    {
+        if (!$this->is_public) {
+            return false;
+        }
+
+        // viewerをProfileインスタンスに変換
+        if (!($viewer instanceof Profile)) {
+            if ($viewer && method_exists($viewer, 'profile')) {
+                $viewer = $viewer->profile;
+            } elseif (is_string($viewer)) {
+                $viewer = Profile::of($viewer)->first();
+            } else {
+                $viewer = null;
+            }
+        }
+
+        switch ($this->public_level) {
+            case PublicLevel::Public:
+                return true;
+            case PublicLevel::Member:
+                return !is_null($viewer);
+            case PublicLevel::Friend:
+                return $viewer && ($viewer->id === $this->profile_id || $this->profile->isFriend($viewer));
+            case PublicLevel::Private:
+                return $viewer && $viewer->id === $this->profile_id;
+            default:
+                return false;
+        }
+    }
+
 
     // ========================== ここまで整理ずみ ==========================
 
@@ -149,30 +344,6 @@ abstract class Post extends Model
     }
 
     /**
-     * 投稿が閲覧可能か判定します。
-     * 投稿が閲覧可能かどうかは、投稿の公開レベルが閲覧者の最小公開レベル以上かどうかで決定されます。
-     * 
-     * 投稿が未公開・・・閲覧不可
-     * 投稿が公開済み、かつ公開レベルが「自分」・・・閲覧者が自分自身の場合のみ閲覧可能
-     * 投稿が公開済み、かつ公開レベルが「友達」・・・閲覧者が投稿を所有するプロフィールの友達リストに含まれる場合のみ閲覧可能
-     * 投稿が公開済み、かつ公開レベルが「会員」・・・閲覧者が特定できている（null以外）場合のみ閲覧可能
-     * 投稿が公開済み、かつ公開レベルが「全員」・・・閲覧者が未特定（null）の場合でも閲覧可能
-     *
-     * @param ?Profile 閲覧者（未特定の場合null）
-     * @return bool 閲覧可能な場合true、閲覧不可の場合false
-     */
-    public function isView(?Profile $viewer): bool
-    {
-        if (!$this->isPublic()) {
-            // 投稿が未公開の場合、閲覧不可
-            return false;
-        }
-
-        // 公開レベルと最小公開レベルを比較
-        return $this->public_level->value >= $this->profile->minPublicLevel($viewer)->value;
-    }
-
-    /**
      * タイトルを条件に含むようにクエリのスコープを設定
      */
     public function scopeOfTitle($query, ?string $title, SqlLikeBuilder $like = SqlLikeBuilder::All)
@@ -186,65 +357,5 @@ abstract class Post extends Model
     public function scopeOrderTitle($query, string $direction = 'asc')
     {
         return $query->orderBy('title', $direction);
-    }
-
-    /**
-     * 公開済み、かつ公開レベルに応じて公開範囲を制御するようにクエリのスコープを設定
-     */
-    public function scopePublic($query)
-    {
-        $table = (new $this)->getTable();
-        $query->where($table . '.is_public', true);
-        $query->where(function (Builder $query) use ($table) {
-            // 公開レベル「全員」
-            $query->orWhere($table . '.public_level', PublicLevel::Public);
-            // 公開レベル「会員」
-            $query->orWhere(function (Builder $query) use ($table) {
-                $query->where($table . '.public_level', PublicLevel::Member)
-                    ->whereRaw('1 = ?', [!is_null(Auth::user()?->profile)]);
-            });
-            // 公開レベル「友達」
-            // TODO::友達機能未実装
-            $query->orWhere(function (Builder $query) use ($table) {
-                $query->where($table . '.public_level', PublicLevel::Friend)
-                    ->where($table . '.profile_id', Auth::user()?->profile->id);
-            });
-            // 公開レベル「自分」
-            $query->orWhere(function (Builder $query) use ($table) {
-                $query->where($table . '.public_level', PublicLevel::Private)
-                    ->where($table . '.profile_id', Auth::user()?->profile->id);
-            });
-        });
-        return $query;
-    }
-
-    protected $order_column = null;
-
-    /**
-     * 投稿を最新のものから並び替えるクエリのスコープを設定
-     */
-    public function scopeOrderLatest($query)
-    {
-        return $query->latest($this->order_column);
-    }
-
-    /**
-     * 投稿を古いものから並び替えるクエリのスコープを設定
-     */
-    public function scopeOrderOldest($query)
-    {
-        return $query->oldest($this->order_column);
-    }
-
-    /**
-     * 最新(desc|latest)または古いもの(asc|oldest)を指定して投稿を並び替えるクエリのスコープを設定
-     */
-    public function scopeOrderDirection($query, string $direction = 'asc')
-    {
-        if ($direction == 'desc' || $direction == 'latest') {
-            $query->latest($this->order_column);
-        } else if ($direction == 'asc' || $direction == 'oldest') {
-            $query->oldest($this->order_column);
-        }
     }
 }
