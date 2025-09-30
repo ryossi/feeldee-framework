@@ -65,6 +65,11 @@ class Reply extends Model
                 throw new ApplicationException(61001);
             }
         });
+
+        static::creating(function (self $model) {
+            // 返信所有者
+            $model->profile_id = $model->comment->commentable->profile_id;
+        });
     }
 
     /**

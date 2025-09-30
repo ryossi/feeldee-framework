@@ -47,7 +47,7 @@ class ReplyTest extends TestCase
         ], $comment);
 
         // 評価
-        Assert::assertEquals($comment, $reply->comment, '返信したコメントであること');
+        Assert::assertEquals($comment->id, $reply->comment->id, '返信したコメントであること');
     }
 
     /**

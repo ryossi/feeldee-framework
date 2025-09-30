@@ -15,6 +15,7 @@ return new class extends Migration
     {
         Schema::create('replies', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('profile_id')->comment('返信所有者プロフィールID')->constrained('profiles')->cascadeOnDelete();
             $table->foreignId('comment_id')->comment('コメントID')->constrained('comments')->cascadeOnDelete();
             $table->dateTime('replied_at')->comment('返信日時');
             $table->text('body')->nullable()->comment('返信本文');
