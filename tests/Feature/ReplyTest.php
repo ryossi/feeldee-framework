@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use Carbon\Carbon;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Comment;
+use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\PublicLevel;
 use Feeldee\Framework\Models\Reply;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -2178,5 +2180,79 @@ class ReplyTest extends TestCase
         $this->assertTrue($post_member, '「会員」は自分自身にも閲覧可能であること');
         $this->assertTrue($post_friend, '「友達」は自分自身にも閲覧可能であること');
         $this->assertTrue($post_private, '「自分」は自分自身にも閲覧可能であること');
+    }
+
+    /**
+     * 投稿種別による返信の絞り込み
+     * 
+     * - 投稿種別によって返信を絞り込むことができることを確認します。
+     * - 絞り込みに投稿の抽象クラスを継承した具象クラスを指定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#投稿種別による返信の絞り込み
+     */
+    public function test_filter_by_commentable_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $replyer = Profile::factory(['nickname' => 'Replyer'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        Journal::factory()->count(1)->has(
+            Comment::factory(['commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['replyer_profile_id' => $replyer->id]
+                )
+            )
+        )->for($profile)->create();
+        Location::factory()->count(3)->has(
+            Comment::factory(['commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['replyer_profile_id' => $replyer->id]
+                )
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $replies = Profile::of('Feeldee')->first()->replies()->of(Location::class)->get();
+
+        // 評価
+        $this->assertCount(3, $replies);
+    }
+
+    /**
+     * 投稿種別による返信の絞り込み
+     *
+     * - 投稿種別によって返信を絞り込むことができることを確認します。
+     * - 絞り込みに投稿種別の文字列を指定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#投稿種別による返信の絞り込み
+     */
+    public function test_filter_by_commentable_type_string()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $replyer = Profile::factory(['nickname' => 'Replyer'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        Item::factory()->count(1)->has(
+            Comment::factory(['commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['replyer_profile_id' => $replyer->id]
+                )
+            )
+        )->for($profile)->create();
+        Location::factory()->count(3)->has(
+            Comment::factory(['commenter_profile_id' => $commenter->id])->has(
+                Reply::factory(
+                    ['replyer_profile_id' => $replyer->id]
+                )
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $replies = Reply::by('Replyer')->of(Item::type())->get();
+
+        // 評価
+        $this->assertCount(1, $replies);
     }
 }
