@@ -1124,7 +1124,7 @@ class PostTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $result = Location::by('Feeldee')->public()->countBy('Ym')->get();
+        $result = Location::by('Feeldee')->public()->countBy('Y-m')->get();
 
         // 評価
         $this->assertCount(3, $result);
@@ -1161,7 +1161,7 @@ class PostTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $result = Photo::by('Feeldee')->viewable('Friend')->countBy('Ymd')->get();
+        $result = Photo::by('Feeldee')->viewable('Friend')->countBy('Y-m-d')->get();
 
         // 評価
         $this->assertCount(3, $result);
