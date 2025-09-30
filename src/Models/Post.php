@@ -328,6 +328,30 @@ abstract class Post extends Model
         }
     }
 
+    /**
+     * 投稿件数をカウントするためのローカルスコープ
+     * 
+     * 結果は、label（集計単位の文字列）とcount（件数）の2つのカラムを持つ形で取得できます。
+     * 
+     * @param Builder $query
+     * @param string $method 集計方法（'Y':年単位、'Y-m':年月単位、'Y-m-d':年月日単位）
+     */
+    public function scopeCountBy(Builder $query, $method): void
+    {
+        if ($method === 'Y') {
+            // 投稿年単位
+            $query->groupByRaw('SUBSTR(DATE(posted_at), 1, 4)');
+            $query->selectRaw('SUBSTR(DATE(posted_at), 1, 4) AS label, COUNT(*) AS count');
+        } elseif ($method === 'Y-m') {
+            // 投稿年月単位
+            $query->groupByRaw('SUBSTR(DATE(posted_at), 1, 7)');
+            $query->selectRaw('SUBSTR(DATE(posted_at), 1, 7) AS label, COUNT(*) AS count');
+        } elseif ($method === 'Y-m-d') {
+            // 投稿年月日単位
+            $query->groupByRaw('SUBSTR(DATE(posted_at), 1, 10)');
+            $query->selectRaw('SUBSTR(DATE(posted_at), 1, 10) AS label, COUNT(*) AS count');
+        }
+    }
 
     // ========================== ここまで整理ずみ ==========================
 

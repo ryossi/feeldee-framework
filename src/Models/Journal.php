@@ -331,24 +331,6 @@ class Journal extends Post
         }
     }
 
-    /**
-     * プロフィールごとのアーカイブリストを取得します。
-     * 
-     * @param Profile $profile プロフィール
-     * @param PublicLevel $minPublicLevel 最小公開レベル（デフォルトは自分）
-     * @return Illuminate\Contracts\Database\Eloquent\Builder
-     */
-    public static function findArchiveList(Profile $profile, PublicLevel $minPublicLevel = PublicLevel::Private): Builder
-    {
-        return self::where('profile_id', $profile->id)
-            ->selectRaw('DATE_FORMAT(post_date, \'%Y-%m\') as archive_month, COUNT(id) as count_of_items')
-            ->where('is_public', true)
-            ->where('public_level', '>=', $minPublicLevel)
-            ->groupByRaw('DATE_FORMAT(post_date, \'%Y-%m\')')
-            ->having('count_of_items', '>', 0)
-            ->orderBy('archive_month', 'desc');
-    }
-
     protected function afterPublic(): void
     {
         // 投稿に添付されている写真リストも全て公開

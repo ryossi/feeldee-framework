@@ -1064,4 +1064,146 @@ class PostTest extends TestCase
         $this->assertTrue($member);
         $this->assertTrue($public);
     }
+
+    /**
+     * 投稿件数のカウント
+     * 
+     * - 記事を投稿年単位でカウントできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿件数のカウント
+     */
+    public function test_count_by_year()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Journal::factory()->count(6)->sequence(
+            ['posted_at' => '2024-01-01', 'is_public' => true, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-09-16', 'is_public' => false, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-09-17', 'is_public' => true, 'public_level' => PublicLevel::Private],
+            ['posted_at' => '2025-09-18', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+            ['posted_at' => '2025-10-19', 'is_public' => true, 'public_level' => PublicLevel::Member],
+            ['posted_at' => '2025-10-20', 'is_public' => true, 'public_level' => PublicLevel::Public],
+        )->for($profile)->create();
+
+        // 実行
+        $result = Journal::by('Feeldee')->countBy('Y')->get();
+
+        // 評価
+        $this->assertCount(2, $result);
+        $this->assertEquals('2025', $result[0]->label);
+        $this->assertEquals(5, $result[0]->count);
+        $this->assertEquals('2024', $result[1]->label);
+        $this->assertEquals(1, $result[1]->count);
+    }
+
+    /**
+     * 投稿件数のカウント
+     * 
+     * - 記事を投稿年月単位でカウントできることを確認します。
+     * - 公開済みの投稿のみをカウントできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿件数のカウント
+     */
+    public function test_count_by_month()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Location::factory()->count(6)->sequence(
+            ['posted_at' => '2024-01-01', 'is_public' => true, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-09-16', 'is_public' => false, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-09-17', 'is_public' => true, 'public_level' => PublicLevel::Private],
+            ['posted_at' => '2025-09-18', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+            ['posted_at' => '2025-10-19', 'is_public' => true, 'public_level' => PublicLevel::Member],
+            ['posted_at' => '2025-10-20', 'is_public' => true, 'public_level' => PublicLevel::Public],
+        )->for($profile)->create();
+
+        // 実行
+        $result = Location::by('Feeldee')->public()->countBy('Y-m')->get();
+
+        // 評価
+        $this->assertCount(3, $result);
+        $this->assertEquals('2025-10', $result[0]->label);
+        $this->assertEquals(2, $result[0]->count);
+        $this->assertEquals('2025-09', $result[1]->label);
+        $this->assertEquals(2, $result[1]->count);
+        $this->assertEquals('2024-01', $result[2]->label);
+        $this->assertEquals(1, $result[2]->count);
+    }
+
+    /**
+     * 投稿件数のカウント
+     * 
+     * - 記事を投稿日単位でカウントできることを確認します。
+     * - 友達が閲覧可能な投稿のみをカウントできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿件数のカウント
+     */
+    public function test_count_by_day()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->hasAttached(Profile::factory(['nickname' => 'Friend']), [], 'friends')->create();
+        Photo::factory()->count(6)->sequence(
+            ['posted_at' => '2025-01-01 00:00:00', 'is_public' => true, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-01-01 23:59:59', 'is_public' => false, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-01-02 00:00:00', 'is_public' => true, 'public_level' => PublicLevel::Private],
+            ['posted_at' => '2025-01-02 23:59:59', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+            ['posted_at' => '2025-01-03 00:00:00', 'is_public' => true, 'public_level' => PublicLevel::Member],
+            ['posted_at' => '2025-01-03 23:59:59', 'is_public' => true, 'public_level' => PublicLevel::Public],
+        )->for($profile)->create();
+
+        // 実行
+        $result = Photo::by('Feeldee')->viewable('Friend')->countBy('Y-m-d')->get();
+
+        // 評価
+        $this->assertCount(3, $result);
+        $this->assertEquals('2025-01-03', $result[0]->label);
+        $this->assertEquals(2, $result[0]->count);
+        $this->assertEquals('2025-01-02', $result[1]->label);
+        $this->assertEquals(1, $result[1]->count);
+        $this->assertEquals('2025-01-01', $result[2]->label);
+        $this->assertEquals(1, $result[2]->count);
+    }
+
+    /**
+     * 投稿件数のカウント
+     * 
+     * - カウント結果を結果の古い順にソートできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿件数のカウント
+     */
+    public function test_count_by_order_oldest()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        Item::factory()->count(6)->sequence(
+            ['posted_at' => '2024-01-01', 'is_public' => true, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-09-16', 'is_public' => false, 'public_level' => PublicLevel::Public],
+            ['posted_at' => '2025-09-17', 'is_public' => true, 'public_level' => PublicLevel::Private],
+            ['posted_at' => '2025-09-18', 'is_public' => true, 'public_level' => PublicLevel::Friend],
+            ['posted_at' => '2025-10-19', 'is_public' => true, 'public_level' => PublicLevel::Member],
+            ['posted_at' => '2025-10-20', 'is_public' => true, 'public_level' => PublicLevel::Public],
+        )->for($profile)->create();
+
+        // 実行
+        $result = Item::by('Feeldee')->public()->countBy('Y')->orderOldest()->get();
+
+        // 評価
+        $this->assertCount(2, $result);
+        $this->assertEquals('2024', $result[0]->label);
+        $this->assertEquals(1, $result[0]->count);
+        $this->assertEquals('2025', $result[1]->label);
+        $this->assertEquals(4, $result[1]->count);
+    }
 }
