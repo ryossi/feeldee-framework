@@ -2138,4 +2138,68 @@ class CommentTest extends TestCase
         $this->assertTrue($post_friend, '「友達」は自分自身にも閲覧可能であること');
         $this->assertTrue($post_private, '「自分」は自分自身にも閲覧可能であること');
     }
+
+    /**
+     * 投稿種別によるコメントの絞り込み
+     * 
+     * - 投稿種別によってコメントを絞り込むことができることを確認します。
+     * - 絞り込みに投稿の抽象クラスを継承した具象クラスを指定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿種別によるコメントの絞り込み
+     */
+    public function test_filter_by_commentable_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        Journal::factory()->count(1)->has(
+            Comment::factory()->sequence(
+                ['commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        Photo::factory()->count(2)->has(
+            Comment::factory()->sequence(
+                ['commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $comments = Profile::of('Feeldee')->first()->comments()->of(Journal::class)->get();
+
+        // 評価
+        $this->assertCount(1, $comments);
+    }
+
+    /**
+     * 投稿種別によるコメントの絞り込み
+     *
+     * - 投稿種別によってコメントを絞り込むことができることを確認します。
+     * - 絞り込みに投稿種別の文字列を指定できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿種別によるコメントの絞り込み
+     */
+    public function test_filter_by_commentable_type_string()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $commenter = Profile::factory(['nickname' => 'Commenter'])->create();
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        Journal::factory()->count(1)->has(
+            Comment::factory()->sequence(
+                ['commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+        Photo::factory()->count(2)->has(
+            Comment::factory()->sequence(
+                ['commenter_profile_id' => $commenter->id],
+            )
+        )->for($profile)->create();
+
+        // 実行
+        $comments = Comment::by('Commenter')->of(Photo::type())->get();
+
+        // 評価
+        $this->assertCount(2, $comments);
+    }
 }

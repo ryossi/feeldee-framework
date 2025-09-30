@@ -419,16 +419,18 @@ class Comment extends Model
         }
     }
 
-    // ========================== ここまで整理ずみ ==========================
-
     /**
-     * コメント対象種別を条件に含むようにクエリのスコープを設定
+     * 投稿種別でコメントの絞り込むためのローカルスコープ
      * 
      * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param string $commentableType コメント対象種別
+     * @param Post|string $type 投稿種別
+     * @see https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿種別によるコメントの絞り込み
      */
-    public function scopeOfCommentableType($query, string $commentableType)
+    public function scopeOf($query, Post|string $type)
     {
-        $query->where('commentable_type', $commentableType);
+        if (is_subclass_of($type, Post::class)) {
+            $type = $type::type();
+        }
+        $query->where('commentable_type', $type);
     }
 }

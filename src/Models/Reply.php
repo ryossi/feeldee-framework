@@ -65,6 +65,11 @@ class Reply extends Model
                 throw new ApplicationException(61001);
             }
         });
+
+        static::creating(function (self $model) {
+            // 返信所有者
+            $model->profile_id = $model->comment->commentable->profile_id;
+        });
     }
 
     /**
@@ -400,5 +405,22 @@ class Reply extends Model
             default:
                 return false;
         }
+    }
+  
+    /**
+     * 投稿種別で返信の絞り込むためのローカルスコープ
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param Post|string $type 投稿種別
+     * @see https://github.com/ryossi/feeldee-framework/wiki/返信#投稿種別による返信の絞り込み
+     */
+    public function scopeOf($query, Post|string $type)
+    {
+        if (is_subclass_of($type, Post::class)) {
+            $type = $type::type();
+        }
+        $query->whereHas('comment', function ($q) use ($type) {
+            $q->where('commentable_type', $type);
+        });
     }
 }

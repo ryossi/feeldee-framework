@@ -160,6 +160,14 @@ class Profile extends Model
     }
 
     /**
+     * 返信リスト
+     */
+    public function replies()
+    {
+        return $this->hasMany(Reply::class);
+    }
+
+    /**
      * コンフィグリスト
      */
     public function configs()
