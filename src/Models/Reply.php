@@ -406,7 +406,7 @@ class Reply extends Model
                 return false;
         }
     }
-
+  
     /**
      * 投稿種別で返信の絞り込むためのローカルスコープ
      * 
