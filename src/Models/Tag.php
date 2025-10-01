@@ -238,7 +238,7 @@ class Tag extends Model
     /**
      * タグ名を条件に含むようにクエリのスコープを設定
      */
-    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
+    public function scopeOfName($query, ?string $name, Like $like = Like::All)
     {
         $like->build($query, 'name', $name);
     }

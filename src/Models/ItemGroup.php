@@ -40,11 +40,11 @@ class ItemGroup extends Model
      * 
      * @param Profile $profile プロフィール
      * @param mixed $term 検索条件（nullの場合条件なし）
-     * @param SqlLikeBuilder $like 検索条件一致タイプ（デフォルは前方一致）
+     * @param Like $like 検索条件一致タイプ（デフォルは前方一致）
      * @return Collection アイテムグループ名リスト
      * 
      */
-    public static function findNameList(Profile $profile, mixed $term = null, SqlLikeBuilder $like = SqlLikeBuilder::Prefix): Collection
+    public static function findNameList(Profile $profile, mixed $term = null, Like $like = Like::Prefix): Collection
     {
         $itemGroupTbleName = with(new static)->getTable();
         $postTableName = with(new Journal())->getTable();

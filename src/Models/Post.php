@@ -370,7 +370,7 @@ abstract class Post extends Model
     /**
      * タイトルを条件に含むようにクエリのスコープを設定
      */
-    public function scopeOfTitle($query, ?string $title, SqlLikeBuilder $like = SqlLikeBuilder::All)
+    public function scopeOfTitle($query, ?string $title, Like $like = Like::All)
     {
         $like->build($query, 'title', $title);
     }

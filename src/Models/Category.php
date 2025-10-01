@@ -4,7 +4,6 @@ namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Profile;
-use Feeldee\Framework\Models\SqlLikeBuilder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -94,7 +93,7 @@ class Category extends Model
      */
     protected static function validateNameDuplicate(Self $model)
     {
-        if ($model->profile->categories()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+        if ($model->profile->categories()->of($model->type)->name($model->name)->first()?->id !== $model->id) {
             // カテゴリ所有プロフィールとカテゴリタイプの中でカテゴリ名が重複している場合
             throw new ApplicationException(71011, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
         }
@@ -522,20 +521,52 @@ class Category extends Model
     }
 
     /**
-     * タイプを条件に含むようにクエリのスコープを設定
+     * カテゴリ所有者による絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param string|Profile|null $profile プロフィールまたはニックネーム
+     * @return void
      */
-    public function scopeOfType($query, string $type)
+    public function scopeBy($query, string|Profile|null $profile): void
     {
+        if ($profile instanceof Profile) {
+            $query->where('profile_id', $profile->id);
+        } elseif (is_string($profile)) {
+            $query->whereHas('profile', function ($q) use ($profile) {
+                $q->where('nickname', $profile);
+            });
+        }
+    }
+
+    /**
+     * カテゴリタイプによる絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param Post|string $type カテゴリタイプ
+     * @return void
+     */
+    public function scopeOf($query, Post|string $type)
+    {
+        if (is_subclass_of($type, Post::class)) {
+            $type = $type::type();
+        }
         return $query->where('type', $type);
     }
 
     /**
-     * 名前を条件に含むようにクエリのスコープを設定
+     * カテゴリ名による絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param string|null $name カテゴリ名
+     * @param Like $like LIKE列挙型（デフォルトは、完全一致）
+     * @return void
      */
-    public function scopeOfName($query, ?string $name, SqlLikeBuilder $like = SqlLikeBuilder::All)
+    public function scopeName($query, ?string $name, Like $like = Like::All): void
     {
         $like->build($query, 'name', $name);
     }
+
+    // ========================== ここまで整理済み ==========================
 
     /**
      * 親カテゴリ（nullの場合は、ルート）を条件に含むようにクエリのスコープを設定
@@ -548,8 +579,6 @@ class Category extends Model
             $query->where('parent_id', $parent->id);
         }
     }
-
-    // ========================== ここまで整理済み ==========================
 
     /**
      * 投稿カウントを追加するようにクエリのスコープを設定

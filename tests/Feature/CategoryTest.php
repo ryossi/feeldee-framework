@@ -10,6 +10,7 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\Like;
 use Feeldee\Framework\Models\Profile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -1475,5 +1476,207 @@ class CategoryTest extends TestCase
         foreach ($serials as $index => $serial) {
             $this->assertEquals('カテゴリ' . ($index + 1), $serial->name, 'カテゴリ階層を親から子へ順番に直列化したカテゴリのコレクションであること');
         }
+    }
+
+    /**
+     * カテゴリ所有者による絞り込み
+     * 
+     * - カテゴリ所有者によりカテゴリを絞り込むことができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ所有者による絞り込み
+     */
+    public function test_filter_by_owner()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Category::factory()->count(2)->sequence(
+            ['name' => 'Feeldeeのカテゴリ', 'type' => Journal::type()],
+            ['name' => 'Feeldeeのカテゴリ', 'type' => Photo::type()],
+        ))->create();
+        Profile::factory(['nickname' => 'Other'])->has(Category::factory()->count(3)->sequence(
+            ['name' => 'Otherのカテゴリ', 'type' => Journal::type()],
+            ['name' => 'Otherのカテゴリ', 'type' => Photo::type()],
+            ['name' => 'Otherのカテゴリ', 'type' => Location::type()],
+        ))->create();
+
+        // 実行
+        $categories = Category::by(Profile::of('Feeldee')->first())->get();
+
+        // 評価
+        $this->assertEquals(2, $categories->count());
+        foreach ($categories as $category) {
+            $this->assertEquals('Feeldeeのカテゴリ', $category->name, 'カテゴリ所有者によりカテゴリを絞り込むことができること');
+        }
+    }
+
+    /**
+     * カテゴリ所有者による絞り込み
+     * 
+     * - ニックネームによりカテゴリ所有者を特定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ所有者による絞り込み
+     */
+    public function test_filter_by_owner_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Category::factory()->count(2)->sequence(
+            ['name' => 'Feeldeeのカテゴリ', 'type' => Journal::type()],
+            ['name' => 'Feeldeeのカテゴリ', 'type' => Photo::type()],
+        ))->create();
+        Profile::factory(['nickname' => 'Other'])->has(Category::factory()->count(3)->sequence(
+            ['name' => 'Otherのカテゴリ', 'type' => Journal::type()],
+            ['name' => 'Otherのカテゴリ', 'type' => Photo::type()],
+            ['name' => 'Otherのカテゴリ', 'type' => Location::type()],
+        ))->create();
+
+        // 実行
+        $categories = Category::by('Feeldee')->get();
+
+        // 評価
+        $this->assertEquals(2, $categories->count());
+        foreach ($categories as $category) {
+            $this->assertEquals('Feeldeeのカテゴリ', $category->name, 'カテゴリ所有者によりカテゴリを絞り込むことができること');
+        }
+    }
+
+    /**
+     * カテゴリタイプによる絞り込み
+     * 
+     * - カテゴリタイプによりカテゴリを絞り込むことができることを確認します。
+     * - 投稿の抽象クラスを継承した具象クラスを使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプによる絞り込み
+     */
+    public function test_filter_by_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Category::factory()->count(5)->sequence(
+            ['name' => 'JournalCategory_1', 'type' => Journal::type()],
+            ['name' => 'JournalCategory_2', 'type' => Journal::type()],
+            ['name' => 'PhotoCategory', 'type' => Photo::type()],
+            ['name' => 'LocationCategory', 'type' => Location::type()],
+            ['name' => 'ItemCategory', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $journalCategories = Category::by('Feeldee')->of(Journal::class)->get();
+
+        // 評価
+        $this->assertEquals(2, $journalCategories->count());
+    }
+
+    /**
+     * カテゴリタイプによる絞り込み
+     * 
+     * - カテゴリタイプによりカテゴリを絞り込むことができることを確認します。
+     * - 投稿種別の文字列を使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプによる絞り込み
+     */
+    public function test_filter_by_type_string()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Category::factory()->count(7)->sequence(
+            ['name' => 'JournalCategory_1', 'type' => Journal::type()],
+            ['name' => 'JournalCategory_2', 'type' => Journal::type()],
+            ['name' => 'PhotoCategory', 'type' => Photo::type()],
+            ['name' => 'LocationCategory', 'type' => Location::type()],
+            ['name' => 'ItemCategory_1', 'type' => Item::type()],
+            ['name' => 'ItemCategory_2', 'type' => Item::type()],
+            ['name' => 'ItemCategory_3', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $itemCategories = Category::by('Feeldee')->of(Item::type())->get();
+
+        // 評価
+        $this->assertEquals(3, $itemCategories->count());
+    }
+
+    /**
+     * カテゴリ名による絞り込み
+     * 
+     * - カテゴリ名を指定してカテゴリを絞り込むことができることを確認します。
+     * - カテゴリ名を完全一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名による絞り込み
+     */
+    public function test_filter_by_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Category::factory()->count(6)->sequence(
+            ['name' => 'JournalCategory_1', 'type' => Journal::type()],
+            ['name' => 'JournalCategory_2', 'type' => Journal::type()],
+            ['name' => 'PhotoCategory', 'type' => Photo::type()],
+            ['name' => 'LocationCategory', 'type' => Location::type()],
+            ['name' => 'NewItem', 'type' => Item::type()],
+            ['name' => 'NewItem2', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $category = Category::by('Feeldee')->of(Item::type())->name('NewItem')->first();
+
+        // 評価
+        $this->assertEquals('NewItem', $category->name);
+    }
+
+    /**
+     * カテゴリ名による絞り込み
+     * 
+     * - カテゴリ名を指定してカテゴリを絞り込むことができることを確認します。
+     * - カテゴリ名を前方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名による絞り込み
+     */
+    public function test_filter_by_name_prefix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Category::factory()->count(6)->sequence(
+            ['name' => 'MyPet1', 'type' => Journal::type()],
+            ['name' => 'JournalCategory_2', 'type' => Journal::type()],
+            ['name' => 'PhotoCategory', 'type' => Photo::type()],
+            ['name' => 'LocationCategory', 'type' => Location::type()],
+            ['name' => 'MyPet3', 'type' => Item::type()],
+            ['name' => 'MyPet2', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $mypets = Category::by('Feeldee')->name('MyPet', Like::Prefix)->get();
+
+        // 評価
+        $this->assertEquals(3, $mypets->count());
+    }
+
+    /**
+     * カテゴリ名による絞り込み
+     * 
+     * - カテゴリ名を指定してカテゴリを絞り込むことができることを確認します。
+     * - カテゴリ名を後方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名による絞り込み
+     */
+    public function test_filter_by_name_suffix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Category::factory()->count(6)->sequence(
+            ['name' => 'HomePark', 'type' => Journal::type()],
+            ['name' => 'JournalCategory_2', 'type' => Journal::type()],
+            ['name' => 'PhotoCategory', 'type' => Photo::type()],
+            ['name' => 'HomePark', 'type' => Location::type()],
+            ['name' => 'BollPark', 'type' => Location::type()],
+            ['name' => 'Park', 'type' => Location::type()],
+        ))->create();
+
+        // 実行
+        $mypets = Category::by('Feeldee')->of(Location::class)->name('Park', Like::Suffix)->get();
+
+        // 評価
+        $this->assertEquals(3, $mypets->count());
     }
 }
