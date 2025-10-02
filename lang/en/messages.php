@@ -54,8 +54,6 @@ return [
     71003 => 'CategoryParentProfileMissmatch',          // カテゴリと親カテゴリでカテゴリ所有プロフィールが異なる
     71004 => 'CategoryParentTypeMissmatch',             // カテゴリと親カテゴリでカテゴリタイプが異なる
     71005 => 'CategoryDeleteHasChild',                  // カテゴリ削除において子カテゴリが存在する
-    71006 => 'CategoryProfileMissmatch',                // カテゴリ所有プロフィールと投稿者プロフィールが異なる
-    71007 => 'CategoryTypeMissmatch',                   // カテゴリタイプと投稿種別が異なる
     71008 => 'CategoryProfileRequired',                 // カテゴリ所有プロフィールが指定されていない
     71009 => 'CategoryTypeRequired',                    // カテゴリタイプが指定されていない
     71010 => 'CategoryNameRequired',                    // カテゴリ名が指定されていない
@@ -84,4 +82,10 @@ return [
     73008 => 'RecordTypeMissmatch',                     // レコーダタイプと投稿種別が異なる
     73009 => 'RecordRecorderIdNotFound',                // レコーダIDに一致するレコーダが見つからない
     73010 => 'RecordRecorderNameNotFound',              // レコーダ名に一致するレコーダが見つからない
+
+    // ****************************
+    // *** 8xxxx 投稿関連        ***
+    // ****************************
+    80001 => 'PostCategoryProfileMissmatch',            // 指定したカテゴリのカテゴリ所有プロフィールと投稿者プロフィールが異なる
+    80002 => 'PostCategoryTypeMissmatch',               // 指定したカテゴリのカテゴリタイプと投稿種別が異なる
 ];

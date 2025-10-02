@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
  * 
  * == コード定義 ==
  * 1xxxx:プロフィール関連
- * 2xxxx:投稿関連
+ * 2xxxx:記録関連
  * 3xxxx:写真関連
  * 4xxxx:場所関連
  * 5xxxx:アイテム関連
@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Log;
  * 71xxx:カテゴリー関連
  * 72xxx:タグ関連
  * 73xxx:レコード関連
+ * 8xxxx:投稿関連
  */
 class ApplicationException extends Exception
 {

@@ -9,14 +9,23 @@ trait HasCategory
 {
     protected static function bootedCategory(Post $post)
     {
-        if (!is_null($post->category)) {
+        if (array_key_exists('category', $post->attributes)) {
             if ($post->category instanceof Category) {
                 // カテゴリオブジェクトを直接指定している場合
                 $post->category_id = $post->category->id;
+            } else if (is_null($post->category) || $post->category === '') {
+                // nullを設定した場合は、カテゴリをクリア
+                $post->category_id = null;
             } else {
-                // カテゴリ名を指定している場合
-                $post->refresh();
-                $obj = $post->profile->categories()->ofType($post->type())->ofName($post->category)->first();
+                $obj = null;
+                if (is_int($post->category)) {
+                    // カテゴリIDで検索
+                    $obj = $post->profile->categories()->find($post->category);
+                }
+                if (!$obj) {
+                    // カテゴリ名で検索
+                    $obj = $post->profile->categories()->of($post->type())->name($post->category)->first();
+                }
                 if ($obj instanceof Category) {
                     $post->category_id = $obj->id;
                 }
@@ -29,7 +38,7 @@ trait HasCategory
     {
         if (!is_null($post->category) && $post->profile->id !== $post->category->profile->id) {
             // カテゴリ所有プロフィールと投稿者プロフィールが一致しない場合
-            throw new ApplicationException(71006);
+            throw new ApplicationException(80001);
         }
     }
 
@@ -37,7 +46,7 @@ trait HasCategory
     {
         if (!is_null($post->category) && $post->category->type !== $post::type()) {
             // カテゴリ種別と投稿種別が一致しない場合
-            throw new ApplicationException(71007);
+            throw new ApplicationException(80002);
         }
     }
 

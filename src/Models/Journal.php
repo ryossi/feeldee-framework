@@ -5,7 +5,6 @@ namespace Feeldee\Framework\Models;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -19,7 +18,7 @@ class Journal extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'posted_at', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'tags', 'posted_at', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性

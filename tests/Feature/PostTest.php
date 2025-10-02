@@ -3,6 +3,8 @@
 namespace Tests\Feature;
 
 use Carbon\Carbon;
+use Feeldee\Framework\Exceptions\ApplicationException;
+use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Like;
@@ -1280,9 +1282,9 @@ class PostTest extends TestCase
         Profile::factory(
             ['nickname' => 'Feeldee']
         )->has(Journal::factory(3)->sequence(
-            ['title' => '今日の釣り日記'],
-            ['title' => '昨日の釣り日記'],
-            ['title' => '日記を書く'],
+            ['title' => '今日の釣り日記', 'posted_at' => now()],
+            ['title' => '昨日の釣り日記', 'posted_at' => now()->subDay()],
+            ['title' => '日記を書く', 'posted_at' => now()->subDays(2)],
         ))->create();
 
         // 実行
@@ -1342,29 +1344,215 @@ class PostTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
      */
-    // public function test_set_category_on_update()
-    // {
-    //     // 準備
-    //     Auth::shouldReceive('id')->andReturn(1);
-    //     $profile = Profile::factory(
-    //         ['nickname' => 'Feeldee']
-    //     )->has(
-    //         Category::factory(1, ['name' => 'News'])->has(Journal::factory()->count(3)->sequence([
-    //             ['title' => 'Journal category by object'],
-    //             ['title' => 'Journal category by id'],
-    //             ['title' => 'Journal category by name'],
-    //         ]))
-    //     )->create();
-    //     $pickup = $profile->categories()->create([
-    //         'type' => Journal::class,
-    //         'name' => 'Pickup'
-    //     ]);
+    public function test_set_category_on_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $news = Category::factory([
+            'type' => Journal::type(),
+            'name' => 'News'
+        ])->for($profile)->create();
+        $pickup = Category::factory([
+            'type' => Journal::type(),
+            'name' => 'Pickup'
+        ])->for($profile)->create();
+        Journal::factory()->count(3)->sequence(
+            ['title' => 'Journal category by object', 'category_id' => $news->id],
+            ['title' => 'Journal category by id', 'category_id' => $news->id],
+            ['title' => 'Journal category by name', 'category_id' => $news->id],
+        )->for($profile)->create();
 
-    //     // 実行
-    //     Journal::by('Feeldee')->at('2025-09-16')->first()->update(['category' => $pickup]);
-    //     $journal->save();
+        // 実行
+        $journal1 = Journal::title('Journal category by object')->first();
+        $journal1->category = $pickup;
+        $journal1->save();
 
-    //     // 評価
-    //     $this->assertNull($journal->category);
-    // }
+        $journal2 = Journal::title('Journal category by id')->first();
+        $journal2->category = $pickup->id;
+        $journal2->save();
+
+        $journal3 = Journal::title('Journal category by name')->first();
+        $journal3->category = 'Pickup';
+        $journal3->save();
+
+        // 評価
+        $this->assertEquals($pickup->id, $journal1->category?->id, 'カテゴリそのものを指定して変更');
+        $this->assertEquals($pickup->id, $journal2->category?->id, 'カテゴリIDを指定して変更');
+        $this->assertEquals($pickup->id, optional($journal3->category)->id, 'カテゴリ名を指定して変更');
+    }
+
+    /**
+     * 投稿カテゴリの設定と変更
+     * 
+     * - カテゴリ所有プロフィールが投稿者プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
+     */
+    public function test_set_category_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Journal::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($otherProfile, $category) {
+            $otherProfile->journals()->create([
+                'title' => 'テスト記録',
+                'posted_at' => now(),
+                'category' => $category,
+            ]);
+        }, ApplicationException::class, 'PostCategoryProfileMissmatch');
+    }
+
+    /**
+     * 投稿カテゴリの設定と変更
+     * 
+     * - 投稿種別と同じカテゴリタイプであることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
+     */
+    public function test_set_category_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = Category::factory([
+            'profile_id' => $profile->id,
+            'type' => Journal::type(),
+        ])->create();
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $category) {
+            $profile->items()->create([
+                'title' => 'テストアイテム',
+                'category' => $category,
+            ]);
+        }, ApplicationException::class, 'PostCategoryTypeMissmatch');
+    }
+
+    /**
+     * 投稿カテゴリの設定と変更
+     * 
+     * - カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されることを確認します。
+     * - 一致するカテゴリが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
+     */
+    public function test_set_category_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $profile->categories()->create([
+            'type' => Journal::type(),
+            'name' => 'Pickup'
+        ]);
+        $pickupForPhoto = $profile->categories()->create([
+            'type' => Photo::type(),
+            'name' => 'Pickup'
+        ]);
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'Pickup Photo',
+            'src' => '/photos/myphoto.jpg',
+            'category' => 'Pickup'
+        ]);
+
+        // 評価
+        $this->assertEquals($pickupForPhoto->id, $photo->category->id, 'カテゴリ名を指定した場合は、カテゴリ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じカテゴリタイプのカテゴリの中からカテゴリ名が一致するカテゴリのIDが設定されること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'category_id' => $pickupForPhoto->id,
+        ]);
+
+        // 実行
+        $photo->category = 'Others';
+        $photo->save();
+
+        // 評価
+        $this->assertEquals($pickupForPhoto->id, optional($photo->category)->id, 'カテゴリ名を指定した場合に一致するカテゴリが存在しない場合は無視されること');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'category_id' => $pickupForPhoto->id,
+        ]);
+    }
+
+    /**
+     * 投稿カテゴリの設定と変更
+     * 
+     * - 投稿カテゴリをクリアしたい場合は、nullを設定することでクリアできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
+     */
+    public function test_set_category_clear()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $category = Category::factory([
+            'type' => Location::type(),
+        ])->for($profile)->create();
+        $location = Location::factory([
+            'category' => $category
+        ])->for($profile)->create();
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'category_id' => $category->id,
+        ]);
+
+        // 実行
+        $location->category = null;
+        $location->save();
+
+        // 評価
+        $this->assertNull($location->category, 'nullを設定することでクリアできること');
+        $this->assertDatabaseHas('locations', [
+            'id' => $location->id,
+            'category_id' => null,
+        ]);
+    }
+
+    /**
+     * 投稿カテゴリ
+     * 
+     * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
+     */
+    public function test_set_category_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $category = $profile->categories()->create([
+            'type' => Photo::type(),
+            'name' => 'Pickup'
+        ]);
+        $photo = $profile->photos()->create([
+            'title' => 'Pickup Photo',
+            'src' => '/photos/myphoto.jpg',
+            'category' => $category
+        ]);
+
+        // 実行
+        $category->delete();
+        $photo->refresh();
+
+        // 評価
+        $this->assertNull($photo->category, '対応するカテゴリが削除された場合は、自動的にnullが設定されること');
+        $this->assertDatabaseEmpty('categories');
+        $this->assertDatabaseHas('photos', [
+            'id' => $photo->id,
+            'category_id' => null,
+        ]);
+    }
 }
