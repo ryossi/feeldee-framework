@@ -353,6 +353,21 @@ abstract class Post extends Model
         }
     }
 
+    /**
+     * 投稿タイトルによる絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param ?string $title 投稿タイトル
+     * @param Like $like LIKE列挙型（デフォルトは、完全一致）
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タイトルによる絞り込み
+     */
+    public function scopeTitle($query, ?string $title, Like $like = Like::All): void
+    {
+        $like->build($query, 'title', $title);
+    }
+
+
     // ========================== ここまで整理ずみ ==========================
 
     /**
@@ -365,14 +380,6 @@ abstract class Post extends Model
     public function textTruncate(int $width, string $trim_marker, ?string $encoding)
     {
         return mb_strimwidth($this->text, 0, $width, $trim_marker, $encoding);
-    }
-
-    /**
-     * タイトルを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfTitle($query, ?string $title, Like $like = Like::All)
-    {
-        $like->build($query, 'title', $title);
     }
 
     /**

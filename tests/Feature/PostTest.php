@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Carbon\Carbon;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\Like;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
@@ -1206,4 +1207,164 @@ class PostTest extends TestCase
         $this->assertEquals('2025', $result[1]->label);
         $this->assertEquals(4, $result[1]->count);
     }
+
+    /**
+     * 投稿タイトルによる絞り込み
+     * 
+     * - 投稿タイトルを指定して投稿を絞り込むことができることを確認します。
+     * - 投稿タイトルを完全一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タイトルによる絞り込み
+     */
+    public function test_filter_title()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->has(Journal::factory(3)->sequence(
+            ['title' => 'First Journal'],
+            ['title' => 'Second Journal'],
+            ['title' => 'Third Journal'],
+        ))->create();
+
+        // 実行
+        $result = Journal::by('Feeldee')->title('First Journal')->get();
+
+        // 評価
+        $this->assertCount(1, $result);
+        $this->assertEquals('First Journal', $result[0]->title);
+    }
+
+    /**
+     * 投稿タイトルによる絞り込み
+     * 
+     * - 投稿タイトルを指定して投稿を絞り込むことができることを確認します。
+     * - 投稿タイトルを前方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タイトルによる絞り込み
+     */
+    public function test_filter_title_prefix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->has(Location::factory(3)->sequence(
+            ['title' => '山形の風景'],
+            ['title' => '山形の名所'],
+            ['title' => '仙台の観光地'],
+        ))->create();
+
+        // 実行
+        $locations = Location::by('Feeldee')->title('山形の', Like::Prefix)->get();
+
+        // 評価
+        $this->assertCount(2, $locations);
+        $this->assertEquals('山形の風景', $locations[0]->title);
+        $this->assertEquals('山形の名所', $locations[1]->title);
+    }
+
+    /**
+     * 投稿タイトルによる絞り込み
+     * 
+     * - 投稿タイトルを指定して投稿を絞り込むことができることを確認します。
+     * - 投稿タイトルを後方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タイトルによる絞り込み
+     */
+    public function test_filter_title_suffix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->has(Journal::factory(3)->sequence(
+            ['title' => '今日の釣り日記'],
+            ['title' => '昨日の釣り日記'],
+            ['title' => '日記を書く'],
+        ))->create();
+
+        // 実行
+        $mypets = Journal::by('Feeldee')->title('日記', Like::Suffix)->get();
+
+        // 評価
+        $this->assertCount(2, $mypets);
+        $this->assertEquals('今日の釣り日記', $mypets[0]->title);
+        $this->assertEquals('昨日の釣り日記', $mypets[1]->title);
+    }
+
+    /**
+     * 投稿カテゴリの設定と変更
+     * 
+     * - 新規作成でカテゴリを直接設定できることを確認します。
+     * - 投稿カテゴリは、カテゴリそのものの他に、カテゴリIDでもカテゴリ名でも指定可能であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
+     */
+    public function test_set_category_on_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $news = Profile::of('Feeldee')->first()->categories()->create([
+            'type' => Journal::type(),
+            'name' => 'News'
+        ]);
+
+        // 実行
+        $journal1 = $profile->journals()->create([
+            'title' => 'Journal category by object',
+            'category' => $news
+        ]);
+        $journal2 = $profile->journals()->create([
+            'title' => 'Journal category by id',
+            'category' => $news->id
+        ]);
+        $journal3 = $profile->journals()->create([
+            'title' => 'Journal category by name',
+            'category' => 'News'
+        ]);
+
+        // 評価
+        $this->assertEquals($news->id, $journal1->category?->id, 'カテゴリそのものを指定して新規作成');
+        $this->assertEquals($news->id, $journal2->category?->id, 'カテゴリIDを指定して新規作成');
+        $this->assertEquals($news->id, $journal3->category?->id, 'カテゴリ名を指定して新規作成');
+    }
+
+    /**
+     * 投稿カテゴリの設定と変更
+     * 
+     * - 既存の投稿に対してカテゴリを直接設定できることを確認します。
+     * - 投稿カテゴリは、カテゴリそのものの他に、カテゴリIDでもカテゴリ名でも指定可能であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリの設定と変更
+     */
+    // public function test_set_category_on_update()
+    // {
+    //     // 準備
+    //     Auth::shouldReceive('id')->andReturn(1);
+    //     $profile = Profile::factory(
+    //         ['nickname' => 'Feeldee']
+    //     )->has(
+    //         Category::factory(1, ['name' => 'News'])->has(Journal::factory()->count(3)->sequence([
+    //             ['title' => 'Journal category by object'],
+    //             ['title' => 'Journal category by id'],
+    //             ['title' => 'Journal category by name'],
+    //         ]))
+    //     )->create();
+    //     $pickup = $profile->categories()->create([
+    //         'type' => Journal::class,
+    //         'name' => 'Pickup'
+    //     ]);
+
+    //     // 実行
+    //     Journal::by('Feeldee')->at('2025-09-16')->first()->update(['category' => $pickup]);
+    //     $journal->save();
+
+    //     // 評価
+    //     $this->assertNull($journal->category);
+    // }
 }
