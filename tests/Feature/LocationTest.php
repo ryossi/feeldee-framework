@@ -7,7 +7,6 @@ use Carbon\Carbon;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
-use Feeldee\Framework\Models\Category;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Profile;

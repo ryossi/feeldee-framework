@@ -1555,4 +1555,128 @@ class PostTest extends TestCase
             'category_id' => null,
         ]);
     }
+
+    /**
+     * 投稿カテゴリによる絞り込み
+     * 
+     * - 投稿カテゴリにより投稿を絞り込むことができることを確認します。
+     * - カテゴリオブジェクトを指定して絞り込みできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリによる絞り込み
+     */
+    public function test_categorizedOf()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $category = Category::factory(['name' => 'NewItem', 'type' => Item::type()])->for($profile)->create();
+        Item::factory(4)->sequence(
+            ['title' => 'Item 1', 'category' => $category],
+            ['title' => 'Item 2', 'category' => $category],
+            ['title' => 'Item 3', 'category' => $category],
+            ['title' => 'Item 4'],
+        )->for($profile)->create();
+
+        // 実行
+        $items = Item::categorizedOf(Category::by('Feeldee')->name('NewItem')->first())->get();
+
+        // 評価
+        $this->assertEquals(3, $items->count());
+    }
+
+    /**
+     * 投稿カテゴリによる絞り込み
+     * 
+     * - 投稿カテゴリにより投稿を絞り込むことができることを確認します。
+     * - カテゴリIDを指定して絞り込みできることを確認
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリによる絞り込み
+     */
+    public function test_categorizedOf_by_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $category = Category::factory(['name' => 'NewItem', 'type' => Item::type()])->for($profile)->create();
+        Item::factory(4)->sequence(
+            ['title' => 'Item 1', 'category' => $category],
+            ['title' => 'Item 2', 'category' => $category],
+            ['title' => 'Item 3', 'category' => $category],
+            ['title' => 'Item 4'],
+        )->for($profile)->create();
+
+        // 実行
+        $category = Category::by('Feeldee')->name('NewItem')->first();
+        $items = Item::categorizedOf($category->id)->get();
+
+        // 評価
+        $this->assertEquals(3, $items->count());
+    }
+
+    /**
+     * 投稿カテゴリによる絞り込み
+     * 
+     * - 投稿カテゴリにより投稿を絞り込むことができることを確認します。
+     * - カテゴリ名を指定して絞り込みできることを確認します。
+     * - プロフィールを横断して同じカテゴリ名に属する複数の投稿を取得できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリによる絞り込み
+     */
+    public function test_categorizedOf_by_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile1 = Profile::factory(['nickname' => 'Profile1'])->create();
+        $category1 = Category::factory(['name' => 'News', 'type' => Journal::type()])->for($profile1)->create();
+        Journal::factory(3)->sequence(
+            ['title' => 'Journal 1', 'category' => $category1],
+            ['title' => 'Journal 2', 'category' => $category1],
+            ['title' => 'Journal 3'],
+        )->for($profile1)->create();
+
+        $profile2 = Profile::factory(['nickname' => 'Profile2'])->create();
+        $category2 = Category::factory(['name' => 'News', 'type' => Journal::type()])->for($profile2)->create();
+        Journal::factory(3)->sequence(
+            ['title' => 'Journal 4', 'category' => $category2],
+            ['title' => 'Journal 5', 'category' => $category2],
+            ['title' => 'Journal 6', 'category' => $category2],
+        )->for($profile2)->create();
+
+        // 実行
+        $journals = Journal::categorizedOf('News')->get();
+
+        // 評価
+        $this->assertEquals(5, $journals->count());
+    }
+
+    /**
+     * 投稿カテゴリによる絞り込み
+     * 
+     * - 投稿カテゴリが指定されていない投稿のみに絞り込みできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリによる絞り込み
+     */
+    public function test_categorizedOf_without_category()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $category = Category::factory(['name' => 'Point', 'type' => Location::type()])->for($profile)->create();
+        Location::factory(4)->sequence(
+            ['title' => 'Item 1', 'category' => $category],
+            ['title' => 'Item 2', 'category' => $category],
+            ['title' => 'Item 3', 'category' => $category],
+            ['title' => 'Item 4'],
+        )->for($profile)->create();
+
+        // 実行
+        $locations = Location::categorizedOf()->get();
+        $uncategorized = Location::categorizedOf(null)->get();
+
+        // 評価
+        $this->assertEquals(1, $locations->count());
+        $this->assertEquals('Item 4', $locations->first()->title);
+        $this->assertEquals(1, $uncategorized->count());
+        $this->assertEquals('Item 4', $uncategorized->first()->title);
+    }
 }

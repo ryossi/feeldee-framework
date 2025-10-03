@@ -79,7 +79,7 @@ class Item extends Post
     /**
      * モデルの「起動」メソッド
      */
-    protected static function booted(): void
+    protected static function onBooted(): void
     {
         static::addGlobalScope('defaultSort', function ($builder) {
             $builder->orderBy('order_number')->orderByDesc('posted_at');

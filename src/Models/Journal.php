@@ -63,7 +63,7 @@ class Journal extends Post
     /**
      * モデルの「起動」メソッド
      */
-    protected static function booted(): void
+    protected static function onBooted(): void
     {
         static::addGlobalScope('defaultSort', function ($builder) {
             $builder->orderByDesc('posted_at');

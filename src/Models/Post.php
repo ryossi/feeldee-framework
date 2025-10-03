@@ -3,6 +3,7 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\CarbonImmutable;
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -15,7 +16,60 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 abstract class Post extends Model
 {
-    use HasFactory, HasCategory, HasTag, HasRecord, Required, StripTags, SetUser;
+    use HasFactory, HasTag, HasRecord, Required, StripTags, SetUser;
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Post $post) {
+            // 投稿カテゴリ
+            static::bootedCategory($post);
+        });
+
+        static::onBooted();
+    }
+
+    /**
+     * 投稿カテゴリの「起動」メソッド
+     */
+    protected static function bootedCategory(Post $post)
+    {
+        if (array_key_exists('category', $post->attributes)) {
+            if ($post->category instanceof Category) {
+                // カテゴリオブジェクトを直接指定している場合
+                $post->category_id = $post->category->id;
+            } else if (is_null($post->category) || $post->category === '') {
+                // nullを設定した場合は、カテゴリをクリア
+                $post->category_id = null;
+            } else {
+                $obj = null;
+                if (is_int($post->category)) {
+                    // カテゴリIDで検索
+                    $obj = $post->profile->categories()->find($post->category);
+                }
+                if (!$obj) {
+                    // カテゴリ名で検索
+                    $obj = $post->profile->categories()->of($post->type())->name($post->category)->first();
+                }
+                if ($obj instanceof Category) {
+                    $post->category_id = $obj->id;
+                }
+            }
+            unset($post['category']);
+        }
+
+        if (!is_null($post->category) && $post->profile->id !== $post->category->profile->id) {
+            // カテゴリ所有プロフィールと投稿者プロフィールが一致しない場合
+            throw new ApplicationException(80001);
+        }
+
+        if (!is_null($post->category) && $post->category->type !== $post::type()) {
+            // カテゴリ種別と投稿種別が一致しない場合
+            throw new ApplicationException(80002);
+        }
+    }
 
     /**
      * 投稿種別
@@ -42,6 +96,16 @@ abstract class Post extends Model
     protected function getIsPublicAttribute(): bool
     {
         return $this->attributes['is_public'] ?? false;
+    }
+
+    /**
+     * 投稿カテゴリ
+     *
+     * @return BelongsTo
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     /**
@@ -367,6 +431,35 @@ abstract class Post extends Model
         $like->build($query, 'title', $title);
     }
 
+    /**
+     * 投稿カテゴリによる絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param Category|int|string|null $category 投稿カテゴリ、カテゴリID、カテゴリ名、またはnull（デフォルトはnull）
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリによる絞り込み
+     */
+    public function scopeCategorizedOf($query, Category|int|string|null $category = null)
+    {
+        if (!is_null($category)) {
+            if ($category instanceof Category) {
+                $query->where('category_id', $category->id);
+            } else {
+                if (is_int($category)) {
+                    $query->where('category_id', $category);
+                } else {
+                    $table = (new $this)->getTable();
+                    $query->leftJoin('categories', "$table.category_id", '=', 'categories.id')
+                        ->select("$table.*")
+                        ->where('categories.name', $category);
+                }
+            }
+        } else {
+            $query->whereNull('category_id');
+        }
+
+        return $query;
+    }
 
     // ========================== ここまで整理ずみ ==========================
 
