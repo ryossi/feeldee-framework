@@ -526,6 +526,7 @@ class Category extends Model
      * @param Builder $query
      * @param string|Profile|null $profile プロフィールまたはニックネーム
      * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ所有者による絞り込み
      */
     public function scopeBy($query, string|Profile|null $profile): void
     {
@@ -544,6 +545,7 @@ class Category extends Model
      * @param Builder $query
      * @param Post|string $type カテゴリタイプ
      * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプによる絞り込み
      */
     public function scopeOf($query, Post|string $type)
     {
@@ -560,6 +562,7 @@ class Category extends Model
      * @param string|null $name カテゴリ名
      * @param Like $like LIKE列挙型（デフォルトは、完全一致）
      * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリ名による絞り込み
      */
     public function scopeName($query, ?string $name, Like $like = Like::All): void
     {
