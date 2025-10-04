@@ -615,55 +615,6 @@ class TagTest extends TestCase
     }
 
     /**
-     * 投稿リスト
-     * 
-     * - 投稿リストに直接投稿のコレクションを指定する場合、タグ所有プロフィールが投稿者プロフィールと一致している必要があることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
-     */
-    public function test_posts_profile_missmatch()
-    {
-        //  準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $otherProfile = Profile::factory()->create();
-
-        // 評価
-        $this->assertThrows(function () use ($profile, $otherProfile) {
-            // 実行
-            $profile->tags()->create([
-                'name' => 'テストタグ',
-                'type' => Journal::type(),
-                'posts' => Journal::factory(3)->create(['profile_id' => $otherProfile->id]),
-            ]);
-        }, ApplicationException::class, 'TagProfileMissmatch');
-    }
-
-    /**
-     * 投稿リスト
-     * 
-     * - 投稿リストに直接投稿のコレクションを指定する場合、タグタイプが投稿種別と一致している必要があることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
-     */
-    public function test_posts_type_missmatch()
-    {
-        //  準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-
-        // 評価
-        $this->assertThrows(function () use ($profile) {
-            // 実行
-            $profile->tags()->create([
-                'name' => 'テストタグ',
-                'type' => Journal::type(),
-                'posts' => Item::factory(1)->create(['profile_id' => $profile->id]),
-            ]);
-        }, ApplicationException::class, 'TagTypeMissmatch');
-    }
-
-    /**
      * タグ所有者による絞り込み
      * 
      * - タグ所有者によりタグを絞り込むことができることを確認します。

@@ -12,6 +12,7 @@ use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
+use Feeldee\Framework\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
@@ -1522,7 +1523,7 @@ class PostTest extends TestCase
     }
 
     /**
-     * 投稿カテゴリ
+     * 投稿カテゴリの設定と変更
      * 
      * - 対応するカテゴリが削除された場合は、自動的にNullが設定されることを確認します。
      * 
@@ -1678,5 +1679,415 @@ class PostTest extends TestCase
         $this->assertEquals('Item 4', $locations->first()->title);
         $this->assertEquals(1, $uncategorized->count());
         $this->assertEquals('Item 4', $uncategorized->first()->title);
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     * 
+     * - 投稿タグリストの設定が可能であることを確認します。
+     * - タグオブジェクトのコレクションで指定可能であることを確認します。
+     * - タグIDの配列で指定可能であることを確認します。
+     * - タグ名の配列で指定可能であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tags_on_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $book = $profile->tags()->create([
+            'type' => Journal::type(),
+            'name' => 'Book'
+        ]);
+        $favorite = $profile->tags()->create([
+            'type' => Journal::type(),
+            'name' => 'Favorite'
+        ]);
+        $music = $profile->tags()->create([
+            'type' => Journal::type(),
+            'name' => 'Music'
+        ]);
+
+        // 実行
+        $journal1 = $profile->journals()->create([
+            'title' => 'Journal tags by object',
+            'tags' => Tag::by('Feeldee')->of(Journal::class)->get()
+        ]);
+        $journal2 = $profile->journals()->create([
+            'title' => 'Journal tags by id',
+            'tags' => [$book->id, $favorite->id]
+        ]);
+        $journal3 = $profile->journals()->create([
+            'title' => 'Journal tagged by name',
+            'tags' => ['Book', 'Favorite']
+        ]);
+
+        // 評価
+        $this->assertEquals(3, $journal1->tags->count(), 'タグオブジェクトのコレクションで指定可能であること');
+        $this->assertTrue($journal1->tags->pluck('name')->contains('Book'));
+        $this->assertTrue($journal1->tags->pluck('name')->contains('Favorite'));
+        $this->assertTrue($journal1->tags->pluck('name')->contains('Music'));
+        $this->assertEquals(2, $journal2->tags->count(), 'タグIDの配列で指定可能であること');
+        $this->assertTrue($journal2->tags->pluck('name')->contains('Book'));
+        $this->assertTrue($journal2->tags->pluck('name')->contains('Favorite'));
+        $this->assertEquals(2, $journal3->tags->count(), 'タグ名の配列で指定可能であること');
+        $this->assertTrue($journal3->tags->pluck('name')->contains('Book'));
+        $this->assertTrue($journal3->tags->pluck('name')->contains('Favorite'));
+        $this->assertDatabaseCount('taggables', 7);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $book->id,
+            'taggable_id' => $journal1->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favorite->id,
+            'taggable_id' => $journal1->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $music->id,
+            'taggable_id' => $journal1->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $book->id,
+            'taggable_id' => $journal2->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favorite->id,
+            'taggable_id' => $journal2->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $book->id,
+            'taggable_id' => $journal3->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favorite->id,
+            'taggable_id' => $journal3->id,
+            'taggable_type' => Journal::type(),
+        ]);
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     * 
+     * - 投稿タグリストの変更が可能であることを確認します。
+     * - タグオブジェクトのコレクションで指定可能であることを確認します。
+     * - タグIDの配列で指定可能であることを確認します。
+     * - タグ名の配列で指定可能であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tags_on_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $book = Tag::factory([
+            'type' => Journal::type(),
+            'name' => 'Book'
+        ])->for($profile)->create();
+        $favorite = Tag::factory([
+            'type' => Journal::type(),
+            'name' => 'Favorite'
+        ])->for($profile)->create();
+        $music = Tag::factory([
+            'type' => Journal::type(),
+            'name' => 'Music'
+        ])->for($profile)->create();
+        Journal::factory()->count(3)->sequence(
+            ['title' => 'Journal tag by object', 'tags' => [$book, $favorite, $music]],
+            ['title' => 'Journal tag by id', 'tags' => [$book, $favorite]],
+            ['title' => 'Journal tag by name', 'tags' => [$book, $favorite]],
+        )->for($profile)->create();
+
+        // 実行
+        $journal1 = Journal::title('Journal tag by object')->first();
+        $journal1->tags = [$music, $favorite];
+        $journal1->save();
+
+        $journal2 = Journal::title('Journal tag by id')->first();
+        $journal2->tags = [$music->id, $favorite->id];
+        $journal2->save();
+
+        $journal3 = Journal::title('Journal tag by name')->first();
+        $journal3->tags = ['Music', 'Favorite'];
+        $journal3->save();
+
+        // 評価
+        $this->assertEquals(2, optional($journal1->tags)->count(), 'タグオブジェクトのコレクションで指定可能であること');
+        $this->assertTrue(optional($journal1->tags)->pluck('name')->contains('Favorite'));
+        $this->assertTrue(optional($journal1->tags)->pluck('name')->contains('Music'));
+        $this->assertEquals(2, optional($journal2->tags)->count(), 'タグIDの配列で指定可能であること');
+        $this->assertTrue(optional($journal2->tags)->pluck('name')->contains('Favorite'));
+        $this->assertTrue(optional($journal2->tags)->pluck('name')->contains('Music'));
+        $this->assertEquals(2, optional($journal3->tags)->count(), 'タグ名の配列で指定可能であること');
+        $this->assertTrue(optional($journal3->tags)->pluck('name')->contains('Favorite'));
+        $this->assertTrue(optional($journal3->tags)->pluck('name')->contains('Music'));
+        $this->assertDatabaseCount('taggables', 6);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favorite->id,
+            'taggable_id' => $journal1->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $music->id,
+            'taggable_id' => $journal1->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favorite->id,
+            'taggable_id' => $journal2->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $music->id,
+            'taggable_id' => $journal2->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favorite->id,
+            'taggable_id' => $journal3->id,
+            'taggable_type' => Journal::type(),
+        ]);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $music->id,
+            'taggable_id' => $journal3->id,
+            'taggable_type' => Journal::type(),
+        ]);
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     * 
+     * - 投稿タグリストに個別にタグを追加できることを確認します。
+     * - 投稿タグリストから特定のタグのみを削除できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tags_on_modify()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $book = Tag::factory([
+            'type' => Photo::type(),
+            'name' => 'Book'
+        ])->for($profile)->create();
+        $favorite = Tag::factory([
+            'type' => Photo::type(),
+            'name' => 'Favorite'
+        ])->for($profile)->create();
+        $photo = Photo::factory([
+            'src' => '/photos/sample.png',
+            'tags' => [$book]
+        ])->for($profile)->create();
+
+        // 実行
+        $photo->tags()->attach($favorite);
+        $photo->tags()->detach($book);
+
+        // 評価
+        $this->assertEquals(1, optional($photo->tags)->count());
+        $this->assertTrue(optional($photo->tags)->pluck('name')->contains('Favorite'));
+        $this->assertDatabaseCount('taggables', 1);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favorite->id,
+            'taggable_id' => $photo->id,
+            'taggable_type' => Photo::type(),
+        ]);
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     * 
+     * - タグ所有プロフィールが投稿者プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tags_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $otherProfile = Profile::factory()->create();
+        $profile = Profile::factory()->create();
+        $favorite = $otherProfile->tags()->create([
+            'type' => Photo::type(),
+            'name' => 'Favorite'
+        ]);
+        $music = $profile->tags()->create([
+            'type' => Photo::type(),
+            'name' => 'Music'
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $favorite, $music) {
+            $profile->photos()->create([
+                'title' => 'PostTagProfileMissmatch',
+                'src' => '/photos/favorite.jpg',
+                'tags' => [$favorite, $music]
+            ]);
+        }, ApplicationException::class, 'PostTagProfileMissmatch');
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     * 
+     * - タグタイプが投稿種別と一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tags_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $favorite = $profile->tags()->create([
+            'type' => Item::type(),
+            'name' => 'Favorite'
+        ]);
+        $music = $profile->tags()->create([
+            'type' => Photo::type(),
+            'name' => 'Music'
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $favorite, $music) {
+            $profile->photos()->create([
+                'title' => 'PostTagProfileMissmatch',
+                'src' => '/photos/favorite.jpg',
+                'tags' => [$favorite, $music]
+            ]);
+        }, ApplicationException::class, 'PostTagTypeMissmatch');
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     *
+     * - タグ名の配列を指定した場合は、タグ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのカテゴリの中からタグ名が一致するタグのIDが設定されることを確認します。
+     * - 一致するタグが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tags_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $profile->tags()->create([
+            'type' => Journal::type(),
+            'name' => 'Favorite'
+        ]);
+        $favoriteForPhoto = $profile->tags()->create([
+            'type' => Photo::type(),
+            'name' => 'Favorite'
+        ]);
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'title' => 'Favorite Photo',
+            'src' => '/photos/myphoto.jpg',
+            'tags' => 'Favorite'
+        ]);
+
+        // 評価
+        $this->assertEquals(1, $photo->tags->count());
+        $this->assertEquals($favoriteForPhoto->id, $photo->tags->first()->id);
+        $this->assertDatabaseCount('taggables', 1);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favoriteForPhoto->id,
+            'taggable_id' => $photo->id,
+            'taggable_type' => Photo::type(),
+        ]);
+
+        // 実行
+        $photo->tags = ['Favorite', 'Others'];
+        $photo->save();
+
+        // 評価
+        $this->assertEquals(1, optional($photo->tags)->count());
+        $this->assertEquals($favoriteForPhoto->id, optional($photo->tags)->first()->id);
+        $this->assertDatabaseCount('taggables', 1);
+        $this->assertDatabaseHas('taggables', [
+            'tag_id' => $favoriteForPhoto->id,
+            'taggable_id' => $photo->id,
+            'taggable_type' => Photo::type(),
+        ]);
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     * 
+     * - 投稿タグリストを全てクリアできることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tags_clear()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $book = Tag::factory([
+            'type' => Photo::type(),
+            'name' => 'Book'
+        ])->for($profile)->create();
+        $favorite = Tag::factory([
+            'type' => Photo::type(),
+            'name' => 'Favorite'
+        ])->for($profile)->create();
+        $photo = Photo::factory([
+            'src' => '/photos/sample.png',
+            'tags' => [$book, $favorite]
+        ])->for($profile)->create();
+
+        // 実行
+        $photo->tags = null;
+        $photo->save();
+
+        // 評価
+        $this->assertEquals(0, optional($photo->tags)->count());
+        $this->assertDatabaseCount('taggables', 0);
+    }
+
+    /**
+     * 投稿タグリストの設定と変更
+     * 
+     * - 対応するタグが削除された場合は、投稿タグリストからも自動的に除外されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
+     */
+    public function test_set_tag_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(
+            ['nickname' => 'Feeldee']
+        )->create();
+        $favorite = Tag::factory([
+            'type' => Journal::type(),
+            'name' => 'Favorite'
+        ])->for($profile)->create();
+        $journal = Journal::factory([
+            'title' => 'Favorite books',
+            'tags' => $favorite
+        ])->for($profile)->create();
+
+        // 実行
+        $favorite->delete();
+        $journal->refresh();
+
+        // 評価
+        $this->assertEquals(0, $journal->tags->count());
+        $this->assertDatabaseCount('taggables', 0);
     }
 }

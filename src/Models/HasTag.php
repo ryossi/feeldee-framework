@@ -3,6 +3,7 @@
 namespace Feeldee\Framework\Models;
 
 use Feeldee\Framework\Exceptions\ApplicationException;
+use Illuminate\Database\Eloquent\Relations\MorphPivot;
 use Illuminate\Support\Facades\Auth;
 
 trait HasTag
@@ -29,29 +30,33 @@ trait HasTag
             } else {
                 if (!empty($model->_tags) || $model->_tags->isNotEmpty()) {
                     // ローカル投稿リストを
-                    $id = Auth::id();
                     $ids = array();
+                    if (!is_array($model->_tags) && !($model->_tags instanceof \Illuminate\Support\Collection)) {
+                        if (is_string($model->_tags)) {
+                            $model->_tags = explode(',', $model->_tags);
+                        } else {
+                            $model->_tags = [$model->_tags];
+                        }
+                    }
                     foreach ($model->_tags as $tag) {
                         if (is_int($tag)) {
                             $tag = Tag::find($tag);
                         } else if (is_string($tag)) {
-                            $tag = $model->profile->tags()->ofType($model::type())->ofName($tag)->first();
+                            $tag = $model->profile->tags()->of($model::type())->name($tag)->first();
                         }
                         if ($tag == null || !($tag instanceof Tag)) {
                             continue;
                         }
                         if ($tag->profile_id !== $model->profile_id) {
                             // タグ所有プロフィールと投稿者プロフィールが一致しない場合
-                            throw new ApplicationException(72005);
+                            throw new ApplicationException(80003);
                         }
                         if ($tag->type !== $model::type()) {
                             // タグタイプと投稿種別が一致しない場合
-                            throw new ApplicationException(72006);
+                            throw new ApplicationException(80004);
                         }
                         $ids[$tag->id] = [
                             'taggable_type' => $model::type(),
-                            'created_by' => $id,
-                            'updated_by' => $id
                         ];
                     }
                     $model->tags()->sync($ids);
@@ -66,6 +71,10 @@ trait HasTag
      */
     public function tags()
     {
-        return $this->morphToMany(Tag::class, 'taggable')->withTimestamps();
+        $tagsPivot = new class extends MorphPivot {
+            use SetUser;
+            protected $table = 'taggables';
+        };
+        return $this->morphToMany(Tag::class, 'taggable')->using($tagsPivot)->withTimestamps();
     }
 }

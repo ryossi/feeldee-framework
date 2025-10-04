@@ -66,8 +66,6 @@ return [
     72002 => 'TagTypeRequired',                         // タグタイプが指定されていない
     72003 => 'TagNameRequired',                         // タグ名が指定されていない
     72004 => 'TagNameDuplicated',                       // タグ所有プロフィールとタグタイプの中でタグ名が重複している
-    72005 => 'TagProfileMissmatch',                     // タグ所有プロフィールと投稿者プロフィールが異なる
-    72006 => 'TagTypeMissmatch',                        // タグタイプと投稿種別が異なる
 
     // ****************************
     // *** 73xxx レコード関連     ***
@@ -88,4 +86,6 @@ return [
     // ****************************
     80001 => 'PostCategoryProfileMissmatch',            // 指定したカテゴリのカテゴリ所有プロフィールと投稿者プロフィールが異なる
     80002 => 'PostCategoryTypeMissmatch',               // 指定したカテゴリのカテゴリタイプと投稿種別が異なる
+    80003 => 'PostTagProfileMissmatch',                 // 指定したタグのいずれかのタグ所有プロフィールと投稿者プロフィールが異なる
+    80004 => 'PostTagTypeMissmatch',                    // 指定したタグのいずれかのタグタイプと投稿種別が異なる
 ];
