@@ -10,13 +10,16 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphPivot;
 
 /**
  * 投稿をあらわすベースモデル
  */
 abstract class Post extends Model
 {
-    use HasFactory, HasTag, HasRecord, Required, StripTags, SetUser;
+    use HasFactory, HasRecord, Required, StripTags, SetUser;
+
+    private $_tags = null;
 
     /**
      * モデルの「起動」メソッド
@@ -26,6 +29,20 @@ abstract class Post extends Model
         static::saving(function (Post $post) {
             // 投稿カテゴリ
             static::bootedCategory($post);
+            // タグリストにタグの配列またはコレクションが設定されている場合には、
+            // ローカルタグリストに一時的に保存
+            $post->_tags = $post->tags;
+            unset($post['tags']);
+        });
+
+        static::saved(function (Post $post) {
+            // 投稿タグリスト
+            static::bootTags($post);
+        });
+
+        static::deleting(function (Post $post) {
+            // タグ付け解除
+            $post->tags()->detach();
         });
 
         static::onBooted();
@@ -72,6 +89,51 @@ abstract class Post extends Model
     }
 
     /**
+     * 投稿タグリストの「起動」メソッド
+     */
+    protected static function bootTags(Post $post): void
+    {
+        if (is_null($post->_tags) || $post->_tags == '' || $post->_tags == array()) {
+            $post->tags()->detach();
+        } else {
+            if (!empty($post->_tags) || $post->_tags->isNotEmpty()) {
+                // ローカル投稿リストを
+                $ids = array();
+                if (!is_array($post->_tags) && !($post->_tags instanceof \Illuminate\Support\Collection)) {
+                    if (is_string($post->_tags)) {
+                        $post->_tags = explode(',', $post->_tags);
+                    } else {
+                        $post->_tags = [$post->_tags];
+                    }
+                }
+                foreach ($post->_tags as $tag) {
+                    if (is_int($tag)) {
+                        $tag = Tag::find($tag);
+                    } else if (is_string($tag)) {
+                        $tag = $post->profile->tags()->of($post::type())->name($tag)->first();
+                    }
+                    if ($tag == null || !($tag instanceof Tag)) {
+                        continue;
+                    }
+                    if ($tag->profile_id !== $post->profile_id) {
+                        // タグ所有プロフィールと投稿者プロフィールが一致しない場合
+                        throw new ApplicationException(80003);
+                    }
+                    if ($tag->type !== $post::type()) {
+                        // タグタイプと投稿種別が一致しない場合
+                        throw new ApplicationException(80004);
+                    }
+                    $ids[$tag->id] = [
+                        'taggable_type' => $post::type(),
+                    ];
+                }
+                $post->tags()->sync($ids);
+            }
+        }
+        $post->_tags = null;
+    }
+
+    /**
      * 投稿種別
      * 
      * @return string 投稿種別
@@ -106,6 +168,18 @@ abstract class Post extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * 投稿タグリスト
+     */
+    public function tags()
+    {
+        $tagsPivot = new class extends MorphPivot {
+            use SetUser;
+            protected $table = 'taggables';
+        };
+        return $this->morphToMany(Tag::class, 'taggable')->using($tagsPivot)->withTimestamps();
     }
 
     /**
