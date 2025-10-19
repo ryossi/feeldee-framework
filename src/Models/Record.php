@@ -51,6 +51,14 @@ class Record extends Model
         });
 
         static::saving(function (Self $model) {
+            // レコーダに直接IDが指定されている場合は、レコーダモデルを取得
+            if (is_int($model->attributes['recorder'] ?? null)) {
+                $model->recorder = Recorder::find($model->attributes['recorder']);
+            }
+            // レコード対象投稿に直接IDが指定されている場合は、投稿モデルを取得
+            if (is_int($model->attributes['post'] ?? null)) {
+                $model->post = Relation::getMorphedModel($model->recorder->type)::find($model->attributes['post']);
+            }
             // レコーダ所有プロフィールが投稿者プロフィールと一致しているかチェック
             if ($model->post->profile->id !== $model->recorder->profile->id) {
                 throw new ApplicationException(73007);
@@ -58,6 +66,12 @@ class Record extends Model
             // レコーダタイプと投稿種別が一致しているかチェック
             if ($model->post::type() !== $model->recorder->type) {
                 throw new ApplicationException(73008);
+            }
+            // レコーダにレコーダオブジェクトが直接指定されている場合
+            if (array_key_exists('recorder', $model->attributes)) {
+                // レコーダIDに変換
+                $model->recorder_id = $model->recorder->id;
+                unset($model['recorder']);
             }
             // レコード対象投稿に投稿オブジェクが直接指定されている場合
             if (array_key_exists('post', $model->attributes)) {
@@ -142,5 +156,25 @@ class Record extends Model
         return Attribute::make(
             get: fn($value, $attributes) => $getter($value, $attributes),
         );
+    }
+
+    /**
+     * レコード対象投稿による絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param Post|int|null $post レコード対象投稿のオブジェクトまたは投稿ID、nullの場合は絞り込みを行わない
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードの操作
+     */
+    public function scopeFor($query, Post|int|null $post): void
+    {
+        if ($post === null) {
+            return;
+        }
+        if (is_int($post)) {
+            $query->where('recordable_id', $post);
+        } else {
+            $query->where('recordable_id', $post->id);
+        }
     }
 }

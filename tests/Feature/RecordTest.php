@@ -8,7 +8,9 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\Like;
 use Feeldee\Framework\Models\Profile;
+use Feeldee\Framework\Models\Record;
 use Feeldee\Framework\Models\Recorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
@@ -722,67 +724,6 @@ class RecordTest extends TestCase
     /**
      * レコードリスト
      * 
-     * - レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
-     */
-    public function test_records_different_profile()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $otherProfile = Profile::factory()->create();
-        $recorder = Recorder::factory()->create([
-            'profile_id' => $profile->id,
-            'type' => Journal::type(),
-            'data_type' => 'int',
-        ]);
-        $post = Journal::factory()->create([
-            'profile_id' => $otherProfile->id,
-        ]);
-
-        // 評価
-        $this->assertThrows(function () use ($recorder, $post) {
-            $recorder->records()->create([
-                'recordable_id' => $post->id,
-                'value' => 1,
-            ]);
-        }, ApplicationException::class, 'RecordProfileMissmatch');
-    }
-
-    /**
-     * レコードリスト
-     * 
-     * - レコーダタイプが投稿種別と一致していることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
-     */
-    public function test_records_different_type()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $recorder = Recorder::factory()->create([
-            'profile_id' => $profile->id,
-            'type' => Item::type(),
-            'data_type' => 'int',
-        ]);
-        $post = Journal::factory()->create([
-            'profile_id' => $profile->id,
-        ]);
-
-        // 評価
-        $this->assertThrows(function () use ($recorder, $post) {
-            $recorder->records()->create([
-                'post' => $post,
-                'value' => 1,
-            ]);
-        }, ApplicationException::class, 'RecordTypeMissmatch');
-    }
-
-    /**
-     * レコードリスト
-     * 
      * - レコードに紐付く投稿を削除すると、レコードリストからも自動的に除外されることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
@@ -810,111 +751,6 @@ class RecordTest extends TestCase
 
         // 評価
         $this->assertEmpty($post->records, 'レコードに紐付く投稿を削除すると、レコードリストからも自動的に除外されること');
-    }
-
-    /**
-     * レコーダ
-     * 
-     * - レコードの記録は、レコーダのrecordメソッドを使うことで作成できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/レコーダ
-     */
-    public function test_record_create()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $recorder = Recorder::factory()->create([
-            'profile_id' => $profile->id,
-            'type' => Journal::type(),
-            'data_type' => 'int',
-        ]);
-        $post = Journal::factory()->create([
-            'profile_id' => $profile->id,
-        ]);
-
-        // 実行
-        $record = $recorder->record($post, 1);
-
-        // 評価
-        $this->assertEquals($post->id, $record->recordable_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで作成できること');
-        $this->assertDatabaseHas('records', [
-            'id' => $record->id,
-            'recordable_id' => $post->id,
-            'recorder_id' => $recorder->id,
-            'value' => 1,
-        ]);
-    }
-
-    /**
-     * レコーダ
-     * 
-     * - レコードの記録は、レコーダのrecordメソッドを使うことで編集できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/レコーダ
-     */
-    public function test_record_update()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $recorder = Recorder::factory()->create([
-            'profile_id' => $profile->id,
-            'type' => Journal::type(),
-            'data_type' => 'int',
-        ]);
-        $post = Journal::factory()->create([
-            'profile_id' => $profile->id,
-        ]);
-        $record = $recorder->records()->create([
-            'post' => $post,
-            'value' => 1,
-        ]);
-
-        // 実行
-        $record = $recorder->record($post, 2);
-
-        // 評価
-        $this->assertEquals($post->id, $record->recordable_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで編集できること');
-        $this->assertDatabaseHas('records', [
-            'id' => $record->id,
-            'recordable_id' => $post->id,
-            'recorder_id' => $recorder->id,
-            'value' => 2,
-        ]);
-    }
-
-    /**
-     * レコーダ
-     * 
-     * - レコードの記録は、レコーダのrecordメソッドを使うことで削除できることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/レコーダ
-     */
-    public function test_record_delete()
-    {
-        // 準備
-        Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $recorder = Recorder::factory()->create([
-            'profile_id' => $profile->id,
-            'type' => Journal::type(),
-            'data_type' => 'int',
-        ]);
-        $post = Journal::factory()->create([
-            'profile_id' => $profile->id,
-        ]);
-        $record = $recorder->records()->create([
-            'post' => $post,
-            'value' => 1,
-        ]);
-
-        // 実行
-        $record = $recorder->record($post, null);
-
-        // 評価
-        $this->assertNull($record, 'レコードの記録は、レコーダのrecordメソッドを使うことで削除できること');
-        $this->assertDatabaseEmpty('records');
     }
 
     /**
@@ -1625,5 +1461,536 @@ class RecordTest extends TestCase
         $this->assertThrows(function () use ($recorder, $post) {
             $recorder->record($post, 'テストレコード');
         }, ApplicationException::class, 'RecordValueDataTypeInvalid');
+    }
+
+    /**
+     * レコーダ所有者による絞り込み
+     * 
+     * - レコーダ所有者によりレコーダを絞り込むことができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ所有者による絞り込み
+     */
+    public function test_filter_by_owner()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Recorder::factory()->count(2)->sequence(
+            ['name' => 'Feeldeeのレコーダ', 'type' => Journal::type()],
+            ['name' => 'Feeldeeのレコーダ', 'type' => Photo::type()],
+        ))->create();
+        Profile::factory(['nickname' => 'Other'])->has(Recorder::factory()->count(3)->sequence(
+            ['name' => 'Otherのレコーダ', 'type' => Journal::type()],
+            ['name' => 'Otherのレコーダ', 'type' => Photo::type()],
+            ['name' => 'Otherのレコーダ', 'type' => Location::type()],
+        ))->create();
+
+        // 実行
+        $recorders = Recorder::by(Profile::of('Feeldee')->first())->get();
+
+        // 評価
+        $this->assertEquals(2, $recorders->count());
+        foreach ($recorders as $recorder) {
+            $this->assertEquals('Feeldeeのレコーダ', $recorder->name, 'レコーダ所有者によりレコーダを絞り込むことができること');
+        }
+    }
+
+    /**
+     * レコーダ所有者による絞り込み
+     * 
+     * - ニックネームによりレコーダ所有者を特定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ所有者による絞り込み
+     */
+    public function test_filter_by_owner_nickname()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Recorder::factory()->count(2)->sequence(
+            ['name' => 'Feeldeeのレコーダ', 'type' => Journal::type()],
+            ['name' => 'Feeldeeのレコーダ', 'type' => Photo::type()],
+        ))->create();
+        Profile::factory(['nickname' => 'Other'])->has(Recorder::factory()->count(3)->sequence(
+            ['name' => 'Otherのレコーダ', 'type' => Journal::type()],
+            ['name' => 'Otherのレコーダ', 'type' => Photo::type()],
+            ['name' => 'Otherのレコーダ', 'type' => Location::type()],
+        ))->create();
+
+        // 実行
+        $recorders = Recorder::by('Feeldee')->get();
+
+        // 評価
+        $this->assertEquals(2, $recorders->count());
+        foreach ($recorders as $recorder) {
+            $this->assertEquals('Feeldeeのレコーダ', $recorder->name, 'レコーダ所有者によりレコーダを絞り込むことができること');
+        }
+    }
+
+    /**
+     * レコーダタイプによる絞り込み
+     * 
+     * - レコーダタイプによりレコーダを絞り込むことができることを確認します。
+     * - 投稿の抽象クラスを継承した具象クラスを使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダタイプによる絞り込み
+     */
+    public function test_filter_by_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Recorder::factory()->count(5)->sequence(
+            ['name' => 'JournalRecorder_1', 'type' => Journal::type()],
+            ['name' => 'JournalRecorder_2', 'type' => Journal::type()],
+            ['name' => 'PhotoRecorder', 'type' => Photo::type()],
+            ['name' => 'LocationRecorder', 'type' => Location::type()],
+            ['name' => 'ItemRecorder', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $journalRecorders = Recorder::by('Feeldee')->of(Journal::class)->get();
+
+        // 評価
+        $this->assertEquals(2, $journalRecorders->count());
+    }
+
+    /**
+     * レコーダタイプによる絞り込み
+     * 
+     * - レコーダタイプによりレコーダを絞り込むことができることを確認します。
+     * - 投稿種別の文字列を使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダタイプによる絞り込み
+     */
+    public function test_filter_by_type_string()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Recorder::factory()->count(7)->sequence(
+            ['name' => 'JournalRecorder_1', 'type' => Journal::type()],
+            ['name' => 'JournalRecorder_2', 'type' => Journal::type()],
+            ['name' => 'PhotoRecorder', 'type' => Photo::type()],
+            ['name' => 'LocationRecorder', 'type' => Location::type()],
+            ['name' => 'ItemRecorder_1', 'type' => Item::type()],
+            ['name' => 'ItemRecorder_2', 'type' => Item::type()],
+            ['name' => 'ItemRecorder_3', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $itemRecorders = Recorder::by('Feeldee')->of(Item::type())->get();
+
+        // 評価
+        $this->assertEquals(3, $itemRecorders->count());
+    }
+
+    /**
+     * レコーダ名による絞り込み
+     * 
+     * - レコーダ名を指定してレコーダを絞り込むことができることを確認します。
+     * - レコーダ名を完全一致検索できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名による絞り込み
+     */
+    public function test_filter_by_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Recorder::factory()->count(6)->sequence(
+            ['name' => 'JournalRecorder_1', 'type' => Journal::type()],
+            ['name' => 'JournalRecorder_2', 'type' => Journal::type()],
+            ['name' => 'PhotoRecorder', 'type' => Photo::type()],
+            ['name' => 'LocationRecorder', 'type' => Location::type()],
+            ['name' => 'Price', 'type' => Item::type()],
+            ['name' => 'Price2', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $recorder = Recorder::by('Feeldee')->of(Item::type())->name('Price')->first();
+
+        // 評価
+        $this->assertEquals('Price', $recorder->name);
+    }
+
+    /**
+     * レコーダ名による絞り込み
+     * 
+     * - レコーダ名を指定してレコーダを絞り込むことができることを確認します。
+     * - レコーダ名を前方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名による絞り込み
+     */
+    public function test_filter_by_name_prefix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Recorder::factory()->count(6)->sequence(
+            ['name' => 'Special1', 'type' => Journal::type()],
+            ['name' => 'JournalRecorder_2', 'type' => Journal::type()],
+            ['name' => 'PhotoRecorder', 'type' => Photo::type()],
+            ['name' => 'LocationRecorder', 'type' => Location::type()],
+            ['name' => 'Special3', 'type' => Item::type()],
+            ['name' => 'Special2', 'type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $recorders = Recorder::by('Feeldee')->name('Special', Like::Prefix)->get();
+
+        // 評価
+        $this->assertEquals(3, $recorders->count());
+    }
+
+    /**
+     * レコーダ名による絞り込み
+     * 
+     * - レコーダ名を指定してレコーダを絞り込むことができることを確認します。
+     * - レコーダ名を後方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名による絞り込み
+     */
+    public function test_filter_by_name_suffix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Recorder::factory()->count(6)->sequence(
+            ['name' => 'HomeTax', 'type' => Journal::type()],
+            ['name' => 'JournalRecorder_2', 'type' => Journal::type()],
+            ['name' => 'PhotoRecorder', 'type' => Photo::type()],
+            ['name' => 'HomeTax', 'type' => Location::type()],
+            ['name' => 'BollTax', 'type' => Location::type()],
+            ['name' => 'Tax', 'type' => Location::type()],
+        ))->create();
+
+        // 実行
+        $recorders = Recorder::by('Feeldee')->of(Location::class)->name('Tax', Like::Suffix)->get();
+
+        // 評価
+        $this->assertEquals(3, $recorders->count());
+    }
+
+    /**
+     * レコードの操作
+     * 
+     * - レコードを追加するには、レコーダのレコードリストを使用する必要があることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードの操作
+     */
+    public function test_record_create()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $journal = $profile->journals()->create([
+            'title' => 'Journal records',
+        ]);
+
+        // 実行
+        $record = $recorder->records()->create([
+            'post' => $journal,
+            'value' => 65,
+        ]);
+
+        // 評価
+        $this->assertEquals($journal->id, $record->post->id, 'レコードの記録は、レコーダのレコードリストを使うことで作成できること');
+        $this->assertDatabaseHas('records', [
+            'id' => $record->id,
+            'recordable_id' => $journal->id,
+            'recorder_id' => $recorder->id,
+            'value' => 65,
+        ]);
+    }
+
+    /**
+     * レコードの操作
+     * 
+     * - レコード対象投稿には、投稿オブジェクトの他に投稿IDも指定可能であることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードの操作
+     */
+    public function test_record_create_by_post_id()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ])->for($profile)->create();
+        $journal = Journal::factory([
+            'title' => 'Journal records',
+        ])->for($profile)->create();
+
+        // 実行
+        $record = $recorder->records()->create([
+            'post' => $journal->id,
+            'value' => 65,
+        ]);
+
+        // 評価
+        $this->assertEquals($journal->id, $record->post->id, 'レコード対象投稿には、投稿オブジェクトの他に投稿IDも指定可能であること');
+        $this->assertDatabaseHas('records', [
+            'id' => $record->id,
+            'recordable_id' => $journal->id,
+            'recorder_id' => $recorder->id,
+            'value' => 65,
+        ]);
+    }
+
+    /**
+     * レコードの操作
+     * 
+     * - レコードリストから特定のレコード対象投稿のレコード値を編集するには、forスコープを使用できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードの操作
+     */
+    public function test_record_update_by_for()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ])->for($profile)->create();
+        $journal1 = Journal::factory([
+            'title' => 'Journal records 1',
+        ])->for($profile)->create();
+        $journal2 = Journal::factory([
+            'title' => 'Journal records 2',
+        ])->for($profile)->create();
+        Record::factory()->create([
+            'recorder' => $recorder,
+            'post' => $journal1,
+            'value' => 70,
+        ]);
+        Record::factory()->create([
+            'recorder' => $recorder,
+            'post' => $journal2,
+            'value' => 55,
+        ]);
+
+        // 実行
+        $record = $recorder->records()->for($journal1)->first();
+        $record->value = 80;
+        $record->save();
+
+        // 評価
+        $this->assertEquals($journal1->id, $record->post->id, 'レコードリストから特定のレコード対象投稿のレコード値を編集するには、forスコープを使用できること');
+        $this->assertDatabaseHas('records', [
+            'id' => $record->id,
+            'recordable_id' => $journal1->id,
+            'recorder_id' => $recorder->id,
+            'value' => 80,
+        ]);
+    }
+
+    /**
+     * レコードの操作
+     * 
+     * - forスコープも投稿オブジェクトの他に投稿IDが指定可能であることを確認します。
+     * - レコードリストから特定のレコード対象投稿のレコードを削除できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードの操作
+     */
+    public function test_record_delete_by_for()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ])->for($profile)->create();
+        $journal = Journal::factory([
+            'title' => 'Journal records',
+        ])->for($profile)->create();
+        $record = Record::factory()->create([
+            'recorder' => $recorder,
+            'post' => $journal,
+            'value' => 70,
+        ]);
+
+        // 実行
+        $recorder->records()->for($journal->id)->delete();
+
+        // 評価
+        $this->assertDatabaseMissing('records', [
+            'id' => $record->id,
+        ]);
+    }
+
+    /**
+     * レコードの操作
+     * 
+     * - レコーダのrecordメソッドで追加できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコードの操作
+     */
+    public function test_record_create_by_record_method()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Journal::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Journal::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 実行
+        $record = $recorder->record($post, 1);
+
+        // 評価
+        $this->assertEquals($post->id, $record->recordable_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで作成できること');
+        $this->assertDatabaseHas('records', [
+            'id' => $record->id,
+            'recordable_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => 1,
+        ]);
+    }
+
+    /**
+     * レコードの操作
+     * 
+     * - レコーダのrecordメソッドで変更できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコードの操作
+     */
+    public function test_record_update()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Journal::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Journal::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $record = $recorder->records()->create([
+            'post' => $post,
+            'value' => 1,
+        ]);
+
+        // 実行
+        $record = $recorder->record($post, 2);
+
+        // 評価
+        $this->assertEquals($post->id, $record->recordable_id, 'レコードの記録は、レコーダのrecordメソッドを使うことで編集できること');
+        $this->assertDatabaseHas('records', [
+            'id' => $record->id,
+            'recordable_id' => $post->id,
+            'recorder_id' => $recorder->id,
+            'value' => 2,
+        ]);
+    }
+
+    /**
+     * レコードの操作
+     * 
+     * - レコーダのrecordメソッドで削除できることを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコードの操作
+     */
+    public function test_record_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Journal::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Journal::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $record = $recorder->records()->create([
+            'post' => $post,
+            'value' => 1,
+        ]);
+
+        // 実行
+        $record = $recorder->record($post, null);
+
+        // 評価
+        $this->assertNull($record, 'レコードの記録は、レコーダのrecordメソッドを使うことで削除できること');
+        $this->assertDatabaseEmpty('records');
+    }
+
+    /**
+     * レコードリスト
+     * 
+     * - レコーダ所有プロフィールが投稿者プロフィールと一致することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
+     */
+    public function test_records_different_profile()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $otherProfile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Journal::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Journal::factory()->create([
+            'profile_id' => $otherProfile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->records()->create([
+                'recordable_id' => $post->id,
+                'value' => 1,
+            ]);
+        }, ApplicationException::class, 'RecordProfileMissmatch');
+    }
+
+    /**
+     * レコードリスト
+     * 
+     * - レコーダタイプが投稿種別と一致していることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
+     */
+    public function test_records_different_type()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $recorder = Recorder::factory()->create([
+            'profile_id' => $profile->id,
+            'type' => Item::type(),
+            'data_type' => 'int',
+        ]);
+        $post = Journal::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 評価
+        $this->assertThrows(function () use ($recorder, $post) {
+            $recorder->records()->create([
+                'post' => $post,
+                'value' => 1,
+            ]);
+        }, ApplicationException::class, 'RecordTypeMissmatch');
     }
 }

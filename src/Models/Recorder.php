@@ -50,7 +50,7 @@ class Recorder extends Model
      */
     protected static function validateNameDuplicate(Self $model)
     {
-        if ($model->profile->recorders()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+        if ($model->profile->recorders()->of($model->type)->name($model->name)->first()?->id !== $model->id) {
             // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している場合
             throw new ApplicationException(73005, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
         }
@@ -67,7 +67,7 @@ class Recorder extends Model
     protected static function decideOrderNumber(Self $model)
     {
         // 同一タイプの全てのレコーダリスト取得
-        $tag_list = $model->profile->recorders()->ofType($model->type)->get();
+        $tag_list = $model->profile->recorders()->of($model->type)->get();
 
         // 表示順生成
         if ($tag_list->isEmpty()) {
@@ -193,6 +193,55 @@ class Recorder extends Model
     }
 
     /**
+     * レコーダ所有者による絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param string|Profile|null $profile プロフィールまたはニックネーム
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ所有者による絞り込み
+     */
+    public function scopeBy($query, string|Profile|null $profile): void
+    {
+        if ($profile instanceof Profile) {
+            $query->where('profile_id', $profile->id);
+        } elseif (is_string($profile)) {
+            $query->whereHas('profile', function ($q) use ($profile) {
+                $q->where('nickname', $profile);
+            });
+        }
+    }
+
+    /**
+     * レコーダタイプによる絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param Post|string $type レコーダタイプ
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダタイプによる絞り込み
+     */
+    public function scopeOf($query, Post|string $type)
+    {
+        if (is_subclass_of($type, Post::class)) {
+            $type = $type::type();
+        }
+        return $query->where('type', $type);
+    }
+
+    /**
+     * レコーダ名による絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param string|null $name レコーダ名
+     * @param Like $like LIKE列挙型（デフォルトは、完全一致）
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダ名による絞り込み
+     */
+    public function scopeName($query, ?string $name, Like $like = Like::All): void
+    {
+        $like->build($query, 'name', $name);
+    }
+
+    /**
      * 投稿を指定してレコードを記録します。
      * 
      * このメソッドは、レコードが存在しない場合は新規作成し、レコードが存在する場合はレコード値のみを更新します。
@@ -226,22 +275,6 @@ class Recorder extends Model
             }
         }
         return $record;
-    }
-
-    /**
-     * レコーダタイプを条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('type', $type);
-    }
-
-    /**
-     * レコーダ名を条件に含むようにクエリのスコープを設定
-     */
-    public function scopeOfName($query, ?string $name)
-    {
-        return $query->where('name', $name);
     }
 
     // ========================== ここまで整理済み ==========================
