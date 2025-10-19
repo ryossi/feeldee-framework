@@ -254,7 +254,7 @@ class Recorder extends Model
      */
     public function record(Post $post, mixed $value): Record|null
     {
-        $record = $this->records()->where('recordable_id', $post->id)->first();
+        $record = $this->records()->for($post)->first();
         if ($record === null) {
             if ($value !== null && $value !== "") {
                 // 値が空でない場合のみレコード追加

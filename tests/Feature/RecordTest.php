@@ -68,7 +68,7 @@ class RecordTest extends TestCase
                 'type' => Journal::type(),
                 'data_type' => 'int',
             ]);
-        }, ApplicationException::class, 'RecordRecorderProfileRequired');
+        }, ApplicationException::class, 'RecorderProfileRequired');
     }
 
     /**
@@ -90,7 +90,7 @@ class RecordTest extends TestCase
                 'name' => 'テストレコード',
                 'data_type' => 'int',
             ]);
-        }, ApplicationException::class, 'RecordRecorderTypeRequired');
+        }, ApplicationException::class, 'RecorderTypeRequired');
     }
 
     /**
@@ -247,7 +247,7 @@ class RecordTest extends TestCase
                 'type' => Photo::type(),
                 'data_type' => 'int',
             ]);
-        }, ApplicationException::class, 'RecordRecorderNameRequired');
+        }, ApplicationException::class, 'RecorderNameRequired');
     }
 
     /**
@@ -270,7 +270,7 @@ class RecordTest extends TestCase
                 'type' => Journal::type(),
                 'data_type' => 'int',
             ]);
-        }, ApplicationException::class, 'RecordRecorderNameDuplicated');
+        }, ApplicationException::class, 'RecorderNameDuplicated');
     }
 
     /**
@@ -441,7 +441,7 @@ class RecordTest extends TestCase
                 'name' => 'テストレコード',
                 'type' => Journal::type(),
             ]);
-        }, ApplicationException::class, 'RecordDataTypeRequired');
+        }, ApplicationException::class, 'RecorderDataTypeRequired');
     }
 
     /**
@@ -1961,7 +1961,7 @@ class RecordTest extends TestCase
                 'recordable_id' => $post->id,
                 'value' => 1,
             ]);
-        }, ApplicationException::class, 'RecordProfileMissmatch');
+        }, ApplicationException::class, 'RecorderProfileMissmatch');
     }
 
     /**
@@ -1991,6 +1991,6 @@ class RecordTest extends TestCase
                 'post' => $post,
                 'value' => 1,
             ]);
-        }, ApplicationException::class, 'RecordTypeMissmatch');
+        }, ApplicationException::class, 'RecorderTypeMissmatch');
     }
 }
