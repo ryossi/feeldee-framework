@@ -25,7 +25,7 @@ class Location extends Post
     public const CONFIG_KEY_LONGITUDE_PRECISION = 'feeldee.location_longitude_precision';
 
     /**
-     * 投稿種別
+     * 投稿タイプ
      * 
      * @return string
      */

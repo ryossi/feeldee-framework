@@ -2140,12 +2140,12 @@ class CommentTest extends TestCase
     }
 
     /**
-     * 投稿種別によるコメントの絞り込み
+     * 投稿タイプによるコメントの絞り込み
      * 
-     * - 投稿種別によってコメントを絞り込むことができることを確認します。
+     * - 投稿タイプによってコメントを絞り込むことができることを確認します。
      * - 絞り込みに投稿の抽象クラスを継承した具象クラスを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿種別によるコメントの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿タイプによるコメントの絞り込み
      */
     public function test_filter_by_commentable_type()
     {
@@ -2172,12 +2172,12 @@ class CommentTest extends TestCase
     }
 
     /**
-     * 投稿種別によるコメントの絞り込み
+     * 投稿タイプによるコメントの絞り込み
      *
-     * - 投稿種別によってコメントを絞り込むことができることを確認します。
-     * - 絞り込みに投稿種別の文字列を指定できることを確認します。
+     * - 投稿タイプによってコメントを絞り込むことができることを確認します。
+     * - 絞り込みに投稿タイプの文字列を指定できることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿種別によるコメントの絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿タイプによるコメントの絞り込み
      */
     public function test_filter_by_commentable_type_string()
     {

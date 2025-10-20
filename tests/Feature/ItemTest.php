@@ -23,11 +23,11 @@ class ItemTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 投稿種別
+     * 投稿タイプ
      * 
-     * - アイテムの投稿種別は、"item"であることを確認します。
+     * - アイテムの投稿タイプは、"item"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿種別
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿タイプ
      */
     public function test_type()
     {
@@ -41,7 +41,7 @@ class ItemTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('item', $item->type(), 'アイテムの投稿種別は、"item"であること');
+        $this->assertEquals('item', $item->type(), 'アイテムの投稿タイプは、"item"であること');
     }
 
     /**

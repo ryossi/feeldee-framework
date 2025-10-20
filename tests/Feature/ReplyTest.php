@@ -2183,12 +2183,12 @@ class ReplyTest extends TestCase
     }
 
     /**
-     * 投稿種別による返信の絞り込み
+     * 投稿タイプによる返信の絞り込み
      * 
-     * - 投稿種別によって返信を絞り込むことができることを確認します。
+     * - 投稿タイプによって返信を絞り込むことができることを確認します。
      * - 絞り込みに投稿の抽象クラスを継承した具象クラスを指定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#投稿種別による返信の絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#投稿タイプによる返信の絞り込み
      */
     public function test_filter_by_commentable_type()
     {
@@ -2220,12 +2220,12 @@ class ReplyTest extends TestCase
     }
 
     /**
-     * 投稿種別による返信の絞り込み
+     * 投稿タイプによる返信の絞り込み
      *
-     * - 投稿種別によって返信を絞り込むことができることを確認します。
-     * - 絞り込みに投稿種別の文字列を指定できることを確認します。
+     * - 投稿タイプによって返信を絞り込むことができることを確認します。
+     * - 絞り込みに投稿タイプの文字列を指定できることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#投稿種別による返信の絞り込み
+     * @link https://github.com/ryossi/feeldee-framework/wiki/返信#投稿タイプによる返信の絞り込み
      */
     public function test_filter_by_commentable_type_string()
     {

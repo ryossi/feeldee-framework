@@ -130,7 +130,7 @@ class Tag extends Model
                         throw new ApplicationException(72005);
                     }
                     if ($model->type !== $post::type()) {
-                        // タグタイプと投稿種別が一致しない場合
+                        // タグタイプと投稿タイプが一致しない場合
                         throw new ApplicationException(72006);
                     }
                     $ids[$post->id] = [
