@@ -23,11 +23,11 @@ class LocationTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 投稿種別
+     * 投稿タイプ
      * 
-     * - 場所の投稿種別は、"location"であることを確認します。
+     * - 場所の投稿タイプは、"location"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿種別
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#投稿タイプ
      */
     public function test_type()
     {
@@ -44,7 +44,7 @@ class LocationTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('location', $location->type(), '場所の投稿種別は、"location"であること');
+        $this->assertEquals('location', $location->type(), '場所の投稿タイプは、"location"であること');
     }
 
     /**

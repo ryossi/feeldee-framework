@@ -63,7 +63,7 @@ class Record extends Model
             if ($model->post->profile->id !== $model->recorder->profile->id) {
                 throw new ApplicationException(73007);
             }
-            // レコーダタイプと投稿種別が一致しているかチェック
+            // レコーダタイプと投稿タイプが一致しているかチェック
             if ($model->post::type() !== $model->recorder->type) {
                 throw new ApplicationException(73008);
             }

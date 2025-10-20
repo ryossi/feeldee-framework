@@ -96,7 +96,7 @@ class Photo extends Post
     }
 
     /**
-     * 投稿種別
+     * 投稿タイプ
      * 
      * @return string
      */

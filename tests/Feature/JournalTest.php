@@ -25,11 +25,11 @@ class JournalTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 投稿種別
+     * 投稿タイプ
      *
-     * - 記録の投稿種別は、"journal"であることを確認します。
+     * - 記録の投稿タイプは、"journal"であることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿種別
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タイプ
      */
     public function test_type()
     {
@@ -44,7 +44,7 @@ class JournalTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('journal', $post->type(), '記録の投稿種別は、"journal"であること');
+        $this->assertEquals('journal', $post->type(), '記録の投稿タイプは、"journal"であること');
     }
 
     /**

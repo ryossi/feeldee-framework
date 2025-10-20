@@ -77,14 +77,14 @@ return [
     73005 => 'RecorderNameDuplicated',                  // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している
     73006 => 'RecorderDataTypeRequired',                // レコードデータ型が指定されていない
     73007 => 'RecorderProfileMissmatch',                // レコーダ所有プロフィールと投稿者プロフィールが異なる
-    73008 => 'RecorderTypeMissmatch',                   // レコーダタイプと投稿種別が異なる
+    73008 => 'RecorderTypeMissmatch',                   // レコーダタイプと投稿タイプが異なる
 
     // ****************************
     // *** 8xxxx 投稿関連        ***
     // ****************************
     80001 => 'PostCategoryProfileMissmatch',            // 指定したカテゴリのカテゴリ所有プロフィールと投稿者プロフィールが異なる
-    80002 => 'PostCategoryTypeMissmatch',               // 指定したカテゴリのカテゴリタイプと投稿種別が異なる
+    80002 => 'PostCategoryTypeMissmatch',               // 指定したカテゴリのカテゴリタイプと投稿タイプが異なる
     80003 => 'PostTagProfileMissmatch',                 // 指定したタグのいずれかのタグ所有プロフィールと投稿者プロフィールが異なる
-    80004 => 'PostTagTypeMissmatch',                    // 指定したタグのいずれかのタグタイプと投稿種別が異なる
+    80004 => 'PostTagTypeMissmatch',                    // 指定したタグのいずれかのタグタイプと投稿タイプが異なる
     80005 => 'PostRecorderNotFound',                    // 指定したレコーダが見つからない
 ];

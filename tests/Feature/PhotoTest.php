@@ -25,11 +25,11 @@ class PhotoTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * 投稿種別
+     * 投稿タイプ
      * 
-     * - 写真の投稿種別は、"photo"であることを確認します。
+     * - 写真の投稿タイプは、"photo"であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿種別
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#投稿タイプ
      */
     public function test_type()
     {
@@ -44,7 +44,7 @@ class PhotoTest extends TestCase
         ]);
 
         // 検証
-        $this->assertEquals('photo', $photo->type(), '写真の投稿種別は、"photo"であること');
+        $this->assertEquals('photo', $photo->type(), '写真の投稿タイプは、"photo"であること');
     }
 
     /**

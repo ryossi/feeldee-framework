@@ -1571,7 +1571,7 @@ class CategoryTest extends TestCase
      * カテゴリタイプによる絞り込み
      * 
      * - カテゴリタイプによりカテゴリを絞り込むことができることを確認します。
-     * - 投稿種別の文字列を使用できることを確認します。
+     * - 投稿タイプの文字列を使用できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/カテゴリ#カテゴリタイプによる絞り込み
      */

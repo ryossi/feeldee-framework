@@ -1556,7 +1556,7 @@ class RecordTest extends TestCase
      * レコーダタイプによる絞り込み
      * 
      * - レコーダタイプによりレコーダを絞り込むことができることを確認します。
-     * - 投稿種別の文字列を使用できることを確認します。
+     * - 投稿タイプの文字列を使用できることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコーダタイプによる絞り込み
      */
@@ -1967,7 +1967,7 @@ class RecordTest extends TestCase
     /**
      * レコードリスト
      * 
-     * - レコーダタイプが投稿種別と一致していることを確認します。
+     * - レコーダタイプが投稿タイプと一致していることを確認します。
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/レコード#レコードリスト
      */

@@ -420,11 +420,11 @@ class Comment extends Model
     }
 
     /**
-     * 投稿種別でコメントの絞り込むためのローカルスコープ
+     * 投稿タイプでコメントの絞り込むためのローカルスコープ
      * 
      * @param \Illuminate\Database\Eloquent\Builder $query
-     * @param Post|string $type 投稿種別
-     * @see https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿種別によるコメントの絞り込み
+     * @param Post|string $type 投稿タイプ
+     * @see https://github.com/ryossi/feeldee-framework/wiki/コメント#投稿タイプによるコメントの絞り込み
      */
     public function scopeOf($query, Post|string $type)
     {

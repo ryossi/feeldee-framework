@@ -93,7 +93,7 @@ abstract class Post extends Model
         }
 
         if (!is_null($post->category) && $post->category->type !== $post::type()) {
-            // カテゴリ種別と投稿種別が一致しない場合
+            // カテゴリ種別と投稿タイプが一致しない場合
             throw new ApplicationException(80002);
         }
     }
@@ -128,7 +128,7 @@ abstract class Post extends Model
                     throw new ApplicationException(80003);
                 }
                 if ($tag->type !== $post::type()) {
-                    // タグタイプと投稿種別が一致しない場合
+                    // タグタイプと投稿タイプが一致しない場合
                     throw new ApplicationException(80004);
                 }
                 $ids[$tag->id] = [
@@ -172,9 +172,9 @@ abstract class Post extends Model
     }
 
     /**
-     * 投稿種別
+     * 投稿タイプ
      * 
-     * @return string 投稿種別
+     * @return string 投稿タイプ
      */
     abstract public static function type();
 
