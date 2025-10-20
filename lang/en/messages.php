@@ -66,26 +66,25 @@ return [
     72002 => 'TagTypeRequired',                         // タグタイプが指定されていない
     72003 => 'TagNameRequired',                         // タグ名が指定されていない
     72004 => 'TagNameDuplicated',                       // タグ所有プロフィールとタグタイプの中でタグ名が重複している
-    72005 => 'TagProfileMissmatch',                     // タグ所有プロフィールと投稿者プロフィールが異なる
-    72006 => 'TagTypeMissmatch',                        // タグタイプと投稿種別が異なる
 
     // ****************************
     // *** 73xxx レコード関連     ***
     // ****************************
-    73001 => 'RecordRecorderProfileRequired',           // レコーダ所有プロフィールが指定されていない
-    73002 => 'RecordRecorderTypeRequired',              // レコーダタイプが指定されていない
-    73003 => 'RecordRecorderNameRequired',              // レコーダ名が指定されていない
-    73004 => 'RecordValueDataTypeInvalid',              // レコードデータ型が指定されていない
-    73005 => 'RecordRecorderNameDuplicated',            // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している
-    73006 => 'RecordDataTypeRequired',                  // レコードデータ型が指定されていない
-    73007 => 'RecordProfileMissmatch',                  // レコーダ所有プロフィールと投稿者プロフィールが異なる
-    73008 => 'RecordTypeMissmatch',                     // レコーダタイプと投稿種別が異なる
-    73009 => 'RecordRecorderIdNotFound',                // レコーダIDに一致するレコーダが見つからない
-    73010 => 'RecordRecorderNameNotFound',              // レコーダ名に一致するレコーダが見つからない
+    73001 => 'RecorderProfileRequired',                 // レコーダ所有プロフィールが指定されていない
+    73002 => 'RecorderTypeRequired',                    // レコーダタイプが指定されていない
+    73003 => 'RecorderNameRequired',                    // レコーダ名が指定されていない
+    73004 => 'RecordValueDataTypeInvalid',              // レコード値がレコードデータ型に違反している
+    73005 => 'RecorderNameDuplicated',                  // レコーダ所有プロフィールとレコーダタイプの中でレコーダ名が重複している
+    73006 => 'RecorderDataTypeRequired',                // レコードデータ型が指定されていない
+    73007 => 'RecorderProfileMissmatch',                // レコーダ所有プロフィールと投稿者プロフィールが異なる
+    73008 => 'RecorderTypeMissmatch',                   // レコーダタイプと投稿種別が異なる
 
     // ****************************
     // *** 8xxxx 投稿関連        ***
     // ****************************
     80001 => 'PostCategoryProfileMissmatch',            // 指定したカテゴリのカテゴリ所有プロフィールと投稿者プロフィールが異なる
     80002 => 'PostCategoryTypeMissmatch',               // 指定したカテゴリのカテゴリタイプと投稿種別が異なる
+    80003 => 'PostTagProfileMissmatch',                 // 指定したタグのいずれかのタグ所有プロフィールと投稿者プロフィールが異なる
+    80004 => 'PostTagTypeMissmatch',                    // 指定したタグのいずれかのタグタイプと投稿種別が異なる
+    80005 => 'PostRecorderNotFound',                    // 指定したレコーダが見つからない
 ];

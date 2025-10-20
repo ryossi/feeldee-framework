@@ -18,7 +18,7 @@ class Journal extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'tags', 'posted_at', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'posted_at', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性
@@ -63,7 +63,7 @@ class Journal extends Post
     /**
      * モデルの「起動」メソッド
      */
-    protected static function booted(): void
+    protected static function onBooted(): void
     {
         static::addGlobalScope('defaultSort', function ($builder) {
             $builder->orderByDesc('posted_at');

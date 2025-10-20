@@ -7,6 +7,7 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\Like;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -614,51 +615,188 @@ class TagTest extends TestCase
     }
 
     /**
-     * 投稿リスト
+     * タグ所有者による絞り込み
      * 
-     * - 投稿リストに直接投稿のコレクションを指定する場合、タグ所有プロフィールが投稿者プロフィールと一致している必要があることを確認します。
+     * - タグ所有者によりタグを絞り込むことができることを確認します。
+     * - プロフィールそのもので絞り込むことができることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ所有者による絞り込み
      */
-    public function test_posts_profile_missmatch()
+    public function test_scopeBy()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
-        $otherProfile = Profile::factory()->create();
+        Profile::factory(['nickname' => 'Feeldee'])->has(Tag::factory()->count(2))->create();
+        Profile::factory(['nickname' => 'Other'])->has(Tag::factory()->count(1))->create();
+
+        // 実行
+        $tags = Tag::by(Profile::of('Feeldee')->first())->get();
 
         // 評価
-        $this->assertThrows(function () use ($profile, $otherProfile) {
-            // 実行
-            $profile->tags()->create([
-                'name' => 'テストタグ',
-                'type' => Journal::type(),
-                'posts' => Journal::factory(3)->create(['profile_id' => $otherProfile->id]),
-            ]);
-        }, ApplicationException::class, 'TagProfileMissmatch');
+        $this->assertCount(2, $tags);
     }
 
     /**
-     * 投稿リスト
+     * タグ所有者による絞り込み
      * 
-     * - 投稿リストに直接投稿のコレクションを指定する場合、タグタイプが投稿種別と一致している必要があることを確認します。
-     * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#投稿リスト
+     * - タグ所有者によりタグを絞り込むことができることを確認します。
+     * - ニックネームで絞り込むことができることを確認します。
      */
-    public function test_posts_type_missmatch()
+    public function test_scopeBy_nickname()
     {
         //  準備
         Auth::shouldReceive('id')->andReturn(1);
-        $profile = Profile::factory()->create();
+        Profile::factory(['nickname' => 'Feeldee'])->has(Tag::factory()->count(3))->create();
+        Profile::factory(['nickname' => 'Other'])->has(Tag::factory()->count(5))->create();
+
+        // 実行
+        $tags = Tag::by('Feeldee')->get();
 
         // 評価
-        $this->assertThrows(function () use ($profile) {
-            // 実行
-            $profile->tags()->create([
-                'name' => 'テストタグ',
-                'type' => Journal::type(),
-                'posts' => Item::factory(1)->create(['profile_id' => $profile->id]),
-            ]);
-        }, ApplicationException::class, 'TagTypeMissmatch');
+        $this->assertCount(3, $tags);
+    }
+
+    /**
+     * タグタイプによる絞り込み
+     * 
+     * - タグタイプによりタグを絞り込むことができることを確認します。
+     * - 投稿の抽象クラスを継承した具象クラスを指定して絞り込むことができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグタイプによる絞り込み
+     */
+    public function test_scopeOf()
+    {
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Tag::factory()->count(7)->sequence(
+            ['type' => Journal::type()],
+            ['type' => Photo::type()],
+            ['type' => Photo::type()],
+            ['type' => Location::type()],
+            ['type' => Location::type()],
+            ['type' => Location::type()],
+            ['type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $locationTags = Tag::by('Feeldee')->of(Location::class)->get();
+
+        // 評価
+        $this->assertCount(3, $locationTags);
+    }
+
+    /**
+     * タグタイプによる絞り込み
+     * 
+     * - タグタイプによりタグを絞り込むことができることを確認します。
+     * - タグタイプの文字列を指定して絞り込むことができることを確認します。
+     */
+    public function test_scopeOf_string()
+    {
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Tag::factory()->count(7)->sequence(
+            ['type' => Journal::type()],
+            ['type' => Photo::type()],
+            ['type' => Photo::type()],
+            ['type' => Location::type()],
+            ['type' => Location::type()],
+            ['type' => Location::type()],
+            ['type' => Item::type()],
+        ))->create();
+
+        // 実行
+        $photoTags = Tag::by('Feeldee')->of(Photo::type())->get();
+
+        // 評価
+        $this->assertCount(2, $photoTags);
+    }
+
+    /**
+     * タグ名による絞り込み
+     * 
+     * - タグ名を指定して絞り込むことができることを確認します。
+     * - タグ名を完全一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名による絞り込み
+     */
+    public function test_scopeName()
+    {
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Tag::factory()->count(9)->sequence(
+            ['type' => Journal::type(), 'name' => 'Favorite'],
+            ['type' => Photo::type(), 'name' => 'Favorite'],
+            ['type' => Photo::type(), 'name' => 'Pickup'],
+            ['type' => Photo::type(), 'name' => 'News'],
+            ['type' => Location::type(), 'name' => 'WestPark'],
+            ['type' => Location::type(), 'name' => 'HomeGround'],
+            ['type' => Location::type(), 'name' => 'HomeTown'],
+            ['type' => Location::type(), 'name' => 'CentralPark'],
+            ['type' => Item::type(), 'name' => 'Favorite'],
+        ))->create();
+
+        // 実行
+        $tags = Tag::by('Feeldee')->name('Favorite')->get();
+
+        // 評価
+        $this->assertCount(3, $tags);
+    }
+
+    /**
+     * タグ名による絞り込み
+     * 
+     * - タグ名を指定して絞り込むことができることを確認します。
+     * - タグ名を前方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名による絞り込み
+     */
+    public function test_scopeName_prefix()
+    {
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Tag::factory()->count(9)->sequence(
+            ['type' => Journal::type(), 'name' => 'Favorite'],
+            ['type' => Photo::type(), 'name' => 'Favorite'],
+            ['type' => Photo::type(), 'name' => 'Pickup'],
+            ['type' => Photo::type(), 'name' => 'News'],
+            ['type' => Location::type(), 'name' => 'WestPark'],
+            ['type' => Location::type(), 'name' => 'HomeGround'],
+            ['type' => Location::type(), 'name' => 'HomeTown'],
+            ['type' => Location::type(), 'name' => 'ParkHome'],
+            ['type' => Item::type(), 'name' => 'Favorite'],
+        ))->create();
+
+        // 実行
+        $homes = Tag::by('Feeldee')->name('Home', Like::Prefix)->get();
+
+        // 評価
+        $this->assertCount(2, $homes);
+    }
+
+    /**
+     * タグ名による絞り込み
+     * 
+     * - タグ名を指定して絞り込むことができることを確認します。
+     * - タグ名を後方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名による絞り込み
+     */
+    public function test_scopeName_suffix()
+    {
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory(['nickname' => 'Feeldee'])->has(Tag::factory()->count(9)->sequence(
+            ['type' => Journal::type(), 'name' => 'Favorite'],
+            ['type' => Photo::type(), 'name' => 'Favorite'],
+            ['type' => Photo::type(), 'name' => 'Pickup'],
+            ['type' => Photo::type(), 'name' => 'News'],
+            ['type' => Location::type(), 'name' => 'WestPark'],
+            ['type' => Location::type(), 'name' => 'HomeGround'],
+            ['type' => Location::type(), 'name' => 'HomeTown'],
+            ['type' => Location::type(), 'name' => 'ParkHome'],
+            ['type' => Item::type(), 'name' => 'Favorite'],
+        ))->create();
+
+        // 実行
+        $parks = Tag::by('Feeldee')->of(Location::class)->name('Park', Like::Suffix)->get();
+
+        // 評価
+        $this->assertCount(1, $parks);
     }
 }

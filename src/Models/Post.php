@@ -3,19 +3,173 @@
 namespace Feeldee\Framework\Models;
 
 use Carbon\CarbonImmutable;
+use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphPivot;
 
 /**
  * 投稿をあらわすベースモデル
  */
 abstract class Post extends Model
 {
-    use HasFactory, HasCategory, HasTag, HasRecord, Required, StripTags, SetUser;
+    use HasFactory, Required, StripTags, SetUser;
+
+    private $_tags = null;
+
+    private $_records = null;
+
+    /**
+     * モデルの「起動」メソッド
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Post $post) {
+            // 投稿カテゴリ
+            static::bootedCategory($post);
+            // 投稿タグリストにタグの配列またはコレクションが設定されている場合には、
+            // ローカルタグリストに一時的に保存
+            $post->_tags = $post->tags;
+            unset($post['tags']);
+            // 投稿レコードリストにレコードの配列またはコレクションが設定されている場合には、
+            // ローカルレコードリストに一時的に保存
+            $post->_records = $post->records;
+            unset($post['records']);
+        });
+
+        static::saved(function (Post $post) {
+            // 投稿タグリスト
+            static::bootTags($post);
+            // 投稿レコードリスト
+            static::bootRecords($post);
+        });
+
+        static::deleting(function (Post $post) {
+            // タグ付け解除
+            $post->tags()->detach();
+            // レコード削除
+            $post->records()->delete();
+        });
+
+        static::onBooted();
+    }
+
+    /**
+     * 投稿カテゴリの「起動」メソッド
+     */
+    protected static function bootedCategory(Post $post)
+    {
+        if (array_key_exists('category', $post->attributes)) {
+            if ($post->category instanceof Category) {
+                // カテゴリオブジェクトを直接指定している場合
+                $post->category_id = $post->category->id;
+            } else if (is_null($post->category) || $post->category === '') {
+                // nullを設定した場合は、カテゴリをクリア
+                $post->category_id = null;
+            } else {
+                $obj = null;
+                if (is_int($post->category)) {
+                    // カテゴリIDで検索
+                    $obj = $post->profile->categories()->find($post->category);
+                }
+                if (!$obj) {
+                    // カテゴリ名で検索
+                    $obj = $post->profile->categories()->of($post->type())->name($post->category)->first();
+                }
+                if ($obj instanceof Category) {
+                    $post->category_id = $obj->id;
+                }
+            }
+            unset($post['category']);
+        }
+
+        if (!is_null($post->category) && $post->profile->id !== $post->category->profile->id) {
+            // カテゴリ所有プロフィールと投稿者プロフィールが一致しない場合
+            throw new ApplicationException(80001);
+        }
+
+        if (!is_null($post->category) && $post->category->type !== $post::type()) {
+            // カテゴリ種別と投稿種別が一致しない場合
+            throw new ApplicationException(80002);
+        }
+    }
+
+    /**
+     * 投稿タグリストの「起動」メソッド
+     */
+    protected static function bootTags(Post $post): void
+    {
+        if (empty($post->_tags) || optional($post->_tags)->isEmpty()) {
+            $post->tags()->detach();
+        } else {
+            $ids = array();
+            if (!is_array($post->_tags) && !($post->_tags instanceof \Illuminate\Support\Collection)) {
+                if (is_string($post->_tags)) {
+                    $post->_tags = explode(',', $post->_tags);
+                } else {
+                    $post->_tags = [$post->_tags];
+                }
+            }
+            foreach ($post->_tags as $tag) {
+                if (is_int($tag)) {
+                    $tag = Tag::find($tag);
+                } else if (is_string($tag)) {
+                    $tag = $post->profile->tags()->of($post::type())->name($tag)->first();
+                }
+                if ($tag == null || !($tag instanceof Tag)) {
+                    continue;
+                }
+                if ($tag->profile_id !== $post->profile_id) {
+                    // タグ所有プロフィールと投稿者プロフィールが一致しない場合
+                    throw new ApplicationException(80003);
+                }
+                if ($tag->type !== $post::type()) {
+                    // タグタイプと投稿種別が一致しない場合
+                    throw new ApplicationException(80004);
+                }
+                $ids[$tag->id] = [
+                    'taggable_type' => $post::type(),
+                ];
+            }
+            $post->tags()->sync($ids);
+        }
+        $post->_tags = null;
+    }
+
+    /**
+     * 投稿レコードリストの「起動」メソッド
+     */
+    protected static function bootRecords(Post $post): void
+    {
+        if (empty($post->_records) || optional($post->_records)->isEmpty()) {
+            $post->records()->delete();
+        } else {
+            foreach ($post->_records as $key => $value) {
+                if (is_int($key)) {
+                    // レコーダIDが指定された場合
+                    $recorder = Recorder::find($key);
+                    if ($recorder === null) {
+                        // レコーダIDに一致するレコーダが見つからない
+                        throw new ApplicationException(80005, ['id' => $key]);
+                    }
+                } else if (is_string($key)) {
+                    // レコーダ名が指定された場合
+                    $recorder = $post->profile->recorders()->of($post::type())->name($key)->first();
+                    if ($recorder === null) {
+                        // 一致するレコーダが存在しない場合は無視
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+                $recorder->record($post, $value);
+            }
+        }
+    }
 
     /**
      * 投稿種別
@@ -42,6 +196,36 @@ abstract class Post extends Model
     protected function getIsPublicAttribute(): bool
     {
         return $this->attributes['is_public'] ?? false;
+    }
+
+    /**
+     * 投稿カテゴリ
+     *
+     * @return BelongsTo
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    /**
+     * 投稿タグリスト
+     */
+    public function tags()
+    {
+        $tagsPivot = new class extends MorphPivot {
+            use SetUser;
+            protected $table = 'taggables';
+        };
+        return $this->morphToMany(Tag::class, 'taggable')->using($tagsPivot)->withTimestamps();
+    }
+
+    /**
+     * レコードリスト
+     */
+    public function records()
+    {
+        return $this->hasMany(Record::class, 'recordable_id');
     }
 
     /**
@@ -367,6 +551,35 @@ abstract class Post extends Model
         $like->build($query, 'title', $title);
     }
 
+    /**
+     * 投稿カテゴリによる絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param Category|int|string|null $category 投稿カテゴリ、カテゴリID、カテゴリ名、またはnull（デフォルトはnull）
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿カテゴリによる絞り込み
+     */
+    public function scopeCategorizedOf($query, Category|int|string|null $category = null)
+    {
+        if (!is_null($category)) {
+            if ($category instanceof Category) {
+                $query->where('category_id', $category->id);
+            } else {
+                if (is_int($category)) {
+                    $query->where('category_id', $category);
+                } else {
+                    $table = (new $this)->getTable();
+                    $query->leftJoin('categories', "$table.category_id", '=', 'categories.id')
+                        ->select("$table.*")
+                        ->where('categories.name', $category);
+                }
+            }
+        } else {
+            $query->whereNull('category_id');
+        }
+
+        return $query;
+    }
 
     // ========================== ここまで整理ずみ ==========================
 

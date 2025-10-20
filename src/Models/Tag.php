@@ -53,9 +53,9 @@ class Tag extends Model
      */
     protected static function validateNameDuplicate(Self $model)
     {
-        if ($model->profile->tags()->ofType($model->type)->ofName($model->name)->first()?->id !== $model->id) {
+        if ($model->profile->tags()->of($model->type)->name($model->name)->first()?->id !== $model->id) {
             // タグ所有プロフィールとタグタイプの中でタグ名が重複している場合
-            throw new ApplicationException(72004, ['ptofile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
+            throw new ApplicationException(72004, ['profile_id' => $model->profile->id, 'type' => $model->type, 'name' => $model->name]);
         }
     }
 
@@ -70,7 +70,7 @@ class Tag extends Model
     protected static function decideOrderNumber(Self $model)
     {
         // 同一タイプの全てのタグリスト取得
-        $tag_list = $model->profile->tags()->ofType($model->type)->get();
+        $tag_list = $model->profile->tags()->of($model->type)->get();
 
         // 表示順生成
         if ($tag_list->isEmpty()) {
@@ -228,17 +228,50 @@ class Tag extends Model
     }
 
     /**
-     * タグタイプを条件に含むようにクエリのスコープを設定
+     * タグ所有者による絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param string|Profile|null $profile プロフィールまたはニックネーム
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ所有者による絞り込み
      */
-    public function scopeOfType($query, string $type)
+    public function scopeBy($query, string|Profile|null $profile): void
     {
+        if ($profile instanceof Profile) {
+            $query->where('profile_id', $profile->id);
+        } elseif (is_string($profile)) {
+            $query->whereHas('profile', function ($q) use ($profile) {
+                $q->where('nickname', $profile);
+            });
+        }
+    }
+
+    /**
+     * タグタイプによる絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param Post|string $type タグタイプ
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグタイプによる絞り込み
+     */
+    public function scopeOf($query, Post|string $type)
+    {
+        if (is_subclass_of($type, Post::class)) {
+            $type = $type::type();
+        }
         return $query->where('type', $type);
     }
 
     /**
-     * タグ名を条件に含むようにクエリのスコープを設定
+     * タグ名による絞り込みのためのローカルスコープ
+     * 
+     * @param Builder $query
+     * @param string|null $name タグ名
+     * @param Like $like LIKE列挙型（デフォルトは、完全一致）
+     * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/タグ#タグ名による絞り込み
      */
-    public function scopeOfName($query, ?string $name, Like $like = Like::All)
+    public function scopeName($query, ?string $name, Like $like = Like::All): void
     {
         $like->build($query, 'name', $name);
     }
@@ -319,12 +352,12 @@ class Tag extends Model
      */
     public static function swap(Profile $profile, string $type, string $source_name, string $target_name): bool
     {
-        $source = $profile->tags()->ofType($type)->ofName($source_name)->first();
+        $source = $profile->tags()->of($type)->name($source_name)->first();
         if ($source === null) {
             return false;
         }
 
-        $target = $profile->tags()->ofType($type)->ofName($target_name)->first();
+        $target = $profile->tags()->of($type)->name($target_name)->first();
         if ($target === null) {
             return false;
         }

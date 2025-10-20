@@ -39,7 +39,7 @@ class Location extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'latitude', 'longitude', 'zoom', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
     /**
      * 配列に表示する属性
@@ -90,7 +90,7 @@ class Location extends Post
     /**
      * モデルの「起動」メソッド
      */
-    protected static function booted(): void
+    protected static function onBooted(): void
     {
         static::addGlobalScope('defaultSort', function ($builder) {
             $builder->orderByDesc('posted_at');
