@@ -20,7 +20,7 @@ class Photo extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'src', 'posted_at'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'src', 'posted_at'];
 
     /**
      * 配列に表示する属性

@@ -18,7 +18,7 @@ class Journal extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'tags', 'posted_at', 'title', 'value', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'posted_at', 'title', 'value', 'thumbnail'];
 
     /**
      * 配列に表示する属性

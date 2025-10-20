@@ -27,7 +27,7 @@ class Item extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'thumbnail', 'order_number'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'thumbnail', 'order_number'];
 
     /**
      * 配列に表示する属性

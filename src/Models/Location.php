@@ -39,7 +39,7 @@ class Location extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'title', 'value', 'latitude', 'longitude', 'zoom', 'thumbnail'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'latitude', 'longitude', 'zoom', 'thumbnail'];
 
     /**
      * 配列に表示する属性

@@ -17,9 +17,11 @@ use Illuminate\Database\Eloquent\Relations\MorphPivot;
  */
 abstract class Post extends Model
 {
-    use HasFactory, HasRecord, Required, StripTags, SetUser;
+    use HasFactory, Required, StripTags, SetUser;
 
     private $_tags = null;
+
+    private $_records = null;
 
     /**
      * モデルの「起動」メソッド
@@ -29,20 +31,28 @@ abstract class Post extends Model
         static::saving(function (Post $post) {
             // 投稿カテゴリ
             static::bootedCategory($post);
-            // タグリストにタグの配列またはコレクションが設定されている場合には、
+            // 投稿タグリストにタグの配列またはコレクションが設定されている場合には、
             // ローカルタグリストに一時的に保存
             $post->_tags = $post->tags;
             unset($post['tags']);
+            // 投稿レコードリストにレコードの配列またはコレクションが設定されている場合には、
+            // ローカルレコードリストに一時的に保存
+            $post->_records = $post->records;
+            unset($post['records']);
         });
 
         static::saved(function (Post $post) {
             // 投稿タグリスト
             static::bootTags($post);
+            // 投稿レコードリスト
+            static::bootRecords($post);
         });
 
         static::deleting(function (Post $post) {
             // タグ付け解除
             $post->tags()->detach();
+            // レコード削除
+            $post->records()->delete();
         });
 
         static::onBooted();
@@ -93,44 +103,72 @@ abstract class Post extends Model
      */
     protected static function bootTags(Post $post): void
     {
-        if (is_null($post->_tags) || $post->_tags == '' || $post->_tags == array()) {
+        if (empty($post->_tags) || optional($post->_tags)->isEmpty()) {
             $post->tags()->detach();
         } else {
-            if (!empty($post->_tags) || $post->_tags->isNotEmpty()) {
-                // ローカル投稿リストを
-                $ids = array();
-                if (!is_array($post->_tags) && !($post->_tags instanceof \Illuminate\Support\Collection)) {
-                    if (is_string($post->_tags)) {
-                        $post->_tags = explode(',', $post->_tags);
-                    } else {
-                        $post->_tags = [$post->_tags];
-                    }
+            $ids = array();
+            if (!is_array($post->_tags) && !($post->_tags instanceof \Illuminate\Support\Collection)) {
+                if (is_string($post->_tags)) {
+                    $post->_tags = explode(',', $post->_tags);
+                } else {
+                    $post->_tags = [$post->_tags];
                 }
-                foreach ($post->_tags as $tag) {
-                    if (is_int($tag)) {
-                        $tag = Tag::find($tag);
-                    } else if (is_string($tag)) {
-                        $tag = $post->profile->tags()->of($post::type())->name($tag)->first();
-                    }
-                    if ($tag == null || !($tag instanceof Tag)) {
-                        continue;
-                    }
-                    if ($tag->profile_id !== $post->profile_id) {
-                        // タグ所有プロフィールと投稿者プロフィールが一致しない場合
-                        throw new ApplicationException(80003);
-                    }
-                    if ($tag->type !== $post::type()) {
-                        // タグタイプと投稿種別が一致しない場合
-                        throw new ApplicationException(80004);
-                    }
-                    $ids[$tag->id] = [
-                        'taggable_type' => $post::type(),
-                    ];
-                }
-                $post->tags()->sync($ids);
             }
+            foreach ($post->_tags as $tag) {
+                if (is_int($tag)) {
+                    $tag = Tag::find($tag);
+                } else if (is_string($tag)) {
+                    $tag = $post->profile->tags()->of($post::type())->name($tag)->first();
+                }
+                if ($tag == null || !($tag instanceof Tag)) {
+                    continue;
+                }
+                if ($tag->profile_id !== $post->profile_id) {
+                    // タグ所有プロフィールと投稿者プロフィールが一致しない場合
+                    throw new ApplicationException(80003);
+                }
+                if ($tag->type !== $post::type()) {
+                    // タグタイプと投稿種別が一致しない場合
+                    throw new ApplicationException(80004);
+                }
+                $ids[$tag->id] = [
+                    'taggable_type' => $post::type(),
+                ];
+            }
+            $post->tags()->sync($ids);
         }
         $post->_tags = null;
+    }
+
+    /**
+     * 投稿レコードリストの「起動」メソッド
+     */
+    protected static function bootRecords(Post $post): void
+    {
+        if (empty($post->_records) || optional($post->_records)->isEmpty()) {
+            $post->records()->delete();
+        } else {
+            foreach ($post->_records as $key => $value) {
+                if (is_int($key)) {
+                    // レコーダIDが指定された場合
+                    $recorder = Recorder::find($key);
+                    if ($recorder === null) {
+                        // レコーダIDに一致するレコーダが見つからない
+                        throw new ApplicationException(80005, ['id' => $key]);
+                    }
+                } else if (is_string($key)) {
+                    // レコーダ名が指定された場合
+                    $recorder = $post->profile->recorders()->of($post::type())->name($key)->first();
+                    if ($recorder === null) {
+                        // 一致するレコーダが存在しない場合は無視
+                        continue;
+                    }
+                } else {
+                    continue;
+                }
+                $recorder->record($post, $value);
+            }
+        }
     }
 
     /**
@@ -180,6 +218,14 @@ abstract class Post extends Model
             protected $table = 'taggables';
         };
         return $this->morphToMany(Tag::class, 'taggable')->using($tagsPivot)->withTimestamps();
+    }
+
+    /**
+     * レコードリスト
+     */
+    public function records()
+    {
+        return $this->hasMany(Record::class, 'recordable_id');
     }
 
     /**

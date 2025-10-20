@@ -2066,7 +2066,7 @@ class PostTest extends TestCase
      * 
      * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿タグリストの設定と変更
      */
-    public function test_set_tag_delete()
+    public function test_set_tags_delete()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -2089,5 +2089,407 @@ class PostTest extends TestCase
         // 評価
         $this->assertEquals(0, $journal->tags->count());
         $this->assertDatabaseCount('taggables', 0);
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - 投稿レコードリストの設定と変更をレコーダキーとレコード値のとの連想配列で指定できることを確認します。
+     * - レコードキーには、レコーダIDで指定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $weightRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $lengthRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Length',
+            'data_type' => 'int',
+            'unit' => 'cm'
+        ]);
+
+        // 実行（設定）
+        $journal = $profile->journals()->create([
+            'title' => 'Journal records by object',
+            'records' => [$weightRecorder->id => 65, $lengthRecorder->id => 173]
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $journal->records->count());
+        $this->assertEquals(65, $journal->records->first()->value);
+        $this->assertEquals(173, $journal->records->last()->value);
+        $this->assertDatabaseCount('records', 2);
+        $this->assertDatabaseHas('records', [
+            'id' => $weightRecorder->id,
+            'value' => 65
+        ]);
+        $this->assertDatabaseHas('records', [
+            'id' => $lengthRecorder->id,
+            'value' => 173
+        ]);
+
+        // 実行（変更）
+        $journal->records = [$weightRecorder->id => 75, $lengthRecorder->id => 185];
+        $journal->save();
+
+        // 評価
+        $this->assertEquals(2, optional($journal->records)->count());
+        $this->assertEquals(75, optional($journal->records)->first()->value);
+        $this->assertEquals(185, optional($journal->records)->last()->value);
+        $this->assertDatabaseCount('records', 2);
+        $this->assertDatabaseHas('records', [
+            'id' => $weightRecorder->id,
+            'value' => 75
+        ]);
+        $this->assertDatabaseHas('records', [
+            'id' => $lengthRecorder->id,
+            'value' => 185
+        ]);
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - 投稿レコードリストの設定と変更をレコーダキーとレコード値のとの連想配列で指定できることを確認します。
+     * - レコードキーには、レコーダ名で指定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_by_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $weightRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $lengthRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Length',
+            'data_type' => 'int',
+            'unit' => 'cm'
+        ]);
+
+        // 実行（設定）
+        $journal = $profile->journals()->create([
+            'title' => 'Journal records by name',
+            'records' => ['Weight' => 65, 'Length' => 173]
+        ]);
+
+        // 評価
+        $this->assertEquals(2, $journal->records->count());
+        $this->assertEquals(65, $journal->records->first()->value);
+        $this->assertEquals(173, $journal->records->last()->value);
+        $this->assertDatabaseCount('records', 2);
+        $this->assertDatabaseHas('records', [
+            'id' => $weightRecorder->id,
+            'value' => 65
+        ]);
+        $this->assertDatabaseHas('records', [
+            'id' => $lengthRecorder->id,
+            'value' => 173
+        ]);
+
+        // 実行（変更）
+        $journal->records = ['Weight' => 75, 'Length' => 185];
+        $journal->save();
+
+        // 評価
+        $this->assertEquals(2, optional($journal->records)->count());
+        $this->assertEquals(75, optional($journal->records)->first()->value);
+        $this->assertEquals(185, optional($journal->records)->last()->value);
+        $this->assertDatabaseCount('records', 2);
+        $this->assertDatabaseHas('records', [
+            'id' => $weightRecorder->id,
+            'value' => 75
+        ]);
+        $this->assertDatabaseHas('records', [
+            'id' => $lengthRecorder->id,
+            'value' => 185
+        ]);
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - レコーダIDを直接指定する場合は、レコーダ所有プロフィールが投稿者プロフィールと一致する必要があることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_profile_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $otherProfile = Profile::factory()->create();
+        $profile = Profile::factory()->create();
+        $weightRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $lengthRecorder = $otherProfile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Length',
+            'data_type' => 'int',
+            'unit' => 'cm'
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $weightRecorder, $lengthRecorder) {
+            $profile->journals()->create([
+                'title' => 'Journal records',
+                'records' => [$weightRecorder->id => 65, $lengthRecorder->id => 173]
+            ]);
+        }, ApplicationException::class, 'RecorderProfileMissmatch');
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - レコーダタイプが投稿種別と一致する必要があることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_type_missmatch()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $weightRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $deviceRecorder = $profile->recorders()->create([
+            'type' => Photo::type(),
+            'name' => 'Device',
+            'data_type' => 'string',
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $weightRecorder, $deviceRecorder) {
+            $profile->journals()->create([
+                'title' => 'Journal records',
+                'records' => [$weightRecorder->id => 65, $deviceRecorder->id => 'iPhone 16 Pro']
+            ]);
+        }, ApplicationException::class, 'RecorderTypeMissmatch');
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - 存在しないレコーダIDを指定した場合は、指定したレコーダが見つからないエラーとなることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_recorder_not_found()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $weightRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+
+        // 実行
+        $this->assertThrows(function () use ($profile, $weightRecorder) {
+            $profile->journals()->create([
+                'title' => 'Journal records',
+                'records' => [99999998 => 100, $weightRecorder->id => 65]
+            ]);
+        }, ApplicationException::class, 'RecorderNotFound');
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - レコーダ名の配列を指定した場合は、レコーダ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプのレコーダの中からレコーダ名が一致するレコーダが使用されることを確認します。
+     * - 一致するレコーダが存在しない場合は無視されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_name()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $weightRecorderForJournal = Profile::of('Feeldee')->first()->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        Profile::of('Feeldee')->first()->recorders()->create([
+            'type' => Item::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'g'
+        ]);
+
+        // レコーダ名の配列を指定した場合は、レコーダ所有プロフィールと投稿者プロフィールが一致し、かつ投稿種別と同じタグタイプの
+        // レコーダの中からレコーダ名が一致するレコーダが使用されることを確認
+        // 実行
+        $journal = $profile->journals()->create([
+            'title' => 'Journal records',
+            'records' => ['Weight' => 65]
+        ]);
+
+        // 評価
+        $this->assertEquals($weightRecorderForJournal->id, $journal->records()->first()->recorder->id);
+        $this->assertEquals(65, $journal->records()->first()->value);
+        $this->assertDatabaseCount('records', 1);
+        $this->assertDatabaseHas('records', [
+            'id' => $weightRecorderForJournal->id,
+            'value' => 65
+        ]);
+
+        // 一致するレコーダが存在しない場合は無視されることを確認
+        // 実行
+        $journal->records = ['Other' => 65];
+        $journal->save();
+
+        // 評価
+        $this->assertEquals($weightRecorderForJournal->id, $journal->records()->first()->recorder->id);
+        $this->assertEquals(65, $journal->records()->first()->value);
+        $this->assertDatabaseCount('records', 1);
+        $this->assertDatabaseHas('records', [
+            'id' => $weightRecorderForJournal->id,
+            'value' => 65
+        ]);
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - 対象となるレコードキーのレコード値にnullを指定した場合は、そのレコードが削除されることを確認します。
+     * - レコードキーそのものを連想配列から除外した場合も、そのレコードが削除されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_delete()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $weightRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $lengthRecorder = $profile->recorders()->create([
+            'type' => Journal::class,
+            'name' => 'Length',
+            'data_type' => 'int',
+            'unit' => 'cm'
+        ]);
+        $journal2 = $profile->journals()->create([
+            'title' => 'Journal records by id',
+            'tags' => [$weightRecorder->id => 65, $lengthRecorder->id => 173]
+        ]);
+        $journal3 = $profile->journals()->create([
+            'title' => 'Journal records by name',
+            'tags' => ['Weight' => 65, 'Length' => 173]
+        ]);
+
+        // 実行
+        $journal2->records = [$weightRecorder->id => 75, $lengthRecorder->id => null];
+        $journal2->save();
+        $journal3->records = [$weightRecorder->id => 75];
+        $journal3->save();
+
+        // 評価
+        $this->assertEquals(1, optional($journal2->records)->count());
+        $this->assertEquals(75, optional($journal2->records)->first()->value);
+        $this->assertEquals(1, optional($journal3->records)->count());
+        $this->assertEquals(75, optional($journal3->records)->first()->value);
+        $this->assertDatabaseCount('records', 2);
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - 投稿に紐付くレコード一括でクリアしたい場合は、投稿レコードリストにnullを設定できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_clear()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $weightRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $lengthRecorder = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Length',
+            'data_type' => 'int',
+            'unit' => 'cm'
+        ]);
+        $journal = $profile->journals()->create([
+            'title' => 'Journal records by id',
+            'records' => [$weightRecorder->id => 65, $lengthRecorder->id => 173]
+        ]);
+
+        // 実行
+        $journal->records = null;
+        $journal->save();
+
+        // 評価
+        $this->assertEquals(0, optional($journal->records)->count());
+        $this->assertDatabaseCount('records', 0);
+    }
+
+    /**
+     * 投稿レコードリストの設定と変更
+     * 
+     * - レコーダそのものが削除された場合は、投稿レコードリストから削除されたレコーダのレコードも自動的に削除されることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/投稿#投稿レコードリストの設定と変更
+     */
+    public function test_set_records_delete_recorder()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
+        $weight = $profile->recorders()->create([
+            'type' => Journal::type(),
+            'name' => 'Weight',
+            'data_type' => 'int',
+            'unit' => 'kg'
+        ]);
+        $journal = $profile->journals()->create([
+            'title' => 'Journal records',
+            'records' => [$weight->id => 65]
+        ]);
+
+        // 実行
+        $weight->delete();
+        $journal->refresh();
+
+        // 評価
+        $this->assertEquals(0, $journal->records->count());
+        $this->assertDatabaseCount('records', 0);
     }
 }
