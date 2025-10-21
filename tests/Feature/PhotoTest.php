@@ -657,7 +657,7 @@ class PhotoTest extends TestCase
         ]);
 
         // 実行
-        $photos = Profile::of('Feeldee')->first()->photos;
+        $photos = Profile::nickname('Feeldee')->first()->photos;
 
         // 評価
         $this->assertEquals(3, $photos->count());

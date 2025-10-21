@@ -20,7 +20,7 @@ class UserService
     public function profile(string $nickname = null): ?Profile
     {
         if ($nickname !== null) {
-            $profile = Profile::of($nickname)->first();
+            $profile = Profile::nickname($nickname)->first();
             if ($profile !== null) {
                 session()->flash(self::KEY, $profile);
             } else {

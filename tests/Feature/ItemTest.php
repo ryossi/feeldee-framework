@@ -627,7 +627,7 @@ class ItemTest extends TestCase
         ]);
 
         // 実行
-        $items = Profile::of('Feeldee')->first()->items;
+        $items = Profile::nickname('Feeldee')->first()->items;
 
         // 評価
         $this->assertEquals(4, $items->count());

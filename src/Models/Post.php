@@ -439,7 +439,7 @@ abstract class Post extends Model
                 $viewer = $viewer->profile;
             } else if (is_string($viewer)) {
                 // $viewerがstringの場合は、プロフィールニックネームとする
-                $viewer = Profile::of($viewer)->first();
+                $viewer = Profile::nickname($viewer)->first();
             } else {
                 // デフォルトプロフィールが特定できない場合は、匿名ユーザー(null)として扱う
                 $viewer = null;
@@ -492,7 +492,7 @@ abstract class Post extends Model
             if ($viewer && method_exists($viewer, 'profile')) {
                 $viewer = $viewer->profile;
             } elseif (is_string($viewer)) {
-                $viewer = Profile::of($viewer)->first();
+                $viewer = Profile::nickname($viewer)->first();
             } else {
                 $viewer = null;
             }

@@ -1485,7 +1485,7 @@ class RecordTest extends TestCase
         ))->create();
 
         // 実行
-        $recorders = Recorder::by(Profile::of('Feeldee')->first())->get();
+        $recorders = Recorder::by(Profile::nickname('Feeldee')->first())->get();
 
         // 評価
         $this->assertEquals(2, $recorders->count());

@@ -630,7 +630,7 @@ class TagTest extends TestCase
         Profile::factory(['nickname' => 'Other'])->has(Tag::factory()->count(1))->create();
 
         // 実行
-        $tags = Tag::by(Profile::of('Feeldee')->first())->get();
+        $tags = Tag::by(Profile::nickname('Feeldee')->first())->get();
 
         // 評価
         $this->assertCount(2, $tags);

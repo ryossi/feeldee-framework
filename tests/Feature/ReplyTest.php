@@ -1638,7 +1638,7 @@ class ReplyTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $replies = Reply::viewable(Profile::of('Friend')->first())->get();
+        $replies = Reply::viewable(Profile::nickname('Friend')->first())->get();
 
         // 評価
         $this->assertEquals(3, $replies->count());
@@ -2213,7 +2213,7 @@ class ReplyTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $replies = Profile::of('Feeldee')->first()->replies()->of(Location::class)->get();
+        $replies = Profile::nickname('Feeldee')->first()->replies()->of(Location::class)->get();
 
         // 評価
         $this->assertCount(3, $replies);

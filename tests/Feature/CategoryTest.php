@@ -1500,7 +1500,7 @@ class CategoryTest extends TestCase
         ))->create();
 
         // 実行
-        $categories = Category::by(Profile::of('Feeldee')->first())->get();
+        $categories = Category::by(Profile::nickname('Feeldee')->first())->get();
 
         // 評価
         $this->assertEquals(2, $categories->count());
