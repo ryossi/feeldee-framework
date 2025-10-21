@@ -9,6 +9,7 @@ use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\Like;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\Recorder;
 use Feeldee\Framework\Models\Tag;
@@ -85,7 +86,7 @@ class ProfileTest extends TestCase
         Profile::factory()->create(['user_id' => 300, 'nickname' => 'プロフィール300']);
 
         // 実行
-        $profile = Profile::of($expected->nickname)->first();
+        $profile = Profile::nickname($expected->nickname)->first();
 
         // 評価
         $this->assertEquals($expected->nickname, $profile->nickname, 'プロフィールを一意に識別するための名前であること');
@@ -699,13 +700,13 @@ class ProfileTest extends TestCase
     }
 
     /**
-     * ユーザIDによるプロフィールの特定
+     * ユーザによるプロフィールの絞り込み
      * 
      * - ユーザIDを指定してプロフィールを特定することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザIDによるプロフィールの特定
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザによるプロフィールの絞り込み
      */
-    public function test_user_id()
+    public function test_by_user_id()
     {
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
@@ -714,18 +715,78 @@ class ProfileTest extends TestCase
         Profile::factory()->create(['user_id' => 300, 'nickname' => 'プロフィール300']);
 
         // 実行
-        $profile = Profile::createdBy($expected->user_id)->first();
+        $profile = Profile::by($expected->user_id)->first();
 
         // 評価
         $this->assertEquals($expected->nickname, $profile->nickname, 'プロフィールの所有者を特定するための数値型の外部情報であること');
     }
 
     /**
-     * ニックネームによるプロフィールの特定
+     * ユーザによるプロフィールの絞り込み
      * 
-     * - ニックネームを指定してプロフィールを特定できることを確認します。
+     * - Authenticatableインターフェースを実装したオブジェクトを指定してプロフィールを特定できることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィールの特定
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザによるプロフィールの絞り込み
+     */
+    public function test_by_user_object()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $user = User::create([
+            'name' => 'ユーザ1',
+            'email' => 'user1@example.com',
+            'password' => bcrypt('password123'),
+        ]);
+        Auth::shouldReceive('user')->andReturn($user);
+        Profile::factory()->create(['user_id' => $user->id, 'nickname' => 'プロフィールA']);
+        Profile::factory()->create(['user_id' => $user->id, 'nickname' => 'プロフィールB']);
+
+        // 実行
+        $profiles = Profile::by(Auth::user())->get();
+
+        // 評価
+        $this->assertEquals(2, $profiles->count(), 'Authenticatableインターフェースを実装したオブジェクトを指定してプロフィールを特定できること');
+        foreach ($profiles as $profile) {
+            $this->assertEquals($user->id, $profile->user_id);
+        }
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'nickname' => 'プロフィールA'
+        ]);
+        $this->assertDatabaseHas('profiles', [
+            'user_id' => $user->id,
+            'nickname' => 'プロフィールB'
+        ]);
+    }
+
+    /**
+     * ユーザによるプロフィールの絞り込み
+     * 
+     * - 空の引数で使用すると内部で自動的にLaravelのAuth::id()が呼び出され、現在ログイン中のユーザのIDに一致するプロフィールを絞り込むことができることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザによるプロフィールの絞り込み
+     */
+    public function test_by_no_argument()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $expected = Profile::factory()->create(['user_id' => 1, 'nickname' => 'プロフィールA']);
+        Profile::factory()->create(['user_id' => 2, 'nickname' => 'プロフィールB']);
+
+        // 実行
+        $profile = Profile::by()->first();
+
+        // 評価
+        $this->assertEquals($expected->id, $profile->id, '現在ログイン中のユーザのIDに一致するプロフィールを絞り込むことができること');
+    }
+
+
+    /**
+     * ニックネームによるプロフィールの絞り込み
+     * 
+     * - ニックネームを完全一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィールの絞り込み
      */
     public function test_nickname_filter()
     {
@@ -736,10 +797,58 @@ class ProfileTest extends TestCase
         Profile::factory()->create(['nickname' => 'jdofajod']);
 
         // 実行
-        $profile = Profile::of('Feeldee')->first();
+        $profile = Profile::nickname('Feeldee')->first();
 
         // 評価
-        $this->assertEquals($expected->id, $profile->id, 'ニックネームを指定してプロフィールを特定できること');
+        $this->assertEquals($expected->id, $profile->id, 'ニックネームをニックネームを完全一致検索できること');
+    }
+
+    /**
+     * ニックネームによるプロフィールの絞り込み
+     * 
+     * - ニックネームを前方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィールの絞り込み
+     */
+    public function test_nickname_filter_prefix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->create(['nickname' => 'Mr.A']);
+        Profile::factory()->create(['nickname' => 'Feeldee']);
+        Profile::factory()->create(['nickname' => 'Mr.B']);
+
+        // 実行
+        $profiles = Profile::nickname('Mr.', Like::Prefix)->get();
+
+        // 評価
+        $this->assertCount(2, $profiles, 'ニックネームを前方一致検索できること');
+        $this->assertEquals('Mr.A', $profiles[0]->nickname);
+        $this->assertEquals('Mr.B', $profiles[1]->nickname);
+    }
+
+    /**
+     * ニックネームによるプロフィールの絞り込み
+     * 
+     * - ニックネームを後方一致検索できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィールの絞り込み
+     */
+    public function test_nickname_filter_suffix()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        Profile::factory()->create(['nickname' => 'A-Jr.']);
+        Profile::factory()->create(['nickname' => 'Feeldee']);
+        Profile::factory()->create(['nickname' => 'B-Jr.']);
+
+        // 実行
+        $profiles = Profile::nickname('Jr.', Like::Suffix)->get();
+
+        // 評価
+        $this->assertCount(2, $profiles, 'ニックネームを後方一致検索できること');
+        $this->assertEquals('A-Jr.', $profiles[0]->nickname);
+        $this->assertEquals('B-Jr.', $profiles[1]->nickname);
     }
 
     /**
@@ -795,7 +904,7 @@ class ProfileTest extends TestCase
         $profile->friends()->attach($friendProfile->id);
 
         // 評価
-        $this->assertTrue(Profile::of('Feeldee')->first()->friends->contains(function (Profile $friend) {
+        $this->assertTrue(Profile::nickname('Feeldee')->first()->friends->contains(function (Profile $friend) {
             return $friend->nickname == 'Friend';
         }));
     }
