@@ -702,7 +702,7 @@ class JournalTest extends TestCase
         ]);
 
         // 実行
-        $journals = Profile::of('Feeldee')->first()->journals()->get();
+        $journals = Profile::nickname('Feeldee')->first()->journals()->get();
 
         // 評価
         $this->assertEquals(3, $journals->count());

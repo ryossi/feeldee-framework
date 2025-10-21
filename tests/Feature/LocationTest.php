@@ -687,7 +687,7 @@ class LocationTest extends TestCase
         ]);
 
         // 実行
-        $locations = Profile::of('Feeldee')->first()->locations;
+        $locations = Profile::nickname('Feeldee')->first()->locations;
 
         // 評価
         $this->assertEquals(3, $locations->count());

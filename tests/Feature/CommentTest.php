@@ -1659,7 +1659,7 @@ class CommentTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $comments = Comment::viewable(Profile::of('Friend')->first())->get();
+        $comments = Comment::viewable(Profile::nickname('Friend')->first())->get();
 
         // 評価
         Assert::assertCount(3, $comments);
@@ -1989,12 +1989,12 @@ class CommentTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable(Profile::of('Friend')->first());
-        $comment_false = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable(Profile::of('Friend')->first());
-        $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable(Profile::of('Friend')->first());
-        $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable(Profile::of('Friend')->first());
-        $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable(Profile::of('Friend')->first());
-        $post_private = Comment::by('Commenter')->at('2025-09-26')->first()->isViewable(Profile::of('Friend')->first());
+        $post_false = Comment::by('Commenter')->at('2025-09-21')->first()->isViewable(Profile::nickname('Friend')->first());
+        $comment_false = Comment::by('Commenter')->at('2025-09-22')->first()->isViewable(Profile::nickname('Friend')->first());
+        $post_public = Comment::by('Commenter')->at('2025-09-23')->first()->isViewable(Profile::nickname('Friend')->first());
+        $post_member = Comment::by('Commenter')->at('2025-09-24')->first()->isViewable(Profile::nickname('Friend')->first());
+        $post_friend = Comment::by('Commenter')->at('2025-09-25')->first()->isViewable(Profile::nickname('Friend')->first());
+        $post_private = Comment::by('Commenter')->at('2025-09-26')->first()->isViewable(Profile::nickname('Friend')->first());
 
         // 評価
         $this->assertFalse($post_false, 'コメント対象が非公開のコメントは友達登録されたプロフィールには閲覧できないこと');
@@ -2165,7 +2165,7 @@ class CommentTest extends TestCase
         )->for($profile)->create();
 
         // 実行
-        $comments = Profile::of('Feeldee')->first()->comments()->of(Journal::class)->get();
+        $comments = Profile::nickname('Feeldee')->first()->comments()->of(Journal::class)->get();
 
         // 評価
         $this->assertCount(1, $comments);

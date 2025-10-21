@@ -50,7 +50,7 @@ class PostTest extends TestCase
         ]);
 
         // 実行
-        $journals = Profile::of('Feeldee')->first()->journals()->orderLatest()->get();
+        $journals = Profile::nickname('Feeldee')->first()->journals()->orderLatest()->get();
 
         // 評価
         $this->assertEquals(3, $journals->count());
@@ -169,8 +169,8 @@ class PostTest extends TestCase
         ]);
 
         // 実行
-        $itemsLatest = Profile::of('Feeldee')->first()->items()->orderDirection('desc')->get();
-        $itemsOldest = Profile::of('Feeldee')->first()->items()->orderDirection('asc')->get();
+        $itemsLatest = Profile::nickname('Feeldee')->first()->items()->orderDirection('desc')->get();
+        $itemsOldest = Profile::nickname('Feeldee')->first()->items()->orderDirection('asc')->get();
 
         // 評価
         $this->assertEquals(3, $itemsLatest->count());
@@ -723,7 +723,7 @@ class PostTest extends TestCase
         ]);
 
         // 実行
-        $photos = Profile::of('Feeldee')->first()->photos()->public()->get();
+        $photos = Profile::nickname('Feeldee')->first()->photos()->public()->get();
 
         // 評価
         $this->assertEquals(2, $photos->count());
@@ -901,7 +901,7 @@ class PostTest extends TestCase
         ))->create();
 
         // 実行
-        $locations = Location::by('Feeldee')->viewable(Profile::of('Feeldee')->first())->get();
+        $locations = Location::by('Feeldee')->viewable(Profile::nickname('Feeldee')->first())->get();
 
         // 評価
         $this->assertEquals(4, $locations->count());
@@ -1312,7 +1312,7 @@ class PostTest extends TestCase
         $profile = Profile::factory(
             ['nickname' => 'Feeldee']
         )->create();
-        $news = Profile::of('Feeldee')->first()->categories()->create([
+        $news = Profile::nickname('Feeldee')->first()->categories()->create([
             'type' => Journal::type(),
             'name' => 'News'
         ]);
@@ -2330,13 +2330,13 @@ class PostTest extends TestCase
         // 準備
         Auth::shouldReceive('id')->andReturn(1);
         $profile = Profile::factory(['nickname' => 'Feeldee'])->create();
-        $weightRecorderForJournal = Profile::of('Feeldee')->first()->recorders()->create([
+        $weightRecorderForJournal = Profile::nickname('Feeldee')->first()->recorders()->create([
             'type' => Journal::type(),
             'name' => 'Weight',
             'data_type' => 'int',
             'unit' => 'kg'
         ]);
-        Profile::of('Feeldee')->first()->recorders()->create([
+        Profile::nickname('Feeldee')->first()->recorders()->create([
             'type' => Item::type(),
             'name' => 'Weight',
             'data_type' => 'int',

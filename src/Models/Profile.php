@@ -66,7 +66,7 @@ class Profile extends Model
 
     protected static function bootedNickname(Self $model)
     {
-        if (Profile::of($model->nickname)->first()?->id !== $model->id) {
+        if (Profile::nickname($model->nickname)->first()?->id !== $model->id) {
             // ニックネームが重複している場合
             throw new ApplicationException(Profile::ERROR_CODE_NICKNAME_DUPLICATED, ['nickname' => $model->nickname]);
         }
@@ -246,15 +246,19 @@ class Profile extends Model
 
 
     /**
-     * ユーザIDを指定してプロフィールを特定します。
+     * ユーザを指定してプロフィールを絞り込むためのローカルスコープ
      * 
      * @param Builder $query クエリビルダ
-     * @param mixed $userId ユーザID
+     * @param mixed $user ユーザIDまたはIlluminate\Contracts\Auth\Authenticatableインターフェースを実装したオブジェクト。nullの場合は現在ログイン中のユーザが使用されます
      * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ユーザによるプロフィールの絞り込み
      */
-    public function scopeCreatedBy($query, mixed $userId)
+    public function scopeBy($query, mixed $user = null): void
     {
-        return $query->where('user_id', $userId);
+        $userId = $user instanceof \Illuminate\Contracts\Auth\Authenticatable
+            ? $user->getAuthIdentifier()
+            : ($user ?? auth()->id());
+        $query->where('user_id', $userId);
     }
 
     /**
@@ -262,11 +266,13 @@ class Profile extends Model
      * 
      * @param Builder $query クエリビルダ
      * @param string|null $nickname ニックネーム
+     * @param Like $like LIKE列挙型（デフォルトは、完全一致）
      * @return void
+     * @link https://github.com/ryossi/feeldee-framework/wiki/プロフィール#ニックネームによるプロフィールの絞り込み
      */
-    public function scopeOf($query, string|null $nickname)
+    public function scopeNickname($query, ?string $nickname, Like $like = Like::All): void
     {
-        return $query->where('nickname', $nickname);
+        $like->build($query, 'nickname', $nickname);
     }
 
     /**
@@ -295,7 +301,7 @@ class Profile extends Model
     {
         $friendProfile = $profile instanceof Profile
             ? $profile
-            : Profile::of($profile)->first();
+            : Profile::nickname($profile)->first();
 
         return $friendProfile
             ? $this->friends()->where('friend_id', $friendProfile->id)->exists()
