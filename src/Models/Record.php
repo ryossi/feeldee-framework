@@ -4,6 +4,7 @@ namespace Feeldee\Framework\Models;
 
 use App;
 use Carbon\Carbon;
+use Feeldee\Framework\Database\Factories\RecordFactory;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,6 +39,16 @@ class Record extends Model
      * @var array
      */
     protected $appends = ['recorder', 'post'];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return RecordFactory::new();
+    }
 
     /**
      * モデルの「起動」メソッド

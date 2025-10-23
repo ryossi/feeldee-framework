@@ -5,6 +5,7 @@ namespace Feeldee\Framework\Models;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
+use Feeldee\Framework\Database\Factories\ItemFactory;
 use Intervention\Image\Facades\Image;
 
 /**
@@ -75,6 +76,16 @@ class Item extends Post
      * @var array
      */
     protected $strip_tags = ['value' => 'text'];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return ItemFactory::new();
+    }
 
     /**
      * モデルの「起動」メソッド

@@ -4,6 +4,7 @@ namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Feeldee\Framework\Database\Factories\CommentFactory;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
@@ -47,6 +48,16 @@ class Comment extends Model
         'commented_at' => 'datetime',
         'is_public' => 'boolean',
     ];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return CommentFactory::new();
+    }
 
     /**
      * モデルの「起動」メソッド
