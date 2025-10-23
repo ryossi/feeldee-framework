@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Database\Factories\TagFactory;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Profile;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,6 +44,16 @@ class Tag extends Model
         'type' => 72002,
         'name' => 72003,
     ];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return TagFactory::new();
+    }
 
     /**
      * タグ名重複チェック

@@ -2,12 +2,7 @@
 
 namespace Feeldee\Framework\Database\Factories;
 
-use Feeldee\Framework\Models\Item;
-use Feeldee\Framework\Models\Location;
-use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\Journal;
 use Feeldee\Framework\Models\Record;
-use Feeldee\Framework\Models\Recorder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 

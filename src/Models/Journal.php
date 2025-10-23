@@ -5,6 +5,7 @@ namespace Feeldee\Framework\Models;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
+use Feeldee\Framework\Database\Factories\JournalFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -59,6 +60,16 @@ class Journal extends Post
      * @var array
      */
     protected $strip_tags = ['value' => 'text'];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return JournalFactory::new();
+    }
 
     /**
      * モデルの「起動」メソッド

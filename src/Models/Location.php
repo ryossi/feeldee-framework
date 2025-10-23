@@ -5,6 +5,7 @@ namespace Feeldee\Framework\Models;
 use Carbon\CarbonImmutable;
 use Feeldee\Framework\Casts\Html;
 use Feeldee\Framework\Casts\URL;
+use Feeldee\Framework\Database\Factories\LocationFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
@@ -86,6 +87,16 @@ class Location extends Post
      * @var array
      */
     protected $strip_tags = ['value' => 'text'];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return LocationFactory::new();
+    }
 
     /**
      * モデルの「起動」メソッド

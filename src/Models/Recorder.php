@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Database\Factories\RecorderFactory;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -40,6 +41,16 @@ class Recorder extends Model
         'name' => 73003,
         'data_type' => 73006,
     ];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return RecorderFactory::new();
+    }
 
     /**
      * レコーダ名重複チェック

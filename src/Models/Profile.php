@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Database\Factories\ProfileFactory;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -70,6 +71,16 @@ class Profile extends Model
             // ニックネームが重複している場合
             throw new ApplicationException(Profile::ERROR_CODE_NICKNAME_DUPLICATED, ['nickname' => $model->nickname]);
         }
+    }
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return ProfileFactory::new();
     }
 
     /**

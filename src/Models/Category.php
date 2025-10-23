@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework\Models;
 
+use Feeldee\Framework\Database\Factories\CategoryFactory;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Profile;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -45,6 +46,16 @@ class Category extends Model
         'type' => 71009,
         'name' => 71010,
     ];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return CategoryFactory::new();
+    }
 
     protected static function bootedProfile(Self $model)
     {

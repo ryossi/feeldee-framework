@@ -4,6 +4,7 @@ namespace Feeldee\Framework\Models;
 
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Feeldee\Framework\Database\Factories\ReplyFactory;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Facades\FDate;
 use Illuminate\Database\Eloquent\Builder;
@@ -40,6 +41,16 @@ class Reply extends Model
         'replied_at' => 'datetime',
         'is_public' => 'boolean',
     ];
+
+    /**
+     * ファクトリインスタンスを返す
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return ReplyFactory::new();
+    }
 
     /**
      * モデルの「起動」メソッド
