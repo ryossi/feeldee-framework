@@ -31,7 +31,8 @@
   },
   "autoload": {
     "psr-4": {
-      "Feeldee\\Framework\\": "src/"
+      "Feeldee\\Framework\\": "src/",
+      "Feeldee\\Framework\\Database\\Factories\\": "database/factories/"
     }
   },
   "autoload-dev": {
