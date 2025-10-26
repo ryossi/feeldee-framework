@@ -630,11 +630,11 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 写真リストの並び順
+     * 新規作成
      *
      * - 写真リストのデフォルトの並び順は、投稿日時降順（最新順）であることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真リストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#新規作成
      */
     public function test_collection_sort_default()
     {

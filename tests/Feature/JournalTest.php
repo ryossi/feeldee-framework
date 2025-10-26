@@ -675,11 +675,11 @@ class JournalTest extends TestCase
     }
 
     /**
-     * 記録リストの並び順
+     * 新規作成
      * 
      * - 記録リストのデフォルトの並び順は、投稿日時降順（最新順）であることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/記録#記録リストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/記録#新規作成
      */
     public function test_collection_sort_default()
     {

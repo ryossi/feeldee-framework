@@ -7,11 +7,9 @@ use Carbon\Carbon;
 use Feeldee\Framework\Casts\HTML;
 use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
-use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
-use Feeldee\Framework\Models\Recorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Tests\Hooks\CustomHtmlHook;
@@ -660,11 +658,11 @@ class LocationTest extends TestCase
     }
 
     /**
-     * 場所リストの並び順
+     * 新規作成
      *
      * - 場所リストのデフォルトの並び順は、投稿日時降順（最新順）であることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#場所リストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/場所#新規作成
      */
     public function test_collection_sort_default()
     {
