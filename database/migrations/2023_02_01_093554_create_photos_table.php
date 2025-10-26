@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('category_id')->nullable()->comment('投稿カテゴリーID')->constrained('categories')->onDelete('set null');
             $table->dateTime('posted_at')->comment('投稿日時');
             $table->mediumText('thumbnail')->nullable()->comment('投稿サムネイル');
-            $table->string('photo_type', 255)->comment('写真タイプ');
+            $table->string('photo_type', 255)->nullable()->comment('写真タイプ');
             $table->string('src', 767)->comment('写真ソース');
             $table->integer('width')->nullable()->comment('写真イメージ幅');
             $table->integer('height')->nullable()->comment('写真イメージ高さ');
