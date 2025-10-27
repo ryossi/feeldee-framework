@@ -665,4 +665,72 @@ class PhotoTest extends TestCase
         $this->assertEquals($postA->id, $photos[1]->id);
         $this->assertEquals($postC->id, $photos[2]->id);
     }
+
+    /**
+     * 写真タイプの自動判定
+     *
+     * - 写真タイプは、写真ソースの設定時に写真タイプマッピングコンフィグレーションの設定値に従って自動判定されることを確認します。
+     * - 写真タイプマッピングコンフィグレーションは、写真タイプの値と写真ソースのURLを評価するための文字列（正規表現）の連想配列で指定することを確認します。
+     *
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真タイプの自動判定
+     */
+    public function test_photo_type_auto_detection()
+    {
+        // 準備
+        Config::set('feeldee.photo_types', [
+            'google' => '/^(?:https?:\/\/)?photos\.google\.com\//',
+            'amazon' => '/^(?:https?:\/\/)?www\.amazon\.com\/photos\//',
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $photoGoogle = $profile->photos()->create([
+            'src' => 'https://photos.google.com/albums/ABC123',
+            'posted_at' => now(),
+        ]);
+        $photoAmazon = $profile->photos()->create([
+            'src' => 'https://www.amazon.com/photos/user/XYZ789',
+            'posted_at' => now(),
+        ]);
+        $photoOther = $profile->photos()->create([
+            'src' => 'https://example.com/images/photo.jpg',
+            'posted_at' => now(),
+        ]);
+
+        // 評価
+        $this->assertEquals('google', $photoGoogle->photo_type, '写真タイプは、写真ソースの設定時に写真タイプマッピングコンフィグレーションの設定値に従って自動判定されること');
+        $this->assertEquals('amazon', $photoAmazon->photo_type, '写真タイプは、写真ソースの設定時に写真タイプマッピングコンフィグレーションの設定値に従って自動判定されること');
+        $this->assertNull($photoOther->photo_type, '写真タイプマッピングコンフィグレーションに該当しない場合は、nullとなること');
+    }
+
+    /**
+     * 写真タイプの自動判定
+     * 
+     * - 写真ソースを変更した場合に、写真タイプが自動判定されることを確認します。
+     * - 写真タイプマッピングコンフィグレーションは、写真タイプの値と写真ソースのURLを評価するための文字列（正規表現）の連想配列で指定することを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真タイプの自動判定
+     */
+    public function test_photo_type_auto_detection_on_src_update()
+    {
+        // 準備
+        Config::set('feeldee.photo_types', [
+            'google' => '/^(?:https?:\/\/)?photos\.google\.com\//',
+            'amazon' => '/^(?:https?:\/\/)?www\.amazon\.com\/photos\//',
+        ]);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $photo = Photo::factory([
+            'src' => 'https://photos.google.com/albums/ABC123',
+        ])->for($profile)->create();
+
+        // 実行
+        $this->assertEquals('google', $photo->photo_type, '初期の写真タイプは、googleであること');
+        $photo->src = 'https://www.amazon.com/photos/user/XYZ789';
+        $photo->save();
+
+        // 評価
+        $this->assertEquals('amazon', $photo->photo_type, '写真ソースを変更した場合に、写真タイプが自動判定されること');
+    }
 }
