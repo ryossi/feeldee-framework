@@ -737,6 +737,30 @@ class PhotoTest extends TestCase
     /**
      * 写真タイプの自動判別
      * 
+     * - 写真タイプマッピングコンフィグレーションが設置されない場合は、自動判別は機能しなくなることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真タイプの自動判別
+     */
+    public function test_photo_type_auto_detection_no_config()
+    {
+        // 準備
+        Config::set('feeldee.photo_types', null);
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+
+        // 実行
+        $photo = $profile->photos()->create([
+            'src' => 'https://photos.google.com/albums/ABC123',
+            'posted_at' => now(),
+        ]);
+
+        // 評価
+        $this->assertNull($photo->photo_type, '写真タイプマッピングコンフィグレーションが設置されない場合は、自動判別は機能しなくなること');
+    }
+
+    /**
+     * 写真タイプの自動判別
+     * 
      * - 写真タイプを一括で修正する"feeldee:refresh-photo-type"コマンドが利用できることを確認します。
      * - 写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できることを確認します。
      * 

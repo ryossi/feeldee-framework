@@ -131,8 +131,12 @@ class Photo extends Post
             get: fn($value, $attributes) => $cast->get($this, 'url', $value, $attributes),
             set: function ($value, $attributes) use ($cast) {
                 $detected = null;
-                $mapping = config('feeldee.photo_types', []);
-
+                $mapping = config('feeldee.photo_types', null);
+                if ($mapping === null) {
+                    return [
+                        'src' => $cast->set($this, 'url', $value, $attributes),
+                    ];
+                }
                 if (is_array($mapping) && !empty($value)) {
                     foreach ($mapping as $key => $pattern) {
                         if (@preg_match($pattern, $value) === 1) {
