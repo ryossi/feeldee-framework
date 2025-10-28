@@ -2,6 +2,7 @@
 
 namespace Feeldee\Framework;
 
+use Feeldee\Framework\Console\Commands\RefreshPhotoTypeCommand;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Location;
 use Feeldee\Framework\Models\Photo;
@@ -69,6 +70,8 @@ class FeeldeeServiceProvider extends ServiceProvider
 
         AboutCommand::add('Feeldee', fn() => ['Framework Version' => '1.0.0']);
 
+        $this->registerCommands();
+
         // カスタムポリモーフィックタイプ
         Relation::enforceMorphMap([
             Journal::type() => 'Feeldee\Framework\Models\Journal',
@@ -76,5 +79,19 @@ class FeeldeeServiceProvider extends ServiceProvider
             Location::type() => 'Feeldee\Framework\Models\Location',
             Item::type() => 'Feeldee\Framework\Models\Item',
         ]);
+    }
+
+    /**
+     * Register the console commands for the package.
+     *
+     * @return void
+     */
+    protected function registerCommands()
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                RefreshPhotoTypeCommand::class,
+            ]);
+        }
     }
 }

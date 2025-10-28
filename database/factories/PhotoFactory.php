@@ -3,7 +3,6 @@
 namespace Feeldee\Framework\Database\Factories;
 
 use Feeldee\Framework\Models\Photo;
-use Feeldee\Framework\Models\PhotoType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PhotoFactory extends Factory
@@ -23,7 +22,6 @@ class PhotoFactory extends Factory
     public function definition(): array
     {
         return [
-            'photo_type' => fake()->randomElement(PhotoType::cases()),
             'src' => fake()->url(),
             'posted_at' => fake()->dateTime(),
         ];

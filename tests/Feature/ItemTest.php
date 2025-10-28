@@ -592,11 +592,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * アイテムリストの並び順
+     * 新規作成
      * 
      * - アイテムリストのデフォルトの並び順は、1.表示順昇順、2.投稿日時降順（最新順）であることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムリストの並び順
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
      */
     public function test_collection_sort_default()
     {

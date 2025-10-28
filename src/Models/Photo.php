@@ -21,7 +21,7 @@ class Photo extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'src', 'posted_at'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'src', 'photo_type', 'posted_at'];
 
     /**
      * 配列に表示する属性
@@ -46,7 +46,6 @@ class Photo extends Post
         'posted_at' => 'datetime',
         'value' => HTML::class,
         'thumbnail' => URL::class,
-        'src' => URL::class
     ];
 
     /**
@@ -91,11 +90,6 @@ class Photo extends Post
             $builder->orderByDesc('posted_at');
         });
 
-        static::creating(function (Self $model) {
-            // 写真準備
-            $model->prepare();
-        });
-
         static::saving(
             function (self $model) {
                 // 投稿日時
@@ -127,6 +121,41 @@ class Photo extends Post
     }
 
     /**
+     * 写真ソース
+     */
+    protected function src(): Attribute
+    {
+        $cast = new URL();
+
+        return Attribute::make(
+            get: fn($value, $attributes) => $cast->get($this, 'url', $value, $attributes),
+            set: function ($value, $attributes) use ($cast) {
+                $detected = null;
+                $mapping = config('feeldee.photo_types', null);
+                if ($mapping === null) {
+                    return [
+                        'src' => $cast->set($this, 'url', $value, $attributes),
+                    ];
+                }
+                if (is_array($mapping) && !empty($value)) {
+                    foreach ($mapping as $key => $pattern) {
+                        if (@preg_match($pattern, $value) === 1) {
+                            $detected = $key;
+                            break;
+                        }
+                    }
+                }
+                return [
+                    'src' => $cast->set($this, 'url', $value, $attributes),
+                    'photo_type' => $detected,
+                ];
+            },
+        );
+    }
+
+    // ========================== ここまで整理済み ==========================
+
+    /**
      * 写真ソースで絞り込むクエリのスコープを設定
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
@@ -137,28 +166,6 @@ class Photo extends Post
         $query->where('src', $src);
     }
 
-    // ========================== ここまで整理済み ==========================
-
-    /**
-     * 写真を準備します。
-     */
-    protected function prepare(): void
-    {
-        $media = $this->profile->mediaBox?->find($this->src);
-        if ($media !== null) {
-            // メディアが存在する場合
-            $this->photo_type = PhotoType::Feeldee;
-            $this->width = $media->width;
-            $this->height = $media->height;
-        } else {
-            // メディアが存在しない場合
-            if (strpos($this->src, PhotoType::Google->value) !== false) {
-                $this->photo_type =  PhotoType::Google;
-            } else {
-                $this->photo_type =  PhotoType::Other;
-            }
-        }
-    }
 
     /**
      * アルバム名
@@ -169,17 +176,6 @@ class Photo extends Post
             get: fn($value, $attributes) => $this->tags()->get(['name'])->map(function ($item, $key) {
                 return $item->name;
             }),
-        );
-    }
-
-    /**
-     * 写真タイプ
-     */
-    protected function photoType(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => empty($value) ? null : PhotoType::from($value),
-            set: fn($value) => $value->value,
         );
     }
 
