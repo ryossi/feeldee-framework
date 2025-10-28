@@ -667,7 +667,7 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 写真タイプの自動判定
+     * 写真タイプの自動判別
      *
      * - 写真タイプは、写真ソースの設定時に写真タイプマッピングコンフィグレーションの設定値に従って自動判定されることを確認します。
      * - 写真タイプマッピングコンフィグレーションは、写真タイプの値と写真ソースのURLを評価するための文字列（正規表現）の連想配列で指定することを確認します。
@@ -705,7 +705,7 @@ class PhotoTest extends TestCase
     }
 
     /**
-     * 写真タイプの自動判定
+     * 写真タイプの自動判別
      * 
      * - 写真ソースを変更した場合に、写真タイプが自動判定されることを確認します。
      * - 写真タイプマッピングコンフィグレーションは、写真タイプの値と写真ソースのURLを評価するための文字列（正規表現）の連想配列で指定することを確認します。
@@ -732,5 +732,127 @@ class PhotoTest extends TestCase
 
         // 評価
         $this->assertEquals('amazon', $photo->photo_type, '写真ソースを変更した場合に、写真タイプが自動判定されること');
+    }
+
+    /**
+     * 写真タイプの自動判別
+     * 
+     * - 写真タイプを一括で修正する"feeldee:refresh-photo-type"コマンドが利用できることを確認します。
+     * - 写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真タイプの自動判別
+     */
+    public function test_refresh_photo_type_command()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $photo1 = Photo::factory([
+            'src' => 'https://photos.google.com/albums/ABC123',
+            'photo_type' => null,
+        ])->for($profile)->create();
+        $photo2 = Photo::factory([
+            'src' => 'https://www.amazon.com/photos/user/XYZ789',
+            'photo_type' => 'google',
+        ])->for($profile)->create();
+        $photo3 = Photo::factory([
+            'src' => 'https://example.com/images/photo.jpg',
+            'photo_type' => 'amazon',
+        ])->for($profile)->create();
+
+        Config::set('feeldee.photo_types', [
+            'google' => '/^(?:https?:\/\/)?photos\.google\.com\//',
+            'amazon' => '/^(?:https?:\/\/)?www\.amazon\.com\/photos\//',
+        ]);
+
+        // 実行
+        $this->artisan('feeldee:refresh-photo-type')
+            ->assertExitCode(0);
+
+        // 評価
+        $this->assertEquals('google', $photo1->fresh()->photo_type, '写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できること');
+        $this->assertEquals('amazon', $photo2->fresh()->photo_type, '写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できること');
+        $this->assertNull($photo3->fresh()->photo_type, '写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できること');
+    }
+
+    /**
+     *  写真タイプの自動判別
+     * 
+     * - 写真タイプを一括で修正する"feeldee:refresh-photo-type"コマンドが利用できることを確認します。
+     * - nullOnlyオプションを指定した場合に、写真タイプが未設定（null）の写真のみを更新できることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真タイプの自動判別
+     */
+    public function test_refresh_photo_type_command_nullOnly()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $photo1 = Photo::factory([
+            'src' => 'https://photos.google.com/albums/ABC123',
+            'photo_type' => null,
+        ])->for($profile)->create();
+        $photo2 = Photo::factory([
+            'src' => 'https://www.amazon.com/photos/user/XYZ789',
+            'photo_type' => 'google',
+        ])->for($profile)->create();
+
+        Config::set('feeldee.photo_types', [
+            'google' => '/^(?:https?:\/\/)?photos\.google\.com\//',
+            'amazon' => '/^(?:https?:\/\/)?www\.amazon\.com\/photos\//',
+        ]);
+
+        // 実行
+        $this->artisan('feeldee:refresh-photo-type nullOnly')->assertExitCode(0);
+
+        // 評価
+        $this->assertEquals('google', $photo1->fresh()->photo_type, '写真タイプが未設定（null）の写真のみを更新できること');
+        $this->assertEquals('google', $photo2->fresh()->photo_type, '写真タイプが未設定（null）の写真のみを更新できること');
+    }
+
+    /**
+     * 写真タイプの自動判別
+     * 
+     * - 写真タイプを一括で修正する"feeldee:refresh-photo-type"コマンドが利用できることを確認します。
+     * - SQLLite環境で"REGEXP"関数をエミュレートして確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/写真#写真タイプの自動判別
+     */
+    public function test_photo_type_auto_detection_sqlite_regexp()
+    {
+        // SQLiteのREGEXP関数をエミュレート
+        \DB::connection()->getPdo()->sqliteCreateFunction('REGEXP', function ($pattern, $value) {
+            return preg_match($pattern, $value) === 1 ? 1 : 0;
+        });
+
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $photo1 = Photo::factory([
+            'src' => 'https://photos.google.com/albums/ABC123',
+            'photo_type' => null,
+        ])->for($profile)->create();
+        $photo2 = Photo::factory([
+            'src' => 'https://www.amazon.com/photos/user/XYZ789',
+            'photo_type' => 'google',
+        ])->for($profile)->create();
+        $photo3 = Photo::factory([
+            'src' => 'https://example.com/images/photo.jpg',
+            'photo_type' => 'amazon',
+        ])->for($profile)->create();
+
+        Config::set('feeldee.photo_types', [
+            'google' => '/^(?:https?:\/\/)?photos\.google\.com\//',
+            'amazon' => '/^(?:https?:\/\/)?www\.amazon\.com\/photos\//',
+        ]);
+
+        // 実行
+        $this->artisan('feeldee:refresh-photo-type')
+            ->assertExitCode(0);
+
+        // 評価
+        $this->assertEquals('google', $photo1->fresh()->photo_type, '写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できること');
+        $this->assertEquals('amazon', $photo2->fresh()->photo_type, '写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できること');
+        $this->assertNull($photo3->fresh()->photo_type, '写真タイプ設定済みのも含めて最新の写真タイプマッピングコンフィグレーション設定値に従って写真タイプを一律更新できること');
     }
 }

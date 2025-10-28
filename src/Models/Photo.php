@@ -21,7 +21,7 @@ class Photo extends Post
      *
      * @var array
      */
-    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'src', 'posted_at'];
+    protected $fillable = ['profile', 'public_level', 'category', 'category_id', 'tags', 'records', 'title', 'value', 'src', 'photo_type', 'posted_at'];
 
     /**
      * 配列に表示する属性
@@ -146,17 +146,6 @@ class Photo extends Post
                     'photo_type' => $detected,
                 ];
             },
-        );
-    }
-
-    /**
-     * 写真タイプ
-     */
-    protected function photoType(): Attribute
-    {
-        return Attribute::make(
-            get: fn($value) => $value,
-            set: fn($value) => null,
         );
     }
 
