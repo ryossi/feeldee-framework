@@ -100,7 +100,7 @@ class Config extends Model
     /**
      * コンフィグタイプを条件に含むようにクエリスコープを設定
      */
-    public function scopeOfType(Builder $query, string $type): void
+    public function scopeOf(Builder $query, string $type): void
     {
         $query->where('type', $type);
     }
