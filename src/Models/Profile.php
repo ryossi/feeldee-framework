@@ -212,7 +212,7 @@ class Profile extends Model
      */
     public function config(string $type): Config
     {
-        $config = $this->configs()->ofType($type)->first();
+        $config = $this->configs()->of($type)->first();
         if ($config === null) {
             // コンフィグが存在しない場合は新しい値オブジェクトを作成
             $config = $this->configs()->create([
@@ -242,7 +242,7 @@ class Profile extends Model
                 // キャッシュに存在する場合はキャッシュから取得
                 return $this->configCache[$key]->value;
             }
-            $config = $this->configs()->ofType($key)->first();
+            $config = $this->configs()->of($key)->first();
             if ($config === null) {
                 // コンフィグが存在しない場合は新しい値オブジェクトを作成
                 $config = $this->configs()->create([

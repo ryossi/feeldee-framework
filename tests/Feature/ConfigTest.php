@@ -141,7 +141,7 @@ class ConfigTest extends TestCase
         ]);
 
         // 実行
-        $config = $profile->configs()->ofType('custom_config')->first();
+        $config = $profile->configs()->of('custom_config')->first();
 
         // 評価
         $this->assertInstanceOf(\Tests\ValueObjects\Configs\CustomConfig::class, $config->value, 'コンフィグタイプごとに事前に定義しておいたカスタムコンフィグクラスに変換されること');
@@ -206,7 +206,7 @@ class ConfigTest extends TestCase
         ]);
 
         // 実行
-        $config = $profile->configs()->ofType('custom_config')->first();
+        $config = $profile->configs()->of('custom_config')->first();
         $config->value->fill([
             'value1' => 'xxxx',
             'value2' => 'yyyy',
