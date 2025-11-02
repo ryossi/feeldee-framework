@@ -8,9 +8,9 @@ use Feeldee\Framework\Casts\URL;
 use Feeldee\Framework\Exceptions\ApplicationException;
 use Feeldee\Framework\Models\Item;
 use Feeldee\Framework\Models\Journal;
+use Feeldee\Framework\Models\PostedItem;
 use Feeldee\Framework\Models\Profile;
 use Feeldee\Framework\Models\PublicLevel;
-use Feeldee\Framework\Models\Recorder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
@@ -507,11 +507,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * アイテムの作成
      * 
      * - アイテムの作成は、アイテムを追加したいプロフィールのアイテムリストに追加することを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムの作成
      */
     public function test_create_item()
     {
@@ -540,11 +540,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * アイテムの作成
      * 
      * - 投稿タイトルは、必須であることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムの作成
      */
     public function test_create_item_title_required()
     {
@@ -561,11 +561,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * アイテムの作成
      * 
      * - 投稿日時を省略した場合は、システム日付が設定されることを確認します。
      * 
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムの作成
      */
     public function test_create_item_posted_at_default()
     {
@@ -592,11 +592,11 @@ class ItemTest extends TestCase
     }
 
     /**
-     * 新規作成
+     * アイテムのデフォルトソート
      * 
      * - アイテムリストのデフォルトの並び順は、1.表示順昇順、2.投稿日時降順（最新順）であることを確認します。
      *
-     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#新規作成
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#アイテムのデフォルトソート
      */
     public function test_collection_sort_default()
     {
@@ -635,5 +635,40 @@ class ItemTest extends TestCase
         $this->assertEquals($itemB->id, $items[1]->id);
         $this->assertEquals($itemD->id, $items[2]->id);
         $this->assertEquals($itemC->id, $items[3]->id);
+    }
+
+    /**
+     * 投稿アイテムの作成
+     * 
+     * - 投稿アイテムを新規作成するには、投稿とアイテムを関連付けすることを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿アイテムの作成
+     */
+    public function test_create_posted_item()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $journal = Journal::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 実行
+        $postedItem = PostedItem::create([
+            'post' => $journal,
+            'item' => $item,
+        ]);
+
+        // 評価
+        $this->assertEquals($item->id, $postedItem->item->id);
+        $this->assertEquals($journal->id, $postedItem->post->id);
+        $this->assertDatabaseHas('posted_items', [
+            'item_id' => $item->id,
+            'post_id' => $journal->id,
+            'post_type' => Journal::type(),
+        ]);
     }
 }
