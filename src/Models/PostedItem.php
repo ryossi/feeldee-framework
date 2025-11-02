@@ -19,7 +19,7 @@ class PostedItem extends Model
      *
      * @var array
      */
-    protected $fillable = ['post', 'item', 'label'];
+    protected $fillable = ['post', 'item', 'label', 'order_number'];
 
     /**
      * 配列に表示する属性

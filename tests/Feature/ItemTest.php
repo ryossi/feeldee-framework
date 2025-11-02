@@ -665,10 +665,81 @@ class ItemTest extends TestCase
         // 評価
         $this->assertEquals($item->id, $postedItem->item->id);
         $this->assertEquals($journal->id, $postedItem->post->id);
+        $this->assertNull($postedItem->label);
         $this->assertDatabaseHas('posted_items', [
             'item_id' => $item->id,
             'post_id' => $journal->id,
             'post_type' => Journal::type(),
+            'label' => null,
+            'order_number' => 0,
+        ]);
+    }
+
+    /**
+     * 投稿アイテムの作成
+     * 
+     * - 投稿アイテムラベルを使って投稿アイテムをグループを作成することができることを確認します。
+     * - 投稿アイテム表示順も使って投稿アイテムリストを取得した際に"Primary"の投稿アイテムが先頭に並ぶことを確認します。
+     * 
+     * @link https://github.com/ryossi/feeldee-framework/wiki/アイテム#投稿アイテムの作成
+     */
+    public function test_create_posted_item_with_label()
+    {
+        // 準備
+        Auth::shouldReceive('id')->andReturn(1);
+        $profile = Profile::factory()->create();
+        $item1 = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $item2 = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $item3 = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $item4 = Item::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+        $journal = Journal::factory()->create([
+            'profile_id' => $profile->id,
+        ]);
+
+        // 実行
+        $postedItem1 = PostedItem::create([
+            'post' => $journal,
+            'item' => $item1,
+            'label' => 'Primary',
+            'order_number' => 1,
+        ]);
+        $postedItem2 = PostedItem::create([
+            'post' => $journal,
+            'item' => $item2,
+            'label' => 'Primary',
+            'order_number' => 1,
+        ]);
+        $postedItem3 = PostedItem::create([
+            'post' => $journal,
+            'item' => $item3,
+            'label' => 'Secondary',
+            'order_number' => 2,
+        ]);
+        $postedItem4 = PostedItem::create([
+            'post' => $journal,
+            'item' => $item4,
+            'label' => 'Secondary',
+            'order_number' => 2,
+        ]);
+
+        // 評価
+        $this->assertEquals($item1->id, $postedItem1->item->id);
+        $this->assertEquals($journal->id, $postedItem1->post->id);
+        $this->assertEquals('Primary', $postedItem1->label);
+        $this->assertDatabaseHas('posted_items', [
+            'item_id' => $item1->id,
+            'post_id' => $journal->id,
+            'post_type' => Journal::type(),
+            'label' => 'Primary',
+            'order_number' => 1,
         ]);
     }
 }
